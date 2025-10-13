@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "gVVN4VQCCm4=",
+  "success": true,
+  "projectFilePath": "/Users/slop/Documents/mesterremek/api/api.csproj",
+  "expectedPackageFiles": [
+    "/Users/slop/.nuget/packages/microsoft.aspnetcore.openapi/9.0.8/microsoft.aspnetcore.openapi.9.0.8.nupkg.sha512",
+    "/Users/slop/.nuget/packages/microsoft.openapi/1.6.17/microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
