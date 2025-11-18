@@ -1,30 +1,23 @@
-# Created by https://www.toptal.com/developers/gitignore/api/svelte,dotnetcore,database
-# Edit at https://www.toptal.com/developers/gitignore?templates=svelte,dotnetcore,database
+node_modules
 
-### Database ###
-*.accdb
-*.db
-*.dbf
-*.mdb
-*.pdb
-*.sqlite3
-*.db-shm
-*.db-wal
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
 
-### DotnetCore ###
-# .NET Core build folders
-bin/
-obj/
+# OS
+.DS_Store
+Thumbs.db
 
-# Common node modules locations
-/node_modules
-/wwwroot/node_modules
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
 
-### Svelte ###
-# gitignore template for the SvelteKit, frontend web component framework
-# website: https://kit.svelte.dev/
-
-.svelte-kit/
-package
-
-# End of https://www.toptal.com/developers/gitignore/api/svelte,dotnetcore,database
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
