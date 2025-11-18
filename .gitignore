@@ -9,7 +9,7 @@ node_modules
 /build
 
 # OS
-.DS_Store
+.DS_Store*
 Thumbs.db
 
 # Env
