@@ -27,7 +27,7 @@ export const Session = auth.table(
 			.notNull()
 			.references(() => User.id),
 		iat: timestamp('issued_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-		eat: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+		eat: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		description: text('description')
 	},
 	(table) => [index('session_user').on(table.id, table.userId)]
@@ -37,7 +37,7 @@ export const User = auth.table(
 	'user',
 	{
 		id: serial('id').primaryKey(),
-		username: varchar('username').notNull().unique(),
+		username: varchar('username').notNull(),
 		email: varchar('email').notNull(),
 		passhash: text('passhash').notNull(),
 		role: role('role').default('User'),
