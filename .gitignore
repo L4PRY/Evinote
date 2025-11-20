@@ -1,6 +1,5 @@
 node_modules
 deno.lock
-pmpm-lock.yaml
 
 # Output
 .output
@@ -9,7 +8,8 @@ pmpm-lock.yaml
 .wrangler
 /.svelte-kit
 /build
-
+/drizzle
+pnpm-lock.yaml
 # OS
 .DS_Store*
 Thumbs.db
