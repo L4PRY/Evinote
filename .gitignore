@@ -1,5 +1,6 @@
 node_modules
 deno.lock
+pmpm-lock.yaml
 
 # Output
 .output
