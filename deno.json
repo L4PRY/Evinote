@@ -1,0 +1,44 @@
+{
+	"tasks": {
+		"dev": "deno run -A npm:vite dev",
+		"build": "deno run -A npm:vite build",
+		"preview": "deno run -A npm:vite preview",
+		"check": "deno run -A npm:svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "deno run -A npm:svelte-check --tsconfig ./tsconfig.json --watch",
+		"db:start": "podman compose up",
+		"db:push": "deno run -A npm:drizzle-kit push",
+		"db:generate": "deno run -A npm:drizzle-kit generate",
+		"db:migrate": "deno run -A npm:drizzle-kit migrate",
+		"db:studio": "deno run -A npm:drizzle-kit studio",
+		"format": "deno fmt",
+		"lint": "deno lint",
+		"lint:fix": "deno lint --fix"
+	},
+	"imports": {
+		"@std/regexp": "jsr:@std/regexp@^1.0.1",
+		"@std/uuid": "jsr:@std/uuid@^1.0.9",
+		"@oslojs/crypto": "npm:@oslojs/crypto",
+		"@oslojs/encoding": "npm:@oslojs/encoding",
+		"argon2": "npm:@node-rs/argon2",
+		"drizzle-orm": "npm:drizzle-orm",
+		"drizzle-kit": "npm:drizzle-kit",
+		"postgres": "npm:postgres",
+		"svelte": "npm:svelte",
+		"@sveltejs/kit": "npm:@sveltejs/kit",
+		"@sveltejs/adapter-auto": "npm:@sveltejs/adapter-auto",
+		"@sveltejs/vite-plugin-svelte": "npm:@sveltejs/vite-plugin-svelte",
+		"tailwindcss": "npm:tailwindcss",
+		"vite": "npm:vite",
+		"@types/node": "npm:@types/node"
+	},
+	"fmt": {},
+	"lint": {
+		"include": ["src/**/*.{ts,js,svelte}"],
+		"exclude": ["node_modules", ".svelte-kit", ".vite", "dist", "build"],
+		"rules": {
+			"tags": ["recommended"]
+		}
+	},
+	"unstable": ["fmt-component"],
+	"nodeModulesDir": "auto"
+}

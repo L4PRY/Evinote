@@ -8,12 +8,13 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { MIMEType } from "util";
+import { MIMEType } from "node:util";
 
 export type File = {
   mime: MIMEType;
   location: URL;
 };
+
 export type NoteData = {
   title: string | null;
   position: [number, number];
