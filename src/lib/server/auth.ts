@@ -1,11 +1,11 @@
-import type { RequestEvent } from "@sveltejs/kit"
-import { eq } from "drizzle-orm"
+import { db } from "@db"
+import type { InsertSession } from "@db/schema"
+import { Session, User } from "@db/schema"
 import { sha256 } from "@oslojs/crypto/sha2"
 import { encodeBase64url, encodeHexLowerCase } from "@oslojs/encoding"
-import { db } from "$lib/server/db"
-import { Session, User } from "$lib/server/db/schema"
-import { NAMESPACE_DNS, v5 } from "@std/uuid"
-import type { InsertSession } from "$lib/server/db/schema"
+import type { RequestEvent } from "@sveltejs/kit"
+import { eq } from "drizzle-orm"
+import { v5 } from "uuid"
 
 //                1s     1m   1h  1d
 const DAY_IN_MS = 1000 * 60 * 60 * 24 * 60 // 60 days
@@ -19,9 +19,9 @@ export function generateSessionToken() {
 }
 
 export async function createSession(token: string, userId: number) {
-  const sessionId = await v5.generate(
-    NAMESPACE_DNS,
+  const sessionId = await v5(
     tx.encode(encodeHexLowerCase(sha256(tx.encode(token)))),
+    v5.DNS,
   )
   const session: InsertSession = {
     id: sessionId,
@@ -33,9 +33,9 @@ export async function createSession(token: string, userId: number) {
 }
 
 export async function validateSessionToken(token: string) {
-  const sessionId = await v5.generate(
-    NAMESPACE_DNS,
+  const sessionId = await v5(
     tx.encode(encodeHexLowerCase(sha256(tx.encode(token)))),
+    v5.DNS,
   )
   const [result] = await db
     .select({
