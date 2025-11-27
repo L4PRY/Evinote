@@ -6,6 +6,7 @@ deno.lock
 .vercel
 .netlify
 .wrangler
+.vite
 /.svelte-kit
 /build
 /drizzle
