@@ -12,6 +12,7 @@ export type NoteData = {
 	color: [type: string, value: string];
 	content: (string | File)[];
 };
+
 export const auth = pgSchema('auth');
 export const app = pgSchema('app');
 
@@ -83,23 +84,23 @@ export const Note = app.table(
 );
 
 // someone kill me
-export type Permission = typeof permission;
-export type BoardType = typeof boardType;
-export type Role = typeof role;
+// export type Permission = typeof permission;
+// export type BoardType = typeof boardType;
+// export type Role = typeof role;
 
-export type SelectPermission = typeof Permissions.$inferSelect;
-export type InsertPermission = typeof Permissions.$inferInsert;
+// export type SelectPermission = typeof Permissions.$inferSelect;
+// export type InsertPermission = typeof Permissions.$inferInsert;
 
-export type SelectBoard = typeof Board.$inferSelect;
-export type InsertBoard = typeof Board.$inferInsert;
+// export type SelectBoard = typeof Board.$inferSelect;
+// export type InsertBoard = typeof Board.$inferInsert;
 
-export type SelectNote = typeof Note.$inferSelect;
-export type InsertNote = typeof Note.$inferInsert;
+// export type SelectNote = typeof Note.$inferSelect;
+// export type InsertNote = typeof Note.$inferInsert;
 
-export type SelectUser = typeof User.$inferSelect;
-export type InsertUser = typeof User.$inferInsert;
+// export type SelectUser = typeof User.$inferSelect;
+// export type InsertUser = typeof User.$inferInsert;
 
-export type SelectSession = typeof Session.$inferSelect;
-export type InsertSession = typeof Session.$inferInsert;
+// export type SelectSession = typeof Session.$inferSelect;
+// export type InsertSession = typeof Session.$inferInsert;
 
-export const SCHEMAS = { auth, app };
+// export const SCHEMAS = { auth, app };
