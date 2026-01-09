@@ -12,7 +12,9 @@ export const load: PageServerLoad = async (event) => {
 	}
 	return {};
 };
-
+// it fails to apply the session token to localstorage resulting in it being undefined for some reason
+// maybe cuz sveltekit is weird sometimes who knows
+// thank you copilot
 export const actions: Actions = {
 	login: async (event) => {
 		const formData = await event.request.formData();
@@ -92,7 +94,7 @@ export const actions: Actions = {
 			const result = await db
 				.insert(table.User)
 				.values({ username, passhash: passwordHash, email, role: 'User' })
-				.returning({ id: table.User.id });
+				.returning();
 
 			const userId = result[0]?.id;
 			if (!userId) {

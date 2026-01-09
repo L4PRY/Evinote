@@ -15,10 +15,11 @@ export function generateSessionToken() {
 }
 
 export async function createSession(userId: number, description: string) {
-	return await db
+	const session = await db
 		.insert(table.Session)
 		.values({ userId, description, iat: new Date(), eat: new Date(Date.now() + DAY_IN_MS * 30) })
-		.returning();
+		.returning({ id: table.Session.id, eat: table.Session.eat });
+	return session;
 }
 
 export async function validateSessionToken(token: string) {
@@ -35,6 +36,8 @@ export async function validateSessionToken(token: string) {
 	if (!result) {
 		return { session: null, user: null };
 	}
+
+	console.log(result.user.username, result.session.id);
 	const { session, user } = result;
 
 	const sessionExpired = Date.now() >= session.eat.getTime();

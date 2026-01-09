@@ -4,7 +4,9 @@ import * as auth from '$lib/server/auth';
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(auth.sessionCookieName);
 
-	if (!sessionToken) {
+	console.log(sessionToken, typeof sessionToken);
+
+	if (!sessionToken || typeof sessionToken === 'undefined' || sessionToken === 'undefined') {
 		event.locals.user = null;
 		event.locals.session = null;
 		return resolve(event);
@@ -13,7 +15,7 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	const { session, user } = await auth.validateSessionToken(sessionToken);
 
 	if (session) {
-		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
+		auth.setSessionTokenCookie(event, sessionToken, session.eat);
 	} else {
 		auth.deleteSessionTokenCookie(event);
 	}
