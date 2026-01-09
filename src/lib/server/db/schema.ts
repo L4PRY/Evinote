@@ -1,4 +1,15 @@
-import { index, json, pgSchema, serial, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+	index,
+	json,
+	pgSchema,
+	serial,
+	text,
+	timestamp,
+	uuid,
+	varchar,
+	pgEnum,
+	pgTable
+} from 'drizzle-orm/pg-core';
 import { MIMEType } from 'util';
 
 export type File = {
@@ -16,11 +27,11 @@ export type NoteData = {
 export const auth = pgSchema('auth');
 export const app = pgSchema('app');
 
-export const role = auth.enum('role', ['User', 'Admin']);
-export const permission = app.enum('permission', ['Read', 'Write']);
-export const boardType = app.enum('board_type', ['Public', 'Unlisted', 'Private']);
+export const role = pgEnum('role', ['User', 'Admin']);
+export const permission = pgEnum('permission', ['Read', 'Write']);
+export const boardType = pgEnum('board_type', ['Public', 'Unlisted', 'Private']);
 
-export const Session = auth.table(
+export const Session = pgTable(
 	'session',
 	{
 		id: uuid('id').defaultRandom().primaryKey(),
@@ -34,7 +45,7 @@ export const Session = auth.table(
 	(table) => [index('session_user').on(table.id, table.userId)]
 );
 
-export const User = auth.table(
+export const User = pgTable(
 	'user',
 	{
 		id: serial('id').primaryKey(),
@@ -47,7 +58,7 @@ export const User = auth.table(
 	(table) => [index('index_username').on(table.username)]
 );
 
-export const Permissions = app.table(
+export const Permissions = pgTable(
 	'permissions',
 	{
 		bid: serial('board_id').references(() => Board.id),
@@ -57,7 +68,7 @@ export const Permissions = app.table(
 	(table) => [index('user_session').on(table.bid, table.uid)]
 );
 
-export const Board = app.table(
+export const Board = pgTable(
 	'board',
 	{
 		id: serial('id').primaryKey(),
@@ -71,7 +82,7 @@ export const Board = app.table(
 	(table) => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
 );
 
-export const Note = app.table(
+export const Note = pgTable(
 	'note',
 	{
 		id: serial('id').primaryKey(),
