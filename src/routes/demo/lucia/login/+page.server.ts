@@ -12,9 +12,6 @@ export const load: PageServerLoad = async (event) => {
 	}
 	return {};
 };
-// it fails to apply the session token to localstorage resulting in it being undefined for some reason
-// maybe cuz sveltekit is weird sometimes who knows
-// thank you copilot
 export const actions: Actions = {
 	login: async (event) => {
 		const formData = await event.request.formData();
@@ -58,10 +55,9 @@ export const actions: Actions = {
 
 		const userAgent = event.request.headers.get('user-agent') ?? 'unknown';
 
-		// todo: might needa error proof this later
-		const session = await auth.createSession(existingUser.id, userAgent);
+		const sessionResult = await auth.createSession(existingUser.id, userAgent);
+		const session = sessionResult[0]; // createSession always returns an array with one element
 
-		// @ts-expect-error createSession might return null but physically cant since it returns an insert
 		auth.setSessionTokenCookie(event, session.id, session.eat);
 
 		return redirect(302, '/demo/lucia');

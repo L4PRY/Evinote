@@ -1,24 +1,18 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { encodeBase64url } from '@oslojs/encoding';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 
+//                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
-export const sessionCookieName = 'auth-session';
-
-export function generateSessionToken() {
-	const bytes = crypto.getRandomValues(new Uint8Array(18));
-	const token = encodeBase64url(bytes);
-	return token;
-}
+export const sessionCookieName = '.EVISECURITY';
 
 export async function createSession(userId: number, description: string) {
 	const session = await db
 		.insert(table.Session)
 		.values({ userId, description, iat: new Date(), eat: new Date(Date.now() + DAY_IN_MS * 30) })
-		.returning({ id: table.Session.id, eat: table.Session.eat });
+		.returning();
 	return session;
 }
 
