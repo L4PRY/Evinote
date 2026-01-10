@@ -8,7 +8,7 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
-		return redirect(302, '/demo/lucia');
+		return redirect(302, '/home');
 	}
 	return {};
 };
@@ -60,7 +60,7 @@ export const actions: Actions = {
 
 		auth.setSessionTokenCookie(event, session.id, session.eat);
 
-		return redirect(302, '/demo/lucia');
+		return redirect(302, '/home');
 	},
 	register: async (event) => {
 		const formData = await event.request.formData();
@@ -106,7 +106,7 @@ export const actions: Actions = {
 		} catch {
 			return fail(500, { message: 'An error has occurred' });
 		}
-		return redirect(302, '/demo/lucia');
+		return redirect(302, '/home');
 	}
 };
 

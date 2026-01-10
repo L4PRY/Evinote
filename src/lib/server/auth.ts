@@ -1,12 +1,25 @@
-import type { RequestEvent } from '@sveltejs/kit';
+import { type RequestEvent, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
+import { getRequestEvent } from '$app/server';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
+const RENEW_THRESHOLD = DAY_IN_MS * 15;
+const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 
 export const sessionCookieName = '.EVISECURITY';
+
+export function requireLogin() {
+	const { locals } = getRequestEvent();
+
+	if (!locals.user) {
+		return redirect(302, '/auth');
+	}
+
+	return locals.user;
+}
 
 export async function createSession(userId: number, description: string) {
 	const session = await db
@@ -40,9 +53,9 @@ export async function validateSessionToken(token: string) {
 		return { session: null, user: null };
 	}
 
-	const renewSession = Date.now() >= session.eat.getTime() - DAY_IN_MS * 15;
+	const renewSession = Date.now() >= session.eat.getTime() - RENEW_THRESHOLD;
 	if (renewSession) {
-		session.eat = new Date(Date.now() + DAY_IN_MS * 30);
+		session.eat = new Date(Date.now() + EXPIRE_THRESHOLD);
 		await db
 			.update(table.Session)
 			.set({ eat: session.eat })
