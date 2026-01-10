@@ -44,7 +44,6 @@ export async function validateSessionToken(token: string) {
 		return { session: null, user: null };
 	}
 
-	console.log(result.user.username, result.session.id);
 	const { session, user } = result;
 
 	const sessionExpired = Date.now() >= session.eat.getTime();
