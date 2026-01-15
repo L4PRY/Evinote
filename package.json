@@ -45,6 +45,7 @@
 		"vite": "^7.2.2"
 	},
 	"dependencies": {
+		"@mecra/logger": "npm:@jsr/mecra__logger@^2.1.0",
 		"@node-rs/argon2": "^2.0.2",
 		"postgres": "^3.4.7"
 	}
