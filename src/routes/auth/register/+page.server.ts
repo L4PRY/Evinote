@@ -9,9 +9,9 @@ import { validateEmail, validatePassword, validateUsername } from '$lib/parseInp
 export const actions: Actions = {
 	register: async (event) => {
 		const formData = await event.request.formData();
-		const username = formData.get('username');
-		const email = formData.get('email');
-		const password = formData.get('password');
+		const username = formData.get('username')! as string;
+		const email = formData.get('email')! as string;
+		const password = formData.get('password')! as string;
 
 		if (!validateUsername(username)) {
 			return fail(400, { message: 'Invalid username' });
@@ -23,7 +23,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Invalid password' });
 		}
 
-		const passwordHash = await hash(password, {
+		const passhash = await hash(password, {
 			// recommended minimum parameters
 			memoryCost: 19456,
 			timeCost: 2,
@@ -34,7 +34,7 @@ export const actions: Actions = {
 		try {
 			const result = await db
 				.insert(table.User)
-				.values({ username, passhash: passwordHash, email, role: 'User' })
+				.values({ username, passhash, email, role: 'User' })
 				.returning();
 
 			const userId = result[0]?.id;
@@ -46,7 +46,7 @@ export const actions: Actions = {
 
 			const session = await auth.createSession(userId, userAgent);
 
-			// @ts-expect-error createSession might return null but physically cant since it returns an insert
+			// @ts-expect-error createSession might in theory return null but physically cant since its an insert
 			auth.setSessionTokenCookie(event, session.id, session.eat);
 		} catch {
 			return fail(500, { message: 'An error has occurred' });
