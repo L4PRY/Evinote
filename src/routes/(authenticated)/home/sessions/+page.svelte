@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { PageServerData } from './$types';
+	import type { PageProps } from './$types';
 
-	let { data }: { data: PageServerData } = $props();
+	let { data, form }: PageProps = $props();
+
 </script>
 
 <h1>hi</h1>
@@ -14,7 +15,8 @@
 		<p>User Agent: {session.description}</p>
 		<form method="post" action="?/invalidate" use:enhance>
 			<input type="hidden" name="session_id" value={session.id} />
-			<button>Sign out of this session</button>
+			<button formaction="?/invalidate">Sign out of this session</button>
 		</form>
 	</div>
 {/each}
+<p style="color: red">{form?.message ?? ''}</p>

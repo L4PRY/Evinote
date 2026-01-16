@@ -1,10 +1,11 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import * as auth from '$lib/server/auth';
+import { authLogger, routeLogger } from '$lib/server/logger';
 
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(auth.sessionCookieName);
-	console.log(sessionToken, typeof sessionToken);
+	authLogger.info(`got session token: ${sessionToken}`);
 
 	if (!sessionToken || typeof sessionToken === 'undefined' || sessionToken === 'undefined') {
 		event.locals.user = null;
@@ -26,15 +27,20 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-const handleRoutes: Handle = async ({ event, resolve }) => {
-	// Add route handling logic here
-	const unprotectedRoutes = ['/', '/auth'];
-	const path = event.url.pathname;
+const protectRoutes: Handle = async ({ event, resolve }) =>
+	!event.locals.user && event.route.id?.includes('/(authenticated)/')
+		? redirect(303, '/auth')
+		: resolve(event);
 
-	if (!event.locals.user && !unprotectedRoutes.includes(path)) {
-		throw redirect(303, '/auth');
-	}
+const logRoute: Handle = async ({ event, resolve }) => {
+	routeLogger.trace(`Handling route: ${event.route.id}`);
 	return resolve(event);
 };
 
-export const handle: Handle = sequence(handleAuth, handleRoutes);
+const nullHandler: Handle = async ({ event, resolve }) => resolve(event);
+
+export const handle: Handle = sequence(
+	handleAuth,
+	protectRoutes,
+	process.env.NODE_ENV == 'development' ? logRoute : nullHandler
+);

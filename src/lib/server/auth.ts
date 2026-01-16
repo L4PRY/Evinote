@@ -24,7 +24,12 @@ export function requireLogin() {
 export async function createSession(userId: number, description: string) {
 	const session = await db
 		.insert(table.Session)
-		.values({ userId, description, iat: new Date(), eat: new Date(Date.now() + DAY_IN_MS * 30) })
+		.values({
+			userId,
+			description,
+			iat: new Date(),
+			eat: new Date(Date.now() + DAY_IN_MS * 30)
+		})
 		.returning();
 	return session;
 }

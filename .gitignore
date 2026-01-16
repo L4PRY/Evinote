@@ -10,7 +10,8 @@ node_modules
 /drizzle
 
 .pnpm-lock.*
-.pnpm-workspace.*
+pnpm-lock.*
+pnpm-workspace.*
 
 # OS
 .DS_Store

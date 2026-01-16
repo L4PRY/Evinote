@@ -3,6 +3,7 @@ import { validateSessionToken } from '$lib/server/auth';
 import * as table from '$lib/server/db/schema';
 import type { Actions, PageServerLoad } from './$types';
 import { eq } from 'drizzle-orm';
+import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async (event) => {
 	const result = await db
@@ -17,10 +18,10 @@ export const load: PageServerLoad = async (event) => {
 export const actions: Actions = {
 	invalidate: async (event) => {
 		const formData = await event.request.formData();
-		const sessionId = formData.get('sessionId');
+		const sessionId = formData.get('session_id');
 
 		if (!sessionId || typeof sessionId !== 'string') {
-			return { success: false, message: 'Invalid session ID' };
+			return fail(400, 'Invalid session ID');
 		}
 
 		const session = await db
@@ -31,7 +32,7 @@ export const actions: Actions = {
 			.then((res) => res[0]);
 
 		if (!session || session.userId !== event.locals.user!.id) {
-			return { success: false, message: 'Session not found or unauthorized' };
+			return fail(400, 'Session not found or unauthorized');
 		}
 
 		await db.delete(table.Session).where(eq(table.Session.id, sessionId));
