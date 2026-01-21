@@ -3,8 +3,8 @@ Notes board webapp made with sveltekit and postgres.
 
 # setup devenv
 prequisites:
-- (podman)[https://podman.io]
-- (node.js)[https://nodejs.org/en/download/]
+- [podman](https://podman.io)
+- [node.js](https://nodejs.org/en/download/)
 
 ### 1. install dependencies
 ```bash
