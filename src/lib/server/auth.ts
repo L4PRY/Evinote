@@ -3,7 +3,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { getRequestEvent } from '$app/server';
-// import { v7 as uuidv7 } from '@std/uuid';
+import type { PostgresError } from 'postgres';
+import { authLogger } from './logger';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
@@ -39,18 +40,37 @@ export function requireLogin() {
 	return locals.user;
 }
 
-export const createSession = async (userId: number, description: string) =>
-	await db
-		.insert(table.Session)
-		.values({
-			token: generateSecureRandomString(),
-			userId,
-			description,
-			iat: new Date(),
-			eat: new Date(Date.now() + DAY_IN_MS * 30)
-		})
-		.returning();
+let layer = 0;
+export async function createSession(userId: number, description: string) {
+	try {
+		layer++;
+		const result = await db.transaction(async (tx) =>
+			tx
+				.insert(table.Session)
+				.values({
+					token: generateSecureRandomString(),
+					userId,
+					description,
+					iat: new Date(),
+					eat: new Date(Date.now() + DAY_IN_MS * 30)
+				})
+				.returning()
+		);
 
+		layer = 0;
+		return result;
+	} catch (error) {
+		if ((error as PostgresError).code === '23505') {
+			authLogger.error('Unique session token collision, retrying...');
+			// PostgreSQL unique violation error code
+			if (layer > 5) {
+				layer = 0;
+				throw new Error('Failed to create unique session token after multiple attempts');
+			}
+			createSession(userId, description);
+		}
+	}
+}
 export async function validateSessionToken(token: string) {
 	const [result] = await db
 		.select({

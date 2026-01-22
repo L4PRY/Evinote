@@ -35,7 +35,7 @@ export const Session = pgTable(
 	'session',
 	{
 		id: uuid('id').defaultRandom().primaryKey(),
-		token: varchar('token').notNull().unique(),
+		token: varchar('token', { length: 24 }).notNull().unique(),
 		userId: serial('user_id')
 			.notNull()
 			.references(() => User.id),
