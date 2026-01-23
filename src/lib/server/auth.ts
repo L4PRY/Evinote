@@ -13,6 +13,19 @@ const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 
 export const sessionCookieName = '.EVISECURITY';
 
+export type AuthenticatedUser = NonNullable<
+	Awaited<ReturnType<typeof validateSessionToken>>['user']
+>;
+
+export type AuthenticatedSession = NonNullable<
+	Awaited<ReturnType<typeof validateSessionToken>>['session']
+>;
+
+export type AuthContext = {
+	user: AuthenticatedUser;
+	session: AuthenticatedSession;
+};
+
 function generateSecureRandomString(): string {
 	// Human readable alphabet (a-z, 0-9 without l, o, 0, 1 to avoid confusion)
 	const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789';
@@ -30,14 +43,14 @@ function generateSecureRandomString(): string {
 	return id;
 }
 
-export function requireLogin() {
+export function requireLogin(): AuthenticatedUser {
 	const { locals } = getRequestEvent();
 
 	if (!locals.user) {
 		return redirect(302, '/auth');
 	}
 
-	return locals.user;
+	return locals.user!;
 }
 
 let layer = 0;
@@ -62,7 +75,6 @@ export async function createSession(userId: number, description: string) {
 	} catch (error) {
 		if ((error as PostgresError).code === '23505') {
 			authLogger.error('Unique session token collision, retrying...');
-			// PostgreSQL unique violation error code
 			if (layer > 5) {
 				layer = 0;
 				throw new Error('Failed to create unique session token after multiple attempts');
@@ -75,7 +87,12 @@ export async function validateSessionToken(token: string) {
 	const [result] = await db
 		.select({
 			// Adjust user table here to tweak returned data
-			user: { id: table.User.id, username: table.User.username, sessionToken: table.Session.token },
+			user: {
+				id: table.User.id,
+				username: table.User.username,
+				role: table.User.role,
+				sessionToken: table.Session.token
+			},
 			session: table.Session
 		})
 		.from(table.Session)
