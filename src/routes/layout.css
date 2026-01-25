@@ -1,1 +1,22 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap');
+
+
+:root {
+    color-scheme: light dark;
+
+    --default-bg-color:     light-dark(#efefec, #191b1c);
+    --default-text-color:   light-dark(#333b3c, #efefec);
+
+    --placeholder-bg-color: #684cf83c;
+}
+
+body {
+    background-color: var(--default-bg-color);
+    color: var(--default-text-color);
+
+    font-family: "Google Sans Code", monospace;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+}
