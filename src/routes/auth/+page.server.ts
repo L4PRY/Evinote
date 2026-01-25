@@ -57,7 +57,7 @@ export const actions: Actions = {
 
 		auth.setSessionTokenCookie(event, session.id, session.eat);
 
-		return redirect(302, '/home');
+		return redirect(302, '/dashboard');
 	},
 	register: async (event) => {
 		const formData = await event.request.formData();
@@ -103,6 +103,6 @@ export const actions: Actions = {
 		} catch {
 			return fail(500, { message: 'An error has occurred' });
 		}
-		return redirect(302, '/home');
+		return redirect(302, '/dashboard');
 	}
 };

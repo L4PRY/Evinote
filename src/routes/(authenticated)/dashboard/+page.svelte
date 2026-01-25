@@ -8,7 +8,7 @@
 
 <h1>Hi, {data.user.username}!</h1>
 <p>Your  user ID is {data.user.id}.</p>
-<a href={resolve('/home/sessions')} aria-label="view sessions">View sessions</a>
+<a href={resolve('/dashboard/sessions')} aria-label="view sessions">View sessions</a>
 <form method="post" action="?/logout" use:enhance>
 	<button>Sign out</button>
 </form>
