@@ -43,7 +43,10 @@ export const Session = pgTable(
 		eat: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
 		description: text('description')
 	},
-	(table) => [index('session_user').on(table.id, table.userId)]
+	(table) => [
+		index('session_user').on(table.id, table.userId),
+		index('session_token').on(table.id, table.token)
+	]
 );
 
 export const User = pgTable(
