@@ -44,10 +44,15 @@ export const actions: Actions = {
 
 			const userAgent = event.request.headers.get('user-agent') ?? 'unknown';
 
-			const session = await auth.createSession(userId, userAgent);
+			const sessionResult = await auth.createSession(userId, userAgent);
 
-			// @ts-expect-error createSession might in theory return null but physically cant since its an insert
-			auth.setSessionTokenCookie(event, session.id, session.eat);
+			if (!sessionResult || sessionResult.length === 0) {
+				return fail(500, { message: 'Failed to create session' });
+			}
+
+			const session = sessionResult[0]; // createSession always returns an array with one element
+
+			auth.setSessionTokenCookie(event, session.token, session.eat);
 		} catch {
 			return fail(500, { message: 'An error has occurred' });
 		}
