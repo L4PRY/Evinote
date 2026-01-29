@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres
+    image: docker.io/library/postgres:latest
     restart: always
     ports:
       - 5432:5432
