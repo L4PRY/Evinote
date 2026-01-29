@@ -1,6 +1,6 @@
 import { type RequestEvent, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+// import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { getRequestEvent } from '$app/server';
 import type { PostgresError } from 'postgres';

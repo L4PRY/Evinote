@@ -28,6 +28,8 @@
 			<button>Dashboard</button>
 			<div class="nav_island_divider"></div>
 			<button>Settings</button>
+			<div class="nav_island_divider"></div>
+			<button>About</button>
 		</div>
         <div class="login">
             <button class="shrink">Login</button>
@@ -41,7 +43,7 @@
         justify-content: center;
         align-items: center;
         width: 100%;
-        height: 200vh;
+        height: 60px;
     }
 	nav {
 		display: flex;
