@@ -4,13 +4,14 @@
 :root {
     color-scheme: light dark;
 
-    --default-bg-color:   light-dark(#efefec, #191b1c);
+    --default-bg-color:   light-dark(#efefec, #090715);
     --default-text-color: light-dark(#333b3c, #efefec);
-    --default-blur-color: light-dark(#efefec5d, #191b1c5d);   
-    --button-stroke-color: light-dark(#cccccc, #444444);
+    --default-blur-color: light-dark(#efefec5d, #0907155d);   
+    --button-stroke-color: light-dark(#cccccc7e, #44444486);
 
     --fancycolor-1: #9c20aa;
     --fancycolor-2: #fb3570;
+    --fancygradient: linear-gradient(135deg, var(--fancycolor-1), var(--fancycolor-2));
 
     --default-border: 1px solid var(--button-stroke-color);
     --border-radius: 12px;
@@ -27,7 +28,6 @@
 }
 
 .btn-fancystroke:hover {
-	background: hsla(285, 42%, 33%, 1);
     background: 
         linear-gradient(var(--default-bg-color) 0 0) padding-box,
         linear-gradient(to right, var(--fancycolor-1), var(--fancycolor-2)) border-box;
