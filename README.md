@@ -12,8 +12,8 @@ npm install
 ```
 
 ### 2. start database
-[!IMPORTANT]
-use `docker:db:start` if you are planning on using docker / docker-compose.
+> [!IMPORTANT]
+> use `docker:db:start` instead if you are planning on using docker / docker-compose.
 
 ```bash
 npm run db:start
