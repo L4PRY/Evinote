@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Display:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cal+Sans&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 @import 'tailwindcss';
 
 :root {
@@ -36,13 +38,20 @@
     cursor: pointer;
 }
 
+html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable both-edges;
+}
+
 body {
     background-color: var(--default-bg-color);
     color: var(--default-text-color);
+    margin: 0;
+    padding: 0;
 
-    font-family: "Google Sans Code", monospace;
+    font-family: "DM Sans", sans-serif;
     font-optical-sizing: auto;
-    font-weight: 400;
+    font-weight: 500;
     font-style: normal;
 
     margin: 20px;

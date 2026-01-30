@@ -1,78 +1,107 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-    let scrollY = $state(0);
+	import { onMount } from 'svelte';
+	let scrollY = $state(0);
+	let outerWidth = $state(0);
 
-    function navbarExpand() {
-        const nav = document.querySelector('nav');
-        if (scrollY > 25) {
-            nav?.style.setProperty('backdrop-filter', 'blur(10px)');
-            nav?.style.setProperty('border', 'var(--default-border)');
-        } else {
-            nav?.style.setProperty('backdrop-filter', 'none');
-            nav?.style.setProperty('border', '1px solid transparent');
-        }
-    }
+	function navbarExpand() {
+		const nav = document.querySelector('nav');
+		const navWidth = nav?.offsetWidth;
+
+		if (scrollY > 5 || outerWidth < 600) {
+			nav?.style.setProperty('transition', 'all 0.15s ease-in-out');
+			nav?.style.setProperty('backdrop-filter', 'blur(5px)');
+			nav?.style.setProperty('border', 'var(--default-border)');
+			nav?.style.setProperty('width', `clamp(50vw, calc(${navWidth}px + 20%), calc(50vw + 20%))`);
+		} else {
+			nav?.style.setProperty('backdrop-filter', 'none');
+			nav?.style.setProperty('border', '1px solid transparent');
+			nav?.style.setProperty('width', "50vw");
+		}
+	}
+
+	function navbarAnimationToggle() {
+		const nav = document.querySelector('nav');
+		nav?.style.setProperty('transition', 'none');
+	}
+
+	onMount(() => {
+		navbarExpand();
+	});
 </script>
 
-<svelte:window bind:scrollY={scrollY} on:scroll={navbarExpand} />
+<svelte:window bind:scrollY bind:outerWidth on:scroll={navbarExpand} on:resize={navbarAnimationToggle}/>
 
 <div class="main">
 	<nav>
-        <div class="logo">
-            Evinote
-        </div>
-		<div class="nav_island">
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<a class="float-left" href="/" onclick={() => goto(resolve('/'))} style="cursor: pointer;" aria-label="Home">Evinote</a>
+		<div class="nav-island">
 			<button>Explore</button>
-			<div class="nav_island_divider"></div>
+			<div class="nav-island-divider"></div>
 			<button>Dashboard</button>
-			<div class="nav_island_divider"></div>
-			<button>Settings</button>
-			<div class="nav_island_divider"></div>
+			<div class="nav-island-divider"></div>
 			<button onclick={() => goto(resolve('/about'))}>About</button>
 		</div>
-        <div class="login">
-            <button class="shrink">Login</button>
-        </div>
+		<div class="float-right">
+			<button class="shrink" onclick={() => goto(resolve('/auth'))}>Login</button>
+		</div>
 	</nav>
 </div>
 
 <style>
-    .main {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 60px;
-    }
+	.main {
+		margin-left: auto;
+		margin-right: auto;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 80%;
+		height: 60px;
+	}
 	nav {
 		display: flex;
 		box-sizing: border-box;
 		align-items: center;
-		justify-content: center;
+		justify-content: space-between;
 		height: 50px;
 		background-color: transparent;
-		width: 80vw;
+		width: 50vw;
+		min-width: fit-content;
+		max-width: 100%;
 		position: fixed;
-		margin-top: 20px;
 		top: 0;
-        z-index: 10;
-        border-radius: var(--border-radius);
-        transition: backdrop-filter 0.5s ease-in-out, border 0.5s ease-in-out;
-        backdrop-filter: none;
-        border: 1px solid transparent;
+		margin: auto;
+		z-index: 10;
+		margin-top: 20px;
+		border-radius: var(--border-radius);
+		transition: all 0.15s ease-in-out;
+		backdrop-filter: none;
+		border: 1px solid transparent;
+		gap: 20px;
 	}
-    .logo {
-        font-size: 1.5rem;
-        position: absolute;
-        left: 20px;
-    }
-	.nav_island {
+	.float-left {
+		font-size: 1.5rem;
+		justify-self: flex-start;
+		margin-left: 20px;
+	}
+	.float-right {
+		justify-self: flex-end;
+		margin-right: 10px;
+	}
+	.float-right button {
+		background: var(--fancygradient);
+		color: #efefec;
+		border: none;
+	}
+	.nav-island {
 		display: flex;
 		gap: 0;
 		text-align: center;
 	}
-	.nav_island_divider {
+	.nav-island-divider {
 		width: 1.5px;
 		background: linear-gradient(
 			0deg,
@@ -91,10 +120,10 @@
 		box-sizing: border-box;
 		width: 100px;
 		border: var(--default-border);
-        border-radius: var(--border-radius);
+		border-radius: var(--border-radius);
 		background-color: var(--default-blur-color);
 		color: var(--default-text-color);
-		backdrop-filter: blur(5px);
+		/* backdrop-filter: blur(5px); */
 		cursor: pointer;
 		transition: all 0.15s ease-in-out;
 		font-size: 0.875rem;
@@ -102,35 +131,27 @@
 	.shrink {
 		width: calc(100% + 5px);
 	}
-	.nav_island button:hover {
-		text-shadow: 0px 0px 20px var(--fancycolor-1);
+	.nav-island button:hover {
+		text-shadow: 0px 0px 20px var(--fancycolor-2);
 		filter: brightness(1.1);
 		width: 110px;
 	}
 	button:active {
 		text-shadow: 0px 0px 20px skyblue;
 	}
-	.nav_island button:first-child {
+	.nav-island button:first-child {
 		border-right: none;
 		border-top-right-radius: 0;
 		border-bottom-right-radius: 0;
 	}
-	.nav_island button:last-child {
+	.nav-island button:last-child {
 		border-left: none;
 		border-top-left-radius: 0;
 		border-bottom-left-radius: 0;
 	}
-	.nav_island button:not(:first-child):not(:last-child) {
+	.nav-island button:not(:first-child):not(:last-child) {
 		border-left: none;
-        border-right: none;
-        border-radius: 0;
-	}
-    .login {
-        position: absolute;
-        right: 12px;
-    }
-	.login button {
-		background: var(--fancygradient);
-        border: none;
+		border-right: none;
+		border-radius: 0;
 	}
 </style>
