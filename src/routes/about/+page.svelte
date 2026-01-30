@@ -78,13 +78,11 @@
     background: #333333;
 
     /* üveghatás */
-    background: rgba(33, 33, 33, 0.45); 
-    backdrop-filter: blur(15px);         
-    -webkit-backdrop-filter: blur(15px);   /* Safari támogatás */
-    
+    background: rgba(33, 33, 33, 0.45);
+    backdrop-filter: blur(15px);
     /* keret */
     border: 2px solid rgba(207, 24, 24, 0.1);
-    
+
     /* árnyék */
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
