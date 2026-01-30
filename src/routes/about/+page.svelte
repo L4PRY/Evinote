@@ -9,6 +9,11 @@
       name: "Dávid",
       role: "Frontend fejlesztő",
       avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=david"
+    },
+    {
+        name: "Patrik",
+        role: "Frontend/Backend fejlesztő",
+        avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=patrik"
     }
   ];
 </script>
@@ -43,9 +48,13 @@
   .about-wrapper {
     min-height: calc(100vh - 80px);
     display: flex;
+    padding: 5rem;
+    width: 75%;
     justify-content: center;
     align-items: center;
-    padding: 2rem;
+    margin: 0 auto;
+    border-radius: 20px;
+    background: #333333;
   }
 
   .about-content {

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
     let scrollY = 0;
 
     function navbarExpand() {
@@ -12,6 +13,10 @@
             nav?.style.setProperty('border', '1px solid transparent');
             nav?.style.setProperty('width', '80vw');
         }
+    }
+
+    function handleAboutClick() {
+        goto('/about');
     }
 </script>
 
@@ -29,7 +34,7 @@
 			<div class="nav_island_divider"></div>
 			<button>Settings</button>
 			<div class="nav_island_divider"></div>
-			<button>About</button>
+			<button on:click={handleAboutClick}>About</button>
 		</div>
         <div class="login">
             <button class="shrink">Login</button>
