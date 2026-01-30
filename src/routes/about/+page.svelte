@@ -44,7 +44,7 @@
       <!-- svelte-ignore a11y_consider_explicit_label -->
       <a href="https://github.com/{member.githubUsername}" target="_blank" class="member-link"></a>
         <div class="member">
-          <img src={member.avatar} alt={member.name} />
+          <img src="https://github.com/{member.githubUsername}.png?s=150" alt={member.name} />
           <h3>{member.name}</h3>
           <span>{member.role}</span>
         </div>
