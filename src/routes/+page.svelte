@@ -1,7 +1,6 @@
 <script>
     // import backgroundImage from '$lib/assets/6229893.jpg';
     import backgroundImage from '$lib/assets/evi_bg.png';
-    import { onMount } from 'svelte';
 </script>
 
 <svelte:body></svelte:body>
@@ -11,7 +10,7 @@
 
 <div class="content">
     <slot />
-    
+
 </div>
 
 <style>
