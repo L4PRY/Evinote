@@ -140,4 +140,9 @@
     display: block;
     transition: transform 0.2s ease-in-out;
   }
+
+    .member-link:hover {
+    transform: translateY(-10px); /* Kicsit felemelkedik, ha rátolod az egeret */
+  }
+
 </style>
