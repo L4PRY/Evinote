@@ -134,4 +134,10 @@
     color: rgba(255, 255, 255, 0.6);
   }
 
+.member-link {
+    text-decoration: none; /* Eltünteti az aláhúzást */
+    color: inherit;       /* Megtartja a szövegszíneket */
+    display: block;
+    transition: transform 0.2s ease-in-out;
+  }
 </style>
