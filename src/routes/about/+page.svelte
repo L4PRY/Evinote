@@ -39,17 +39,17 @@
       élménnyel és a jól strukturált frontend megoldásokkal.
     </p>
 
-    <div class="team-card">
-      {#each team as member}
-      <!-- svelte-ignore a11y_consider_explicit_label -->
-      <a href="https://github.com/{member.githubUsername}" target="_blank" class="member-link"></a>
-        <div class="member">
-          <img src="https://github.com/{member.githubUsername}.png?s=150" alt={member.name} />
-          <h3>{member.name}</h3>
-          <span>{member.role}</span>
-        </div>
-      {/each}
-    </div>
+<div class="team-card">
+  {#each team as member}
+    <a href="https://github.com/{member.githubUsername}" target="_blank" class="member-link">
+      <div class="member">
+        <img src="https://github.com/{member.githubUsername}.png?s=150" alt={member.name} />
+        <h3>{member.name}</h3>
+        <span>{member.role}</span>
+      </div>
+    </a>
+  {/each}
+</div>
   </div>
 </section>
 
@@ -133,4 +133,5 @@
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.6);
   }
+
 </style>
