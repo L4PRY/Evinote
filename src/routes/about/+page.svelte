@@ -137,7 +137,8 @@
 .member-link {
     text-decoration: none; /* Eltünteti az aláhúzást */
     color: inherit;       /* Megtartja a szövegszíneket */
-    display: block;
+    display: flex;
+    justify-content: center;
     transition: transform 0.2s ease-in-out;
   }
 
