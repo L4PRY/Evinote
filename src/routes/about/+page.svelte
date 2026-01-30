@@ -76,6 +76,17 @@
     margin: 0 auto;
     border-radius: 20px;
     background: #333333;
+
+    /* üveghatás */
+    background: rgba(33, 33, 33, 0.45); 
+    backdrop-filter: blur(15px);         
+    -webkit-backdrop-filter: blur(15px);   /* Safari támogatás */
+    
+    /* keret */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    /* árnyék */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
   .about-content {
