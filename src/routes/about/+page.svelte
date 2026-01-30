@@ -1,22 +1,29 @@
 <script>
+  import backgroundImage from '$lib/assets/evi_bg.png';
   const team = [
     {
       name: "Mátyás",
       role: "Backend / Projektgazda",
-      avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=matyas"
+      avatar: "https://github.com/slopslug.png",
+      githubUsername: "slopslug"
     },
     {
       name: "Dávid",
       role: "Frontend fejlesztő",
-      avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=david"
+      avatar: "https://github.com/davidlados511.png",
+      githubUsername: "davidlados511"
     },
     {
         name: "Patrik",
         role: "Frontend/Backend fejlesztő",
-        avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=patrik"
+        avatar: "https://github.com/L4PRY.png",
+        githubUsername: "L4PRY"
     }
   ];
 </script>
+
+<div class="background" style="background-image: url({backgroundImage});">
+</div>
 
 <section class="about-wrapper">
   <div class="about-content">
@@ -45,6 +52,18 @@
 </section>
 
 <style>
+.background {
+    position: fixed; /* Fixen a háttérben marad */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Behelyezi a tartalom mögé */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
   .about-wrapper {
     min-height: calc(100vh - 80px);
     display: flex;
