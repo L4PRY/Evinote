@@ -146,4 +146,9 @@
     transform: translateY(-10px); /* Kicsit felemelkedik, ha rátolod az egeret */
   }
 
+  .member-link:hover img {
+    border-color: #ff3e00; /* Változtatja a keret színét hover esetén */
+    box-shadow: 0 0 15px rgba(255, 62, 0, 0.4);
+  }
+
 </style>
