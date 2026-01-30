@@ -40,7 +40,7 @@
     </p>
 
 <div class="team-card">
-  {#each team as member}
+  {#each team as member (member.name)}
     <a href="https://github.com/{member.githubUsername}" target="_blank" class="member-link">
       <div class="member">
         <img src="https://github.com/{member.githubUsername}.png?s=150" alt={member.name} />
