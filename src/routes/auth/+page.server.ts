@@ -62,6 +62,6 @@ export const actions: Actions = {
 
 		auth.setSessionTokenCookie(event, session.token, session.eat);
 
-		return redirect(302, '/home');
+		return redirect(302, '/dashboard');
 	}
 };
