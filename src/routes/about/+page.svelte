@@ -41,6 +41,7 @@
 
     <div class="team-card">
       {#each team as member}
+      <a href="https://github.com/{member.githubUsername}" target="_blank" class="member-link"></a>
         <div class="member">
           <img src={member.avatar} alt={member.name} />
           <h3>{member.name}</h3>
