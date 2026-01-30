@@ -1,22 +1,17 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    let scrollY = 0;
+	import { resolve } from '$app/paths';
+    let scrollY = $state(0);
 
     function navbarExpand() {
         const nav = document.querySelector('nav');
-        if (scrollY > 50) {
+        if (scrollY > 25) {
             nav?.style.setProperty('backdrop-filter', 'blur(10px)');
             nav?.style.setProperty('border', 'var(--default-border)');
-            nav?.style.setProperty('width', 'calc(80vw + 20px)');
         } else {
             nav?.style.setProperty('backdrop-filter', 'none');
             nav?.style.setProperty('border', '1px solid transparent');
-            nav?.style.setProperty('width', '80vw');
         }
-    }
-
-    function handleAboutClick() {
-        goto('/about');
     }
 </script>
 
@@ -34,7 +29,7 @@
 			<div class="nav_island_divider"></div>
 			<button>Settings</button>
 			<div class="nav_island_divider"></div>
-			<button on:click={handleAboutClick}>About</button>
+			<button onclick={() => goto(resolve('/about'))}>About</button>
 		</div>
         <div class="login">
             <button class="shrink">Login</button>
@@ -63,7 +58,7 @@
 		top: 0;
         z-index: 10;
         border-radius: var(--border-radius);
-        transition: all 0.5s ease-in-out;
+        transition: backdrop-filter 0.5s ease-in-out, border 0.5s ease-in-out;
         backdrop-filter: none;
         border: 1px solid transparent;
 	}
