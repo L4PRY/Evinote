@@ -1,13 +1,13 @@
 services:
   db:
-    image: postgres
+    image: docker.io/library/postgres:latest
     restart: always
     ports:
       - 5432:5432
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: local
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWD}
+      POSTGRES_DB: ${DB}
     volumes:
       - pgdata:/var/lib/postgresql
 volumes:
