@@ -2,9 +2,11 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import FancyButton1 from './buttons/FancyButton1.svelte';
+	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	let scrollY = $state(0);
 	let outerWidth = $state(0);
+	let navVisible = true;
 
 	function navbarExpand() {
 		const nav = document.querySelector('nav');
@@ -32,18 +34,29 @@
 		if (nav) {
 			nav.style.transition = 'none'; 
 			nav.style.transform = 'translateY(-500%)';
+			navVisible = false;
 		}
 	}
 
-	onMount(() => {
-		navHide();
+	function navShow() {
+		const nav = document.querySelector('nav');
+		if (nav) {
+			nav.style.transition = 'transform 0.5s ease-in-out';
+			nav.style.transform = 'translateY(0)';
+			navVisible = true;
+		}
+	}
+
+	afterNavigate(({ from }) => {
+		if (from != null) return;
+        navHide();
 		setTimeout(() => {
-			const nav = document.querySelector('nav');
-			if (nav) {
-				nav.style.transition = 'transform 0.5s ease-in-out';
-				nav.style.transform = 'translateY(0)';
-			}
+			navShow();
 		}, 100);
+    });
+
+	onMount(() => {
+		
 	});
 </script>
 
@@ -62,7 +75,7 @@
 			<button onclick={() => goto(resolve('/about'))}>About</button>
 		</div>
 		<div class="float-right">
-			<button onclick={() => goto(resolve('/auth'))}>Login</button>
+			<button onclick={() => { goto(resolve('/auth')); }}>Login</button>
 		</div>
 	</nav>
 </div>
