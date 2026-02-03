@@ -27,15 +27,23 @@
 		nav?.style.setProperty('transition', 'none');
 	}
 
-	function navDropAnimation() {
+	function navHide() {
 		const nav = document.querySelector('nav');
 		if (nav) {
-			nav.style.transform = 'translateY(-100%)';
+			nav.style.transition = 'none'; 
+			nav.style.transform = 'translateY(-500%)';
 		}
 	}
 
 	onMount(() => {
-		
+		navHide();
+		setTimeout(() => {
+			const nav = document.querySelector('nav');
+			if (nav) {
+				nav.style.transition = 'transform 0.5s ease-in-out';
+				nav.style.transform = 'translateY(0)';
+			}
+		}, 100);
 	});
 </script>
 
@@ -54,11 +62,7 @@
 			<button onclick={() => goto(resolve('/about'))}>About</button>
 		</div>
 		<div class="float-right">
-			<FancyButton1
-				onclick={() => goto(resolve('/auth'))}
-				width="fit-content"
-				>Login</FancyButton1>
-			<!-- <button class="shrink" onclick={() => goto(resolve('/auth'))}>Login</button> -->
+			<button onclick={() => goto(resolve('/auth'))}>Login</button>
 		</div>
 	</nav>
 </div>
@@ -132,13 +136,21 @@
 		color: var(--default-text-color);
 		/* backdrop-filter: blur(5px); */
 		cursor: pointer;
-		transition: all 0.15s ease-in-out;
+		transition: width 0.15s ease-in-out, text-shadow 0.05s ease-in-out;
 		font-size: 0.875rem;
 	}
 	.nav-island button:hover {
 		text-shadow: 0px 0px 20px var(--fancycolor-2);
 		filter: brightness(1.1);
 		width: 110px;
+	}
+	.float-right button {
+		width: fit-content;
+		padding: 8px 16px;
+	}
+	.float-right button:hover {
+		text-shadow: 0px 0px 20px var(--fancycolor-1);
+		filter: brightness(1.1);
 	}
 	button:active {
 		text-shadow: 0px 0px 20px skyblue;
