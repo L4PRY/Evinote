@@ -21,23 +21,6 @@
     --default-blur-hover-color: light-dark(#efefecaf, #5454702b); 
 }
 
-.btn-fancystroke {
-    background: 
-        linear-gradient(var(--default-bg-color) 0 0) padding-box,
-        linear-gradient(to right, var(--fancycolor-1), var(--fancycolor-2)) border-box;
-	box-sizing: border-box;
-    transition: all 0.5s ease-in-out;
-}
-
-.btn-fancystroke:hover {
-    background: 
-        linear-gradient(var(--default-bg-color) 0 0) padding-box,
-        linear-gradient(to right, var(--fancycolor-1), var(--fancycolor-2)) border-box;
-    border: 2px solid transparent;
-    box-sizing: border-box;
-    cursor: pointer;
-}
-
 html {
     scroll-behavior: smooth;
     scrollbar-gutter: stable both-edges;

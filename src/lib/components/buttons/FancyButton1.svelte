@@ -1,0 +1,33 @@
+<script lang="ts">
+	export let width: string | undefined = undefined;
+	export let onclick: (() => void) | undefined = undefined;
+</script>
+ 
+<button style="width: {width};" on:click={onclick}>
+    <slot />
+</button>
+
+<style>
+	button {
+		background: var(--fancygradient);
+		color: #efefec;
+		border: none;
+		padding: 8px 10px;
+		box-sizing: border-box;
+		border-radius: var(--border-radius);
+		background-color: var(--default-blur-color);
+		color: var(--default-text-color);
+		/* backdrop-filter: blur(5px); */
+		cursor: pointer;
+		transition: all 0.15s ease-in-out;
+		font-size: 0.875rem;
+	}
+
+	button:hover {
+		background: var(--fancygradient);
+		color: #efefec;
+		border: none;
+		text-shadow: 0px 0px 20px var(--fancycolor-2);
+		filter: brightness(1.1);
+	}
+</style>

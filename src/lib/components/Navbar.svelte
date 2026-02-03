@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
+	import FancyButton1 from './buttons/FancyButton1.svelte';
 	let scrollY = $state(0);
 	let outerWidth = $state(0);
 
@@ -26,8 +27,15 @@
 		nav?.style.setProperty('transition', 'none');
 	}
 
+	function navDropAnimation() {
+		const nav = document.querySelector('nav');
+		if (nav) {
+			nav.style.transform = 'translateY(-100%)';
+		}
+	}
+
 	onMount(() => {
-		navbarExpand();
+		
 	});
 </script>
 
@@ -46,7 +54,11 @@
 			<button onclick={() => goto(resolve('/about'))}>About</button>
 		</div>
 		<div class="float-right">
-			<button class="shrink" onclick={() => goto(resolve('/auth'))}>Login</button>
+			<FancyButton1
+				onclick={() => goto(resolve('/auth'))}
+				width="fit-content"
+				>Login</FancyButton1>
+			<!-- <button class="shrink" onclick={() => goto(resolve('/auth'))}>Login</button> -->
 		</div>
 	</nav>
 </div>
@@ -91,11 +103,6 @@
 		justify-self: flex-end;
 		margin-right: 10px;
 	}
-	.float-right button {
-		background: var(--fancygradient);
-		color: #efefec;
-		border: none;
-	}
 	.nav-island {
 		display: flex;
 		gap: 0;
@@ -127,9 +134,6 @@
 		cursor: pointer;
 		transition: all 0.15s ease-in-out;
 		font-size: 0.875rem;
-	}
-	.shrink {
-		width: calc(100% + 5px);
 	}
 	.nav-island button:hover {
 		text-shadow: 0px 0px 20px var(--fancycolor-2);

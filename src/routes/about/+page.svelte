@@ -1,6 +1,5 @@
 <script>
 	import backgroundImage from '$lib/assets/evi_bg.png';
-	import { FastAverageColor } from 'fast-average-color';
 	import { onMount } from 'svelte';
 
 	const team = [
