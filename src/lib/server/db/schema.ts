@@ -13,14 +13,14 @@ import {
 import { MIMEType } from 'util';
 
 export type File = {
-	mime: MIMEType;
-	location: URL;
+	mime: MIMEType | string;
+	location: URL | string;
 };
 
 export type NoteData = {
 	title: string | null;
-	position: [number, number];
-	color: [type: string, value: string];
+	position: { x: number; y: number };
+	color: { type: string; value: string | number[] };
 	content: (string | File)[];
 };
 
