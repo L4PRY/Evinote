@@ -2,7 +2,11 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	interface FormProps {
+		message?: string;
+	}
+	
+	let { data, form }: { data: PageProps['data'], form: FormProps } = $props();
 
 </script>
 
@@ -15,8 +19,8 @@
 		<p>User Agent: {session.description}</p>
 		<form method="post" action="?/invalidate" use:enhance>
 			<input type="hidden" name="session_id" value={session.id} />
-			<button formaction="?/invalidate">Sign out of this session</button>
+			<button formaction="?/invalidate" disabled={data.user.sessionToken === session.token} style:color={data.user.sessionToken === session.token ? 'red' : 'green'}>Sign out of this session</button>
 		</form>
 	</div>
 {/each}
-<p style="color: red">{form?.message ?? ''}</p>
+<p style="color: red">{form.message ?? ''}</p>
