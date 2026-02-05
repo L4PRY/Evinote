@@ -20,8 +20,17 @@ export type File = {
 export type NoteData = {
 	title: string | null;
 	position: { x: number; y: number };
-	color: { type: string; value: string | number[] };
+	color: { type: 'hex' | 'rgba' | 'hsv' | 'oklch'; value: string | number[] };
 	content: (string | File)[];
+};
+
+//! NOT FINAL VERSION!!!
+export type BoardData = {
+	background: {
+		type: 'Grid' | 'Image' | 'Custom' | 'Solid';
+		value: URL | string | number[];
+	};
+	version: number;
 };
 
 export const auth = pgSchema('auth');
