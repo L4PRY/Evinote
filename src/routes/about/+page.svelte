@@ -15,7 +15,7 @@
 			role: 'Frontend fejlesztő',
 			avatar: 'https://github.com/davidlados511.png',
 			githubUsername: 'davidlados511',
-			glowColor: '#ff5733'
+			glowColor: '#ff7564'
 		},
 		{
 			name: 'Patrik',
