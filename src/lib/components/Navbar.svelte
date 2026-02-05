@@ -18,7 +18,7 @@
 		} else {
 			nav?.style.setProperty('backdrop-filter', 'none');
 			nav?.style.setProperty('border', '1px solid transparent');
-			nav?.style.setProperty('width', "50vw");
+			nav?.style.setProperty('width', '50vw');
 		}
 	}
 
@@ -30,7 +30,7 @@
 	function navHide() {
 		const nav = document.querySelector('nav');
 		if (nav) {
-			nav.style.transition = 'none'; 
+			nav.style.transition = 'none';
 			nav.style.transform = 'translateY(-500%)';
 		}
 	}
@@ -47,13 +47,24 @@
 	});
 </script>
 
-<svelte:window bind:scrollY bind:outerWidth on:scroll={navbarExpand} on:resize={navbarAnimationToggle}/>
+<svelte:window
+	bind:scrollY
+	bind:outerWidth
+	on:scroll={navbarExpand}
+	on:resize={navbarAnimationToggle}
+/>
 
 <div class="main">
 	<nav>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<a class="float-left" href="/" onclick={() => goto(resolve('/'))} style="cursor: pointer;" aria-label="Home">Evinote</a>
+		<a
+			class="float-left"
+			href="/"
+			onclick={() => goto(resolve('/'))}
+			style="cursor: pointer;"
+			aria-label="Home">Evinote</a
+		>
 		<div class="nav-island">
 			<button>Explore</button>
 			<div class="nav-island-divider"></div>
@@ -136,7 +147,9 @@
 		color: var(--default-text-color);
 		/* backdrop-filter: blur(5px); */
 		cursor: pointer;
-		transition: width 0.15s ease-in-out, text-shadow 0.05s ease-in-out;
+		transition:
+			width 0.15s ease-in-out,
+			text-shadow 0.05s ease-in-out;
 		font-size: 0.875rem;
 	}
 	.nav-island button:hover {
