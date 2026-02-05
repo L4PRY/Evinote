@@ -4,38 +4,38 @@
 @import 'tailwindcss';
 
 :root {
-    color-scheme: light dark;
+	color-scheme: light dark;
 
-    --default-bg-color:   light-dark(#efefec, #090715);
-    --default-text-color: light-dark(#333b3c, #efefec);
-    --default-blur-color: light-dark(#efefec5d, #0907155d);   
-    --button-stroke-color: light-dark(#cccccc7e, #44444486);
+	--default-bg-color: light-dark(#efefec, #090715);
+	--default-text-color: light-dark(#333b3c, #efefec);
+	--default-blur-color: light-dark(#efefec5d, #0907155d);
+	--button-stroke-color: light-dark(#cccccc7e, #44444486);
 
-    --fancycolor-1: #9c20aa;
-    --fancycolor-2: #fb3570;
-    --fancygradient: linear-gradient(135deg, var(--fancycolor-1), var(--fancycolor-2));
+	--fancycolor-1: #9c20aa;
+	--fancycolor-2: #fb3570;
+	--fancygradient: linear-gradient(135deg, var(--fancycolor-1), var(--fancycolor-2));
 
-    --default-border: 1px solid var(--button-stroke-color);
-    --border-radius: 12px;
+	--default-border: 1px solid var(--button-stroke-color);
+	--border-radius: 12px;
 
-    --default-blur-hover-color: light-dark(#efefecaf, #5454702b); 
+	--default-blur-hover-color: light-dark(#efefecaf, #5454702b);
 }
 
 html {
-    scroll-behavior: smooth;
-    scrollbar-gutter: stable both-edges;
+	scroll-behavior: smooth;
+	scrollbar-gutter: stable both-edges;
 }
 
 body {
-    background-color: var(--default-bg-color);
-    color: var(--default-text-color);
-    margin: 0;
-    padding: 0;
+	background-color: var(--default-bg-color);
+	color: var(--default-text-color);
+	margin: 0;
+	padding: 0;
 
-    font-family: "DM Sans", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
+	font-family: 'DM Sans', sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 500;
+	font-style: normal;
 
-    margin: 20px;
+	margin: 20px;
 }
