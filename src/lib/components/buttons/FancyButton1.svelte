@@ -3,7 +3,7 @@
 </script>
  
 <div>
-	<button style={style} onclick={onclick}>
+	<button class="fancybutton" style={style} onclick={onclick}>
 		{@render children()}
 	</button>
 </div>
