@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData } from './$types';
+	import {  onMount } from 'svelte';
+
+	onMount(() => {
+        document.title = "Evinote • Login";
+    });
 
 	let { form }: { form: ActionData } = $props();
 </script>

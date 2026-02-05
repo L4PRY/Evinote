@@ -2,6 +2,10 @@
 	import backgroundImage from '$lib/assets/evi_bg.png';
 	import { onMount } from 'svelte';
 
+	onMount(() => {
+        document.title = "Evinote • About";
+    });
+
 	const team = [
 		{
 			name: 'Mátyás',
@@ -34,12 +38,9 @@
 		<h1>Meet Our Team</h1>
 
 		<p class="about-text">
-			Az <strong>Evinote</strong> egy jegyzetelésre szolgáló webalkalmazás, amelynek célja az
-			egyszerű, átlátható és gyors jegyzetkezelés. A projekt tanulási célból készül, modern webes
-			technológiák felhasználásával.
+			<strong>Evinote</strong> is a web application for note-taking, aimed at simple, transparent, and fast note management. The project is being developed for learning purposes, utilizing modern web technologies.
 			<br /><br />
-			Kis csapatként dolgozunk rajta, fókuszban a letisztult felhasználói élménnyel és a jól strukturált
-			frontend megoldásokkal.
+			We are working on it as a small team, focusing on a clean user experience and well-structured frontend solutions.
 		</p>
 
 		<div class="team-card">
