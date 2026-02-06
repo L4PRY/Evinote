@@ -11,6 +11,7 @@ import {
 	pgTable
 } from 'drizzle-orm/pg-core';
 import { MIMEType } from 'util';
+import { generateSecureRandomString } from '../auth';
 
 export type File = {
 	mime: MIMEType | string;
@@ -81,10 +82,14 @@ export const Permissions = pgTable(
 	(table) => [index('user_session').on(table.bid, table.uid)]
 );
 
+//TODO: BOARDS AND NOTES NEED UNIQUE IDENTIFIERS
+// I COULD USE THE AUTH.GENEREATESECURERANDOMSTRING AND GET THE FIRST 5 CHARS
+// THAT WOULD BE ENOUGH ENTROPY I THINK
+// WHY AM I TYPING IN CAPS
 export const Board = pgTable(
 	'board',
 	{
-		id: serial('id').primaryKey(),
+		id: text('id').primaryKey().notNull(), // __ALWAYS__ set the value to be defaultrandomstring.slice(0, 5), drizzle-kit push doesnt like .$default() right now for some reason
 		type: boardType('board_type').default('Private').notNull(),
 		owner: serial('owner_id')
 			.notNull()
@@ -98,7 +103,7 @@ export const Board = pgTable(
 export const Note = pgTable(
 	'note',
 	{
-		id: serial('id').primaryKey(),
+		id: text('id').primaryKey().notNull(),
 		bid: serial('board_id')
 			.notNull()
 			.references(() => Board.id, { onDelete: 'cascade' }),
