@@ -1,4 +1,5 @@
 import { verify } from '@node-rs/argon2';
+import { scryptSync } from 'node:crypto';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import * as auth from '$lib/server/auth';
@@ -6,6 +7,7 @@ import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import type { Actions } from './$types';
 import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
+import { env } from '$env/dynamic/private';
 
 export const actions: Actions = {
 	login: async (event) => {
@@ -40,12 +42,17 @@ export const actions: Actions = {
 			return fail(400, { message: 'Incorrect username or password' });
 		}
 
-		const validPassword = await verify(existingUser.passhash, password, {
-			memoryCost: 19456,
-			timeCost: 2,
-			outputLen: 32,
-			parallelism: 1
-		});
+		const validPassword =
+			env.USE_LEGACY_HASH == '1'
+				? scryptSync(password, 'dev-use-do-not-use-in-prod', 32).toString('hex') ===
+					existingUser.passhash
+				: await verify(existingUser.passhash, password, {
+						memoryCost: 19456,
+						timeCost: 2,
+						outputLen: 32,
+						parallelism: 1
+					});
+
 		if (!validPassword) {
 			return fail(400, { message: 'Incorrect username or password' });
 		}
@@ -62,6 +69,6 @@ export const actions: Actions = {
 
 		auth.setSessionTokenCookie(event, session.token, session.eat);
 
-		return redirect(302, '/home');
+		return redirect(302, '/dashboard');
 	}
 };
