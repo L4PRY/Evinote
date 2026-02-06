@@ -26,7 +26,7 @@ export type AuthContext = {
 	session: AuthenticatedSession;
 };
 
-function generateSecureRandomString(): string {
+export function generateSecureRandomString(): string {
 	// Human readable alphabet (a-z, 0-9 without l, o, 0, 1 to avoid confusion)
 	const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789';
 
