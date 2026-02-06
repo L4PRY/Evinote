@@ -2,8 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import backgroundImage from '$lib/assets/evi_bg.png';
-	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import Divider from '$lib/components/frontend/Divider.svelte';
+	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import { onMount } from 'svelte';
 	import { redirect } from '@sveltejs/kit';
 	import { afterNavigate } from '$app/navigation';
