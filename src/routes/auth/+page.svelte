@@ -88,7 +88,7 @@
 /* Cím */
 h1 {
 	font-size: 2rem;
-	color: white;
+	color: var(--default-text-color);
 	font-weight: 600;
 	margin-bottom: 1.5rem;
 }
@@ -98,8 +98,8 @@ h1 {
 	width: 100%;
 	padding: 0.75rem;
 	border-radius: 8px;
-	border: 1px solid #1a1919;
-	background-color: #2b2a2a;
+	border: 1px solid var(--default-border-color);
+	background-color: var(--default-bg-color);
 	font-size: 1rem;
 	transition: border-color 0.3s, box-shadow 0.3s;
 }
