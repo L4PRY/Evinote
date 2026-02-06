@@ -68,7 +68,7 @@
 		</div>
 
 		<div class="about-buttons">
-			<a href="https://github.com/your-repo" target="_blank" class="button-link">
+			<a href="https://github.com/L4PRY/Evinote" target="_blank" class="button-link">
 				<div>
 					<img
 						src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
