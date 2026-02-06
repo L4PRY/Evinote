@@ -3,7 +3,7 @@ Notes board webapp made with sveltekit and postgres.
 
 # setup devenv
 prequisites:
-- [podman](https://podman.io)
+- [podman](https://podman.io) or [docker](https://docker.com)
 - [node.js](https://nodejs.org/en/download/)
 
 ### 1. install dependencies
@@ -12,6 +12,9 @@ npm install
 ```
 
 ### 2. start database
+> [!IMPORTANT]
+> use `docker:db:start` instead if you are planning on using docker / docker-compose.
+
 ```bash
 npm run db:start
 ```
