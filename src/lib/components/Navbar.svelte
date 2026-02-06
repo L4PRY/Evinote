@@ -6,7 +6,7 @@
 	import { page } from '$app/state';
 	let scrollY = $state(0);
 	let outerWidth = $state(0);
-	let navVisible = true;
+	let navVisible = $state(false);
 
 	function navbarExpand() {
 		const nav = document.querySelector('nav');
@@ -33,7 +33,7 @@
 		const nav = document.querySelector('nav');
 		if (nav) {
 			nav.style.transition = 'none';
-			nav.style.transform = 'translateY(-500%)';
+			nav.style.transform = 'translateY(0)';
 			navVisible = false;
 		}
 	}
@@ -41,22 +41,14 @@
 	function navShow() {
 		const nav = document.querySelector('nav');
 		if (nav) {
-			nav.style.transition = 'transform 0.5s ease-in-out';
-			nav.style.transform = 'translateY(0)';
+			nav.style.transition = 'transform 0.8s ease-in-out';
+			nav.style.transform = 'translateY(170px)';
 			navVisible = true;
 		}
 	}
 
-	afterNavigate(({ from }) => {
-		if (from != null) return;
-        navHide();
-		setTimeout(() => {
-			navShow();
-		}, 100);
-    });
-
 	onMount(() => {
-		
+		if (!navVisible) navShow();
 	});
 </script>
 
@@ -115,7 +107,7 @@
 		top: 0;
 		margin: auto;
 		z-index: 10;
-		margin-top: 20px;
+		margin-top: -150px;
 		border-radius: var(--border-radius);
 		transition: all 0.15s ease-in-out;
 		backdrop-filter: none;
