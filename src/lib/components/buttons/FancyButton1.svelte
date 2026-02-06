@@ -2,13 +2,12 @@
 	export let width: string | undefined = undefined;
 	export let onclick: (() => void) | undefined = undefined;
 </script>
- 
+
 <div>
 	<button style="width: {width};" on:click={onclick}>
-    	<slot />
+		<slot />
 	</button>
 </div>
-
 
 <style>
 	button {

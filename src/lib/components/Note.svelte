@@ -11,7 +11,8 @@
 	import type { NoteData, File } from '$lib/server/db/schema';
 	import DOMPurify from 'dompurify';
 
-	let { data }: { data: NoteData } = $props();
+	let { data = $bindable() }: { data: NoteData } = $props();
+
 	let notePosition = $state(data.position);
 
 	$effect(() => {
@@ -40,7 +41,7 @@
 		})
 	])}
 	class="note"
-	title="note"
+	title={data.title}
 >
 	<div class="handle" unselectable="on">Drag me</div>
 	<h1>{data.title}</h1>
@@ -112,15 +113,13 @@
 	}
 
 	.entry {
-		border: 5px dotted oklch(100% 100% 30deg / 0.5);
+		border-top: 2px solid var(--default-border-color);
 	}
 
 	.note {
 		background-color: var(--default-bg-color);
 		color: var(--default-text-color);
-		/*add glow around it*/
 		box-shadow: 0 0 10px var(--default-text-color);
-		/*padding: 16px;*/
 		margin-bottom: 16px;
 		width: 15rem;
 		height: fit-content;
