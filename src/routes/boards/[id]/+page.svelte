@@ -3,9 +3,9 @@
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import { mount } from 'svelte';
 	import type { PageProps } from './$types';
-	const { boardId }: PageProps = $props();
+	const { params, data, form }: PageProps = $props();
 
-	const notes = $state([]);
+	const notes = $state(data.notes);
 
 	function addNote() {
 		// add a note to the note container with default values
@@ -17,7 +17,7 @@
 			props: {
 				data: {
 					title: 'New Note',
-					position: { x: 0, y: 0 },
+					position: { x: 500, y: 500, z: 0 },
 					color: { type: 'oklch', value: [28, 19, 287] },
 					content: ['This is a new note!']
 				}
@@ -34,7 +34,7 @@
 	<Note
 		data={{
 			title: 'uhm',
-			position: { x: 0, y: 0 },
+			position: { x: 0, y: 0, z: 0 },
 			color: { type: 'oklch', value: [28, 19, 287] },
 			content: [
 				'Hi',

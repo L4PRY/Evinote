@@ -11,9 +11,10 @@
 	import type { NoteData, File } from '$lib/server/db/schema';
 	import DOMPurify from 'dompurify';
 
-	let { data = $bindable() }: { data: NoteData } = $props();
+	let { id, data = $bindable() }: { id: number; data: NoteData } = $props();
 
 	let notePosition = $state(data.position);
+	let color = $state('var(--default-bg-color)');
 
 	$effect(() => {
 		// parse all the strings in data.content to be markdown, then sanitize and swap with regular value
@@ -26,6 +27,27 @@
 					})
 				: entry
 		);
+		// set color from data.color, if it's oklch then convert it to css color and set it as the background color of the note
+		switch (data.color.type) {
+			case 'oklch': {
+				const [l, c, h, a] = data.color.value as [number, number, number, number?];
+				color = `oklch(${l}% ${c} ${h}deg ${a ? '/ ' + a : ''})`;
+				break;
+			}
+			case 'rgb': {
+				const [r, g, b, a] = data.color.value as [number, number, number, number?];
+				color = `rgb(${r}, ${g}, ${b} ${a ? '/ ' + a : ''})`;
+				break;
+			}
+			case 'hsl': {
+				const [h, s, l, a] = data.color.value as [number, number, number, number?];
+				color = `hsl(${h} ${s}% ${l}%) ${a ? '/ ' + a : ''}`;
+				break;
+			}
+			case 'hex':
+				color = data.color.value as string;
+				break;
+		}
 	});
 </script>
 
@@ -36,16 +58,20 @@
 		controls({ allow: ControlFrom.selector('.handle') }),
 		events({
 			onDrag: (data) => {
-				notePosition = data.offset;
+				// get z-index style of the note and add 1 to it, then set it as the new z-index and also update the note position
+				const z = parseInt(getComputedStyle(document.querySelector('.note')!).zIndex || '0') + 1;
+				notePosition = { ...data.offset, z };
 			}
 		})
 	])}
 	class="note"
 	title={data.title}
+	id={`note-${id}`}
+	style:background-color={color}
 >
 	<div class="handle" unselectable="on">Drag me</div>
 	<h1>{data.title}</h1>
-	<code>[{Math.floor(notePosition.x)}, {Math.floor(notePosition.y)}]</code>
+	<code>[{Math.floor(notePosition.x)}, {Math.floor(notePosition.y)}, {notePosition.z}]</code>
 	<div class="note-content">
 		{#each data.content as entry (entry)}
 			<div class="entry">
