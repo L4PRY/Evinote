@@ -1,5 +1,6 @@
 # Evinote
 Notes board webapp made with sveltekit and postgres.
+[Projects board](https://github.com/users/L4PRY/projects/1)
 
 # setup devenv
 prequisites:
