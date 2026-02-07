@@ -1,11 +1,68 @@
-export function load({ params }) {
-	const { id } = params;
+import { routeLogger } from '$lib/server/logger.js';
+import { db } from '$lib/server/db/index';
+import * as table from '$lib/server/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { checkLogin } from '$lib/server/auth.js';
+import { error } from '@sveltejs/kit';
 
-	// okay so
-	// check for perms if board.type is private
-	// if board.type is public, just return the board
-	// if board.type is unlisted, check for perms if user is logged in, otherwise just return the board
+export async function load({ params }) {
+	const { id } = params;
+	const user = checkLogin();
+
+	routeLogger.info(`Loading board with id ${id}`);
+
+	const board = await db
+		.select()
+		.from(table.Board)
+		.where(eq(table.Board.id, parseInt(id)))
+		.then((res) => res[0]);
+
+	if (!board) {
+		routeLogger.warn(`Board with id ${id} not found`);
+		error(404, 'board not found');
+	}
+
+	// get perms for current user and board if any
+
+	const perms = user
+		? await db
+				.select()
+				.from(table.Permissions)
+				.where(and(eq(table.Permissions.bid, parseInt(id)), eq(table.Permissions.uid, user.id)))
+		: null;
+
+	// juggle perms for stuff
+	// so like if the board is private, we either check for board.owner === user.id or perms.bid === board.id && read || write perms
+
+	if (user && user.role !== 'Admin')
+		switch (board.type) {
+			case 'Public':
+				// anyone can read, only owner and users with write perms can write
+				break;
+			case 'Unlisted':
+				// anybody can read, only owner and users with perms can write, is not searchable, only accessible through the link
+				if (!perms) {
+					routeLogger.warn(`User ${user?.id} does not have permissions to view board ${id}`);
+					error(403, 'forbidden');
+				}
+				break;
+			case 'Private':
+				// only owner and users with perms can read or write
+				if (board.owner !== user?.id || !perms) {
+					routeLogger.warn(`User ${user?.id} does not have permissions to view board ${id}`);
+					error(403, 'forbidden');
+				}
+				break;
+		}
+
+	const notes = await db
+		.select()
+		.from(table.Note)
+		.where(eq(table.Note.bid, parseInt(id)));
+
 	return {
-		id
+		id,
+		perms,
+		notes
 	};
 }
