@@ -1,5 +1,5 @@
-import { type RequestEvent, redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { type RequestEvent, error, redirect } from '@sveltejs/kit';
+import { eq, and } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { getRequestEvent } from '$app/server';
@@ -140,4 +140,41 @@ export function deleteSessionTokenCookie(event: RequestEvent) {
 	event.cookies.delete(sessionCookieName, {
 		path: '/'
 	});
+}
+
+export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
+	const { locals } = getRequestEvent();
+
+	const user = locals.user as AuthenticatedUser | null;
+
+	const perms = user
+		? db
+				.select()
+				.from(table.Permissions)
+				.where(and(eq(table.Permissions.bid, board.id), eq(table.Permissions.uid, user.id)))
+		: null;
+
+	if (user && user.role !== 'Admin') {
+		switch (board.type) {
+			case 'Public':
+				// anyone can read, only owner and users with write perms can write
+				break;
+			case 'Unlisted':
+				// anybody can read, only owner and users with perms can write, is not searchable, only accessible through the link
+				if (!perms) {
+					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
+					error(403, 'forbidden');
+				}
+				break;
+			case 'Private':
+				// only owner and users with perms can read or write
+				if (board.owner !== user?.id || !perms) {
+					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
+					error(403, 'forbidden');
+				}
+				break;
+		}
+	}
+
+	return perms;
 }
