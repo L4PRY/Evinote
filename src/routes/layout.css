@@ -1,1 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Display:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cal+Sans&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 @import 'tailwindcss';
+
+:root {
+    color-scheme: light dark;
+
+    --default-bg-color:   light-dark(#efefec, #090715);
+    --default-text-color: light-dark(#333b3c, #efefec);
+    --default-blur-color: light-dark(#efefec5d, #0907155d);   
+    --button-stroke-color: light-dark(#cccccc7e, #44444486);
+
+    --fancycolor-1: #9c20aa;
+    --fancycolor-2: #fb3570;
+    --fancygradient: linear-gradient(135deg, var(--fancycolor-1), var(--fancycolor-2));
+
+    --default-border: 1px solid var(--button-stroke-color);
+    --border-radius: 12px;
+
+    --default-blur-hover-color: light-dark(#efefecaf, #5454702b); 
+}
+
+html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable both-edges;
+}
+
+body {
+    background-color: var(--default-bg-color);
+    color: var(--default-text-color);
+    margin: 0;
+    padding: 0;
+
+    font-family: "DM Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+
+    margin: 20px;
+}
+
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
