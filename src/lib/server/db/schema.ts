@@ -1,6 +1,6 @@
 import {
 	index,
-	json,
+	jsonb,
 	pgSchema,
 	serial,
 	text,
@@ -69,19 +69,20 @@ export const Board = pgTable(
 			.notNull()
 			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		name: varchar('name').notNull(),
-		updated: timestamp('updated_at')
+		updated: timestamp('updated_at'),
+		data: jsonb('data').$type<NoteData[]>()
 	},
 	(table) => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
 );
 
-export const Note = pgTable(
-	'note',
-	{
-		id: serial('id').primaryKey().notNull(),
-		bid: serial('board_id')
-			.notNull()
-			.references(() => Board.id, { onDelete: 'cascade' }),
-		data: json('data').$type<NoteData>()
-	},
-	(table) => [index('parent_board').on(table.bid)]
-);
+// export const Note = pgTable(
+// 	'note',
+// 	{
+// 		id: serial('id').primaryKey().notNull(),
+// 		bid: serial('board_id')
+// 			.notNull()
+// 			.references(() => Board.id, { onDelete: 'cascade' }),
+// 		data: json('data').$type<NoteData>()
+// 	},
+// 	(table) => [index('parent_board').on(table.bid)]
+// );

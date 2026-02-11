@@ -55,14 +55,9 @@ export async function load({ params }) {
 				break;
 		}
 
-	const notes = await db
-		.select()
-		.from(table.Note)
-		.where(eq(table.Note.bid, parseInt(id)));
-
 	return {
 		id,
 		perms,
-		notes
+		notes: board.data
 	};
 }
