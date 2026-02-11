@@ -34,7 +34,8 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte-check": "^4.3.4",
-		"typescript-eslint": "^8.47.0"
+		"typescript-eslint": "^8.47.0",
+		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
 		"@mecra/logger": "npm:@jsr/mecra__logger@^2.1.0",
