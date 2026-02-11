@@ -10,31 +10,7 @@ import {
 	pgEnum,
 	pgTable
 } from 'drizzle-orm/pg-core';
-import { MIMEType } from 'util';
-
-export type File = {
-	mime: MIMEType | string;
-	location: URL | string;
-};
-
-export type NoteData = {
-	title: string | null;
-	position: { x: number; y: number; z: number };
-	color: {
-		type: 'hex' | 'rgb' | 'hsl' | 'oklch';
-		value: string | number[];
-	};
-	content: (string | File)[];
-};
-
-//! NOT FINAL VERSION!!!
-export type BoardData = {
-	background: {
-		type: 'Grid' | 'Image' | 'Custom' | 'Solid';
-		value: URL | string | number[];
-	};
-	version: number;
-};
+import type { NoteData } from '$lib/types/NoteData';
 
 export const auth = pgSchema('auth');
 export const app = pgSchema('app');
