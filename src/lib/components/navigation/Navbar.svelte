@@ -2,9 +2,11 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import FancyButton1 from './buttons/FancyButton1.svelte';
+	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	let scrollY = $state(0);
 	let outerWidth = $state(0);
+	let navVisible = $state(false);
 
 	function navbarExpand() {
 		const nav = document.querySelector('nav');
@@ -18,7 +20,7 @@
 		} else {
 			nav?.style.setProperty('backdrop-filter', 'none');
 			nav?.style.setProperty('border', '1px solid transparent');
-			nav?.style.setProperty('width', "50vw");
+			nav?.style.setProperty('width', '50vw');
 		}
 	}
 
@@ -30,30 +32,44 @@
 	function navHide() {
 		const nav = document.querySelector('nav');
 		if (nav) {
-			nav.style.transition = 'none'; 
-			nav.style.transform = 'translateY(-500%)';
+			nav.style.transition = 'none';
+			nav.style.transform = 'translateY(0)';
+			navVisible = false;
+		}
+	}
+
+	function navShow() {
+		const nav = document.querySelector('nav');
+		if (nav) {
+			nav.style.transition = 'transform 0.8s ease-in-out';
+			nav.style.transform = 'translateY(170px)';
+			navVisible = true;
 		}
 	}
 
 	onMount(() => {
-		navHide();
-		setTimeout(() => {
-			const nav = document.querySelector('nav');
-			if (nav) {
-				nav.style.transition = 'transform 0.5s ease-in-out';
-				nav.style.transform = 'translateY(0)';
-			}
-		}, 100);
+		if (!navVisible) navShow();
 	});
 </script>
 
-<svelte:window bind:scrollY bind:outerWidth on:scroll={navbarExpand} on:resize={navbarAnimationToggle}/>
+<svelte:window
+	bind:scrollY
+	bind:outerWidth
+	on:scroll={navbarExpand}
+	on:resize={navbarAnimationToggle}
+/>
 
 <div class="main">
 	<nav>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<a class="float-left" href="/" onclick={() => goto(resolve('/'))} style="cursor: pointer;" aria-label="Home">Evinote</a>
+		<a
+			class="float-left"
+			href="/"
+			onclick={() => goto(resolve('/'))}
+			style="cursor: pointer;"
+			aria-label="Home">Evinote</a
+		>
 		<div class="nav-island">
 			<button>Explore</button>
 			<div class="nav-island-divider"></div>
@@ -62,7 +78,7 @@
 			<button onclick={() => goto(resolve('/about'))}>About</button>
 		</div>
 		<div class="float-right">
-			<button onclick={() => goto(resolve('/auth'))}>Login</button>
+			<button onclick={() => { goto(resolve('/auth')); }}>Login</button>
 		</div>
 	</nav>
 </div>
@@ -91,7 +107,7 @@
 		top: 0;
 		margin: auto;
 		z-index: 10;
-		margin-top: 20px;
+		margin-top: -150px;
 		border-radius: var(--border-radius);
 		transition: all 0.15s ease-in-out;
 		backdrop-filter: none;
@@ -136,7 +152,9 @@
 		color: var(--default-text-color);
 		/* backdrop-filter: blur(5px); */
 		cursor: pointer;
-		transition: width 0.15s ease-in-out, text-shadow 0.05s ease-in-out;
+		transition:
+			width 0.15s ease-in-out,
+			text-shadow 0.05s ease-in-out;
 		font-size: 0.875rem;
 	}
 	.nav-island button:hover {

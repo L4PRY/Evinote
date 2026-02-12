@@ -1,11 +1,10 @@
 <script lang="ts">
-	export let width: string | undefined = undefined;
-	export let onclick: (() => void) | undefined = undefined;
+	let { onclick, style, children } : {onclick: () => any, style: string, children: () => any} = $props();
 </script>
 
 <div>
-	<button style="width: {width};" on:click={onclick}>
-		<slot />
+	<button class="fancybutton" style={style} onclick={onclick}>
+		{@render children()}
 	</button>
 </div>
 
@@ -37,5 +36,10 @@
 		filter: brightness(1.2);
 		transform-style: flat;
 		transform: scale(0.95);
+	}
+
+	div {
+		display: inline-block;
+		width: fit-content;
 	}
 </style>
