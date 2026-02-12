@@ -6,6 +6,7 @@
 
 	export let data: PageData;
 	const user = data!.user;
+	const boards = data!.boards;
 </script>
 
 <DashboardSidebar />

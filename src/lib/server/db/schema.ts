@@ -1,6 +1,6 @@
 import {
 	index,
-	json,
+	jsonb,
 	pgSchema,
 	serial,
 	text,
@@ -10,19 +10,7 @@ import {
 	pgEnum,
 	pgTable
 } from 'drizzle-orm/pg-core';
-import { MIMEType } from 'util';
-
-export type File = {
-	mime: MIMEType;
-	location: URL;
-};
-
-export type NoteData = {
-	title: string | null;
-	position: [number, number];
-	color: [type: string, value: string];
-	content: (string | File)[];
-};
+import type { NoteData } from '$lib/types/NoteData';
 
 export const auth = pgSchema('auth');
 export const app = pgSchema('app');
@@ -75,47 +63,26 @@ export const Permissions = pgTable(
 export const Board = pgTable(
 	'board',
 	{
-		id: serial('id').primaryKey(),
+		id: serial('id').primaryKey().notNull(),
 		type: boardType('board_type').default('Private').notNull(),
 		owner: serial('owner_id')
 			.notNull()
 			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		name: varchar('name').notNull(),
-		updated: timestamp('updated_at')
+		updated: timestamp('updated_at'),
+		data: jsonb('data').$type<NoteData[]>()
 	},
 	(table) => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
 );
 
-export const Note = pgTable(
-	'note',
-	{
-		id: serial('id').primaryKey(),
-		bid: serial('board_id')
-			.notNull()
-			.references(() => Board.id, { onDelete: 'cascade' }),
-		data: json('data').$type<NoteData>()
-	},
-	(table) => [index('parent_board').on(table.bid)]
-);
-
-// someone kill me
-// export type Permission = typeof permission;
-// export type BoardType = typeof boardType;
-// export type Role = typeof role;
-
-// export type SelectPermission = typeof Permissions.$inferSelect;
-// export type InsertPermission = typeof Permissions.$inferInsert;
-
-// export type SelectBoard = typeof Board.$inferSelect;
-// export type InsertBoard = typeof Board.$inferInsert;
-
-// export type SelectNote = typeof Note.$inferSelect;
-// export type InsertNote = typeof Note.$inferInsert;
-
-// export type SelectUser = typeof User.$inferSelect;
-// export type InsertUser = typeof User.$inferInsert;
-
-// export type SelectSession = typeof Session.$inferSelect;
-// export type InsertSession = typeof Session.$inferInsert;
-
-// export const SCHEMAS = { auth, app };
+// export const Note = pgTable(
+// 	'note',
+// 	{
+// 		id: serial('id').primaryKey().notNull(),
+// 		bid: serial('board_id')
+// 			.notNull()
+// 			.references(() => Board.id, { onDelete: 'cascade' }),
+// 		data: json('data').$type<NoteData>()
+// 	},
+// 	(table) => [index('parent_board').on(table.bid)]
+// );

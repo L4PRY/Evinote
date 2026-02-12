@@ -5,6 +5,5 @@ import { env } from '$env/dynamic/private';
 
 if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
 
-const client = import.meta.env.DB !== "null" ? postgres(env.DATABASE_URL) : null;
-
-export const db = import.meta.env.DB === "null" ? drizzle.mock({ schema }) : drizzle(client!, { schema });
+export const db =
+	env.DB === 'null' ? drizzle.mock({ schema }) : drizzle(postgres(env.DATABASE_URL), { schema });
