@@ -2,7 +2,7 @@ import { routeLogger } from '$lib/server/logger.js';
 import { db } from '$lib/server/db/index';
 import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
-import { checkLogin, requireLogin } from '$lib/server/auth.js';
+import { requireLogin } from '$lib/server/auth';
 import { error } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import type { NoteData } from '$lib/types/NoteData';
