@@ -5,12 +5,14 @@
 	import type { PageProps } from './$types';
 	import type { NoteData } from '$lib/types/NoteData';
 	import { onMount } from 'svelte';
+	import { initializeZIndex } from '$lib/stores/noteZIndex';
 
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
 	let showDialog = $state(false);
 
-	let notes: NoteData[] = $state([]);
+	// svelte-ignore state_referenced_locally
+	let notes: NoteData[] = $state(data.notes || []);
 
 	function addNote() {
 		const titleInput = document.getElementById('note-title-input') as HTMLInputElement;
@@ -69,6 +71,10 @@
 		// make this fucking thing be hidden for once god damn it
 		//
 	}
+
+	$effect(() => {
+		initializeZIndex(notes);
+	});
 </script>
 
 <div class="note-creator">
@@ -100,7 +106,7 @@
 <div class="note-container">
 	{#each notes as _, i}
 		{console.log('added note')}
-		<Note data={notes[i]} />
+		<Note bind:data={notes[i]} />
 	{/each}
 	<!-- <Note
 		data={{

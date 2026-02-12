@@ -11,9 +11,13 @@
 	} from '@neodrag/svelte';
 	import type { NoteData } from '$lib/types/NoteData';
 	import type { File } from '$lib/types/File';
+	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
 	// import DOMPurify from 'dompurify';
 
-	let { data }: { data: NoteData } = $props();
+	let { data = $bindable() }: { data: NoteData } = $props();
+
+	// Capture initial position as static value for position plugin (non-reactive)
+	const initialPosition = { x: data.position.x, y: data.position.y };
 
 	// svelte-ignore state_referenced_locally
 	let notePosition = $state(data.position);
@@ -64,12 +68,22 @@
 		grid([5, 5]),
 		bounds(BoundsFrom.parent()),
 		controls({ allow: ControlFrom.selector('.handle') }),
-		// position({ default: { ...notePosition } }),
+		position({ default: initialPosition }),
 		events({
-			onDrag: data => {
-				// get z-index style of the note and add 1 to it, then set it as the new z-index and also update the note position
-				const z = parseInt(getComputedStyle(document.querySelector('.note')!).zIndex || '0') + 1;
-				notePosition = { ...data.offset, z };
+			onDragStart: () => {
+				// Bring this note to front using the shared z-index store
+				const z = bringToFront(notePosition.z);
+				notePosition = { ...notePosition, z };
+				// Sync back to parent
+				data = { ...data, position: notePosition };
+			},
+			onDrag: dragData => {
+				// Update position while keeping the current z-index
+				notePosition = { ...dragData.offset, z: notePosition.z };
+			},
+			onDragEnd: () => {
+				// Sync final position back to parent data
+				data = { ...data, position: notePosition };
 			}
 		})
 	])}

@@ -69,16 +69,27 @@ export const actions: Actions = {
 		const user = requireLogin();
 		const formData = await request.formData();
 		const notes = JSON.parse(formData.get('notes') as string) as NoteData[];
-
 		routeLogger.info(`User requested to update board no. ${params.id}`);
+		routeLogger.info(`notes is ${JSON.stringify(notes)}`);
 
 		const perms = await db
 			.select()
 			.from(table.Permissions)
 			.where(
 				and(eq(table.Permissions.bid, parseInt(params.id)), eq(table.Permissions.uid, user.id))
-			);
+			)
+			.then(res => res[0]);
 
-		if (perms && perms.length !== 0) await db.update(table.Board).set({ data: notes });
+		const board = await db
+			.select()
+			.from(table.Board)
+			.where(eq(table.Board.id, parseInt(params.id)))
+			.then(res => res[0]);
+
+		if (perms || board.owner === user.id)
+			await db
+				.update(table.Board)
+				.set({ data: notes })
+				.where(eq(table.Board.id, parseInt(params.id)));
 	}
 };
