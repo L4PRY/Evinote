@@ -53,6 +53,12 @@ export function requireLogin(): AuthenticatedUser {
 	return locals.user!;
 }
 
+export function checkLogin(): AuthenticatedUser | null {
+	const { locals } = getRequestEvent();
+
+	return locals.user || null;
+}
+
 let layer = 0;
 export async function createSession(userId: number, description: string) {
 	try {

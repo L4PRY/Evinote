@@ -32,12 +32,14 @@
 		"eslint-plugin-svelte": "^3.13.0",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
-		"prettier-plugin-tailwindcss": "^0.7.1",
+		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte-check": "^4.3.4",
-		"typescript-eslint": "^8.47.0"
+		"typescript-eslint": "^8.47.0",
+		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
 		"@mecra/logger": "npm:@jsr/mecra__logger@^2.1.0",
+		"@neodrag/svelte": "3.0.0-next.8",
 		"@node-rs/argon2": "^2.0.2",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
@@ -45,9 +47,11 @@
 		"@sveltejs/kit": "^2.48.5",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/vite": "^4.1.17",
+		"dompurify": "^3.3.1",
 		"drizzle-orm": "^0.44.7",
 		"fast-average-color": "^9.5.0",
 		"globals": "^16.5.0",
+		"marked": "^17.0.1",
 		"postgres": "^3.4.7",
 		"svelte": "^5.43.8",
 		"tailwindcss": "^4.1.17",

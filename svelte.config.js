@@ -15,6 +15,11 @@ const config = {
 		csrf: {
 			checkOrigin: false
 		}
+	},
+	compilerOptions: {
+		experimental: {
+			async: true
+		}
 	}
 };
 

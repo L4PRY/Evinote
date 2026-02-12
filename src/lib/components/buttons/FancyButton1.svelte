@@ -1,13 +1,12 @@
 <script lang="ts">
 	let { onclick, style, children } : {onclick: () => any, style: string, children: () => any} = $props();
 </script>
- 
+
 <div>
 	<button class="fancybutton" style={style} onclick={onclick}>
 		{@render children()}
 	</button>
 </div>
-
 
 <style>
 	button {
