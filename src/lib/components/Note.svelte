@@ -6,48 +6,56 @@
 		ControlFrom,
 		bounds,
 		BoundsFrom,
+		position,
 		events
 	} from '@neodrag/svelte';
-	import type { NoteData, File } from '$lib/server/db/schema';
-	import DOMPurify from 'dompurify';
+	import type { NoteData } from '$lib/types/NoteData';
+	import type { File } from '$lib/types/File';
+	// import DOMPurify from 'dompurify';
 
-	let { id, data = $bindable() }: { id: number; data: NoteData } = $props();
+	let { data }: { data: NoteData } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let notePosition = $state(data.position);
 	let color = $state('var(--default-bg-color)');
 
+	// what the fuck vite, messing with my imports and shit
+	let sanitizedContent = $derived(
+		data.content.map(
+			entry => entry
+			// typeof entry === 'string'
+			// ? DOMPurify.sanitize(entry, {
+			// ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li']
+			// })
+			// : entry
+		)
+	);
+
 	$effect(() => {
-		// parse all the strings in data.content to be markdown, then sanitize and swap with regular value
-		// ok markdown didn't necessarily work
-		// maybe later for now its just html
-		data.content = data.content.map((entry) =>
-			typeof entry === 'string'
-				? DOMPurify.sanitize(entry, {
-						ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li']
-					})
-				: entry
-		);
-		// set color from data.color, if it's oklch then convert it to css color and set it as the background color of the note
-		switch (data.color.type) {
-			case 'oklch': {
-				const [l, c, h, a] = data.color.value as [number, number, number, number?];
-				color = `oklch(${l}% ${c} ${h}deg ${a ? '/ ' + a : ''})`;
-				break;
+		// set colors
+		if (data.color)
+			switch (data.color.type) {
+				case 'oklch': {
+					const [l, c, h, a] = data.color.value;
+					color = `oklch(${l}% ${c} ${h}deg ${a ? '/ ' + a : ''})`;
+					break;
+				}
+				case 'rgb': {
+					const [r, g, b, a] = data.color.value;
+					color = `rgb(${r}, ${g}, ${b} ${a ? '/ ' + a : ''})`;
+					break;
+				}
+				case 'hsl': {
+					const [h, s, l, a] = data.color.value;
+					color = `hsl(${h} ${s}% ${l}%) ${a ? '/ ' + a : ''}`;
+					break;
+				}
+				case 'hex':
+					color = data.color.value;
+					break;
+				default:
+					break;
 			}
-			case 'rgb': {
-				const [r, g, b, a] = data.color.value as [number, number, number, number?];
-				color = `rgb(${r}, ${g}, ${b} ${a ? '/ ' + a : ''})`;
-				break;
-			}
-			case 'hsl': {
-				const [h, s, l, a] = data.color.value as [number, number, number, number?];
-				color = `hsl(${h} ${s}% ${l}%) ${a ? '/ ' + a : ''}`;
-				break;
-			}
-			case 'hex':
-				color = data.color.value as string;
-				break;
-		}
 	});
 </script>
 
@@ -56,8 +64,9 @@
 		grid([5, 5]),
 		bounds(BoundsFrom.parent()),
 		controls({ allow: ControlFrom.selector('.handle') }),
+		// position({ default: { ...notePosition } }),
 		events({
-			onDrag: (data) => {
+			onDrag: data => {
 				// get z-index style of the note and add 1 to it, then set it as the new z-index and also update the note position
 				const z = parseInt(getComputedStyle(document.querySelector('.note')!).zIndex || '0') + 1;
 				notePosition = { ...data.offset, z };
@@ -66,14 +75,14 @@
 	])}
 	class="note"
 	title={data.title}
-	id={`note-${id}`}
 	style:background-color={color}
+	style:z-index={notePosition.z}
 >
 	<div class="handle" unselectable="on">Drag me</div>
 	<h1>{data.title}</h1>
 	<code>[{Math.floor(notePosition.x)}, {Math.floor(notePosition.y)}, {notePosition.z}]</code>
 	<div class="note-content">
-		{#each data.content as entry (entry)}
+		{#each sanitizedContent as entry, i}
 			<div class="entry">
 				{#if typeof entry === 'string'}
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -139,7 +148,7 @@
 	}
 
 	.entry {
-		border-top: 2px solid var(--default-border-color);
+		border-top: var(--default-border);
 	}
 
 	.note {

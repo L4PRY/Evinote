@@ -2,8 +2,10 @@ import { routeLogger } from '$lib/server/logger.js';
 import { db } from '$lib/server/db/index';
 import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
-import { checkLogin } from '$lib/server/auth.js';
+import { checkLogin, requireLogin } from '$lib/server/auth.js';
 import { error } from '@sveltejs/kit';
+import type { Actions } from './$types';
+import type { NoteData } from '$lib/types/NoteData';
 
 export async function load({ params }) {
 	const { id } = params;
@@ -15,7 +17,7 @@ export async function load({ params }) {
 		.select()
 		.from(table.Board)
 		.where(eq(table.Board.id, parseInt(id)))
-		.then((res) => res[0]);
+		.then(res => res[0]);
 
 	if (!board) {
 		routeLogger.warn(`Board with id ${id} not found`);
@@ -61,3 +63,22 @@ export async function load({ params }) {
 		notes: board.data
 	};
 }
+
+export const actions: Actions = {
+	default: async ({ request, params }) => {
+		const user = requireLogin();
+		const formData = await request.formData();
+		const notes = JSON.parse(formData.get('notes') as string) as NoteData[];
+
+		routeLogger.info(`User requested to update board no. ${params.id}`);
+
+		const perms = await db
+			.select()
+			.from(table.Permissions)
+			.where(
+				and(eq(table.Permissions.bid, parseInt(params.id)), eq(table.Permissions.uid, user.id))
+			);
+
+		if (perms && perms.length !== 0) await db.update(table.Board).set({ data: notes });
+	}
+};
