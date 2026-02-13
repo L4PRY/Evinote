@@ -6,6 +6,7 @@ import { requireLogin } from '$lib/server/auth';
 import { error } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import type { NoteData } from '$lib/types/NoteData';
+import { checkLogin } from '$lib/server/auth';
 
 export async function load({ params }) {
 	const { id } = params;

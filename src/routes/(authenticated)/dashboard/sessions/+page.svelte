@@ -5,9 +5,8 @@
 	interface FormProps {
 		message?: string;
 	}
-	
-	let { data, form }: { data: PageProps['data'], form: FormProps } = $props();
 
+	let { data, form }: { data: PageProps['data']; form: FormProps } = $props();
 </script>
 
 <h1>hi</h1>
@@ -19,7 +18,12 @@
 		<p>User Agent: {session.description}</p>
 		<form method="post" action="?/invalidate" use:enhance>
 			<input type="hidden" name="session_id" value={session.id} />
-			<button formaction="?/invalidate" disabled={data.user.sessionToken === session.token} style:color={data.user.sessionToken === session.token ? 'red' : 'green'}>Sign out of this session</button>
+			<button
+				formaction="?/invalidate"
+				disabled={data.user.sessionToken === session.token}
+				style:color={data.user.sessionToken === session.token ? 'red' : 'green'}
+				>Sign out of this session</button
+			>
 		</form>
 	</div>
 {/each}

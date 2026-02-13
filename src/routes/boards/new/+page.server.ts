@@ -7,7 +7,7 @@ import * as table from '$lib/server/db/schema';
 export const load = async () => requireLogin();
 
 export const actions: Actions = {
-	create: async (event) => {
+	create: async event => {
 		const formData = await event.request.formData();
 		const name = formData.get('name');
 		const access = formData.get('access');

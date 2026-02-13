@@ -20,7 +20,7 @@ export const load = async () => {
 };
 
 export const actions: Actions = {
-	logout: async (event) => {
+	logout: async event => {
 		if (!event.locals.session) {
 			return fail(401);
 		}

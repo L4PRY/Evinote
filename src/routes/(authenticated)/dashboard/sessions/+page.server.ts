@@ -5,7 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { eq } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async (event) => {
+export const load: PageServerLoad = async event => {
 	const result = await db
 		.select()
 		.from(table.Session)
@@ -16,7 +16,7 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-	invalidate: async (event) => {
+	invalidate: async event => {
 		const formData = await event.request.formData();
 		const sessionId = formData.get('session_id');
 
@@ -29,7 +29,7 @@ export const actions: Actions = {
 			.from(table.Session)
 			.where(eq(table.Session.id, sessionId))
 			.limit(1)
-			.then((res) => res[0]);
+			.then(res => res[0]);
 
 		if (!session || session.userId !== event.locals.user!.id) {
 			return fail(400, 'Session not found or unauthorized');

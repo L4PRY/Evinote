@@ -63,7 +63,7 @@ let layer = 0;
 export async function createSession(userId: number, description: string) {
 	try {
 		layer++;
-		const result = await db.transaction(async (tx) =>
+		const result = await db.transaction(async tx =>
 			tx
 				.insert(table.Session)
 				.values({

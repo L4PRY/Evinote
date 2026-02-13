@@ -31,7 +31,7 @@ export const Session = pgTable(
 		eat: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
 		description: text('description')
 	},
-	(table) => [
+	table => [
 		index('session_user').on(table.id, table.userId),
 		index('session_token').on(table.id, table.token)
 	]
@@ -47,7 +47,7 @@ export const User = pgTable(
 		role: role('role').default('User'),
 		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
-	(table) => [index('index_username').on(table.username)]
+	table => [index('index_username').on(table.username)]
 );
 
 export const Permissions = pgTable(
@@ -57,7 +57,7 @@ export const Permissions = pgTable(
 		uid: serial('user_id').references(() => User.id),
 		perm: permission('permission')
 	},
-	(table) => [index('user_session').on(table.bid, table.uid)]
+	table => [index('user_session').on(table.bid, table.uid)]
 );
 
 export const Board = pgTable(
@@ -72,7 +72,7 @@ export const Board = pgTable(
 		updated: timestamp('updated_at'),
 		data: jsonb('data').$type<NoteData[]>()
 	},
-	(table) => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
+	table => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
 );
 
 // export const Note = pgTable(
