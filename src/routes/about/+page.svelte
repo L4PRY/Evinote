@@ -5,6 +5,14 @@
 	onMount(() => {
 		document.title = 'Evinote • About';
 	});
+    
+	export const load = () => {
+	return {
+		mode: 'scroll'
+	};
+};
+
+
 
 	const team = [
 		{
@@ -238,3 +246,4 @@
 		filter: opacity(0.8);
 	}
 </style>
+

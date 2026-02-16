@@ -1,12 +1,28 @@
 <script lang="ts">
 	import './layout.css';
 	import Navbar from '$lib/components/navigation/Navbar.svelte';
+	import Footer from '$lib/components/footer/Footer.svelte';
 
-	let { children } = $props();
+	export let data: { mode?: 'hidden' | 'fixed' | 'scroll' };
 </script>
 
-<svelte:head></svelte:head>
+<div class="layout">
+	<Navbar />
+	<main>
+		<slot />
+	</main>
+	<Footer mode={data.mode ?? 'fixed'} />
+</div>
 
-<Navbar />
+<style>
+	.layout {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+	}
 
-{@render children()}
+	main {
+		flex: 1;
+		padding-bottom: 90px;
+	}
+</style>
