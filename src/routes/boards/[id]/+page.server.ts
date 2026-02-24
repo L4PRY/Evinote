@@ -9,7 +9,7 @@ import type { NoteData } from '$lib/types/NoteData';
 import { checkLogin } from '$lib/server/auth';
 
 export async function load({ params }) {
-	const { id } = params;
+  const { id } = params;
 	const user = checkLogin();
 
 	routeLogger.info(`Loading board with id ${id}`);
@@ -59,7 +59,8 @@ export async function load({ params }) {
 		}
 
 	return {
-		id,
+    id,
+    board, //returning board data to page to use for displaying name etc
 		perms,
 		notes: board.data
 	};

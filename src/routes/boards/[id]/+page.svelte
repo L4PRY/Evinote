@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import type { PageProps } from './$types';
+
 	import type { NoteData } from '$lib/types/NoteData';
 	import { onMount } from 'svelte';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
@@ -57,6 +58,8 @@
 		showDialog = false;
 	}
 	onMount(() => {
+	    document.title = `Evinote • ${data.board.name}`;
+
 		dialog = document.getElementById('add-dialog') as HTMLDialogElement;
 		console.log(dialog);
 	});

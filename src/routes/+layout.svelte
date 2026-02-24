@@ -3,26 +3,22 @@
 	import Navbar from '$lib/components/navigation/Navbar.svelte';
 	import Footer from '$lib/components/footer/Footer.svelte';
 
-	export let data: { mode?: 'hidden' | 'fixed' | 'scroll' };
+	import { page } from '$app/state';
+	let { children } = $props();
+
+	const disallowedPaths = ['/dashboard', '/boards'];
+
+	// Optional: Derived state for better readability
+	const isDisallowed = $derived(
+		disallowedPaths.some(path => page.url.pathname.startsWith(path))
+	);
 </script>
 
-<div class="layout">
+<svelte:head></svelte:head>
+
+{#if !isDisallowed}
 	<Navbar />
-	<main>
-		<slot />
-	</main>
-	<Footer mode={data.mode ?? 'fixed'} />
-</div>
+	<Footer />
+{/if}
 
-<style>
-	.layout {
-		min-height: 100vh;
-		display: flex;
-		flex-direction: column;
-	}
-
-	main {
-		flex: 1;
-		padding-bottom: 90px;
-	}
-</style>
+{@render children()}

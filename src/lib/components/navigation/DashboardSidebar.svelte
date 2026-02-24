@@ -3,16 +3,61 @@
 </script>
 
 <aside>
-	<h2>Dashboard Sidebar</h2>
+	<h1>Evinote</h1>
 	<nav>
 		<ul>
-			<li><DashboardButton>Overview</DashboardButton></li>
+			<li><DashboardButton href="/dashboard">Overview</DashboardButton></li>
+			<li><DashboardButton>Projects</DashboardButton></li>
+			<li><DashboardButton>Groups</DashboardButton></li>
+		</ul>
+		<ul class="lower">
+			<li><DashboardButton href="/dashboard/settings">Settings</DashboardButton></li>
 		</ul>
 	</nav>
 </aside>
 
+<div class="bottom-bar"></div>
+
 <style>
+	h1 {
+		font-size: 1.5rem;
+		margin-bottom: 0.5rem;
+		margin-top: 0.5rem;
+		margin-left: 20px;
+	}
+
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		border-top: var(--default-border);
+	}
+
+	.lower {
+		position: absolute;
+		bottom: 100px;
+		width: 100%;
+		border-top: none;
+	}
+
 	aside {
+		position: absolute;
+		width: 150px;
 		box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+		background-color: var(--default-bar-color);
+		border-right: var(--default-border);
+		height: 100%;
+	}
+
+	.bottom-bar {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 100px;
+		box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+		background-color: var(--default-bar-color);
+		border-top: var(--default-border);
+		z-index: 2;
 	}
 </style>

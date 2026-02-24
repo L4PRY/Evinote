@@ -9,7 +9,7 @@
 	import { afterNavigate } from '$app/navigation';
 
 	onMount(() => {
-		document.title = 'Evinote • Noteboard';
+		document.title = 'Evinote • Welcome';
 		contentShow();
 	});
 

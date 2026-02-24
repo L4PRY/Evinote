@@ -1,13 +1,46 @@
 <script lang="ts">
-	let { children } = $props();
+	let { children, href } : {children: any, href? : any} = $props();
+	import { page } from '$app/state';
+
+	function isActive(path : string) {
+		return page.url.pathname === path;
+	}
 </script>
 
-<a href="/dashboard">
-	<div>
-		<img src="https://placehold.it/72x72?text=%40" alt="" />
+<a href={href}>
+	<div class:active={isActive(href)}>
+		<img src="https://placehold.co/25x25" alt="" />
 		{@render children()}
 	</div>
 </a>
 
 <style>
+    div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        padding-left: 1.5rem;
+        width: 100%;
+        transition: all 0.3s ease-in-out;
+        cursor: pointer;
+    }
+
+    div:not(.active):hover {
+        background-color: rgba(100,100,255, 0.05);
+    }
+
+    .active {
+        background-color: var(--default-bar-active);
+        color: var(--default-bar-color);
+    }
+
+    img {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .active img {
+        filter: invert(100%);
+    }
+
 </style>
