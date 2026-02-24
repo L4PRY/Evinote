@@ -27,7 +27,7 @@
 				<button
 					formaction="?/invalidate"
 					disabled={data.user.sessionToken === session.token}
-					style:color={data.user.sessionToken === session.token ? 'red' : 'green'}
+					style:color={data.user.sessionToken === session.token ? 'darkgray' : 'white'}
 					>Sign out of this session</button
 				>
 			</form>

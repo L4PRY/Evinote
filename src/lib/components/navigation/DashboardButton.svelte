@@ -24,10 +24,13 @@
         width: 100%;
         transition: all 0.3s ease-in-out;
         cursor: pointer;
+        border-radius: 5px;
+        margin-left: 2px;
+        margin-right: 2px;
     }
 
     div:not(.active):hover {
-        background-color: rgba(100,100,255, 0.05);
+        background-color: rgba(200,200,255, 0.05);
     }
 
     .active {

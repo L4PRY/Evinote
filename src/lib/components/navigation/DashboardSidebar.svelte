@@ -7,8 +7,8 @@
 	<nav>
 		<ul>
 			<li><DashboardButton href="/dashboard">Overview</DashboardButton></li>
-			<li><DashboardButton>Projects</DashboardButton></li>
-			<li><DashboardButton>Groups</DashboardButton></li>
+			<li><DashboardButton href="/asfda">Projects</DashboardButton></li>
+			<li><DashboardButton href="asdfa2">Groups</DashboardButton></li>
 		</ul>
 		<ul class="lower">
 			<li><DashboardButton href="/dashboard/settings">Settings</DashboardButton></li>
@@ -31,6 +31,9 @@
 		padding: 0;
 		margin: 0;
 		border-top: var(--default-border);
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
 	.lower {
