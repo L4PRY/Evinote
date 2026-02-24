@@ -1,7 +1,9 @@
 <script lang="ts">
-	let { children, href } : {children: any, href? : any} = $props();
+	let { children, href, symbol } : {children: any, href? : string, symbol: string} = $props();
 	import { page } from '$app/state';
+	import * as Icons from '@lucide/svelte';
 
+	const Icon = Icons[symbol as keyof typeof Icons];
 	function isActive(path : string) {
 		return page.url.pathname === path;
 	}

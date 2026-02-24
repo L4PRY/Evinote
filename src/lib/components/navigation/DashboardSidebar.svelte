@@ -6,9 +6,9 @@
 	<h1>Evinote</h1>
 	<nav>
 		<ul>
-			<li><DashboardButton href="/dashboard">Overview</DashboardButton></li>
-			<li><DashboardButton href="/asfda">Projects</DashboardButton></li>
-			<li><DashboardButton href="asdfa2">Groups</DashboardButton></li>
+			<li><DashboardButton symbol="" href="/dashboard">Overview</DashboardButton></li>
+			<li><DashboardButton symbol="" href="/asfda">Projects</DashboardButton></li>
+			<li><DashboardButton symbol="" href="asdfa2">Groups</DashboardButton></li>
 		</ul>
 		<ul class="lower">
 			<li><DashboardButton href="/dashboard/settings">Settings</DashboardButton></li>
