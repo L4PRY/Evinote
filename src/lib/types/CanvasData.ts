@@ -1,11 +1,12 @@
 //! NOT FINAL VERSION!!!
 import type { Color } from './Color';
+import type { Grid } from './Grid';
 
 export type CanvasData = {
 	background:
-		| { type: 'Image'; value: 'URL' }
-		| { type: 'Solid'; value: Color }
-		| { type: 'Grid'; value: { gridSize: number; gridColor: Color } }
-		| { type: 'Custom'; value: string };
+		| { type: 'Image'; value: URL } // background imageuh
+		| { type: 'Solid'; value: Color } // solid color
+		| { type: 'Grid'; value: Grid } // dotted or line grid type shi
+		| { type: 'Custom'; value: string }; // custom css background
 	size: { width: number; height: number; zoom: number };
 };
