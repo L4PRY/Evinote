@@ -7,9 +7,10 @@ import { error } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import type { NoteData } from '$lib/types/NoteData';
 import { checkLogin } from '$lib/server/auth';
+import type { CanvasData } from '$lib/types/CanvasData.js';
 
 export async function load({ params }) {
-  const { id } = params;
+	const { id } = params;
 	const user = checkLogin();
 
 	routeLogger.info(`Loading board with id ${id}`);
@@ -32,6 +33,7 @@ export async function load({ params }) {
 				.select()
 				.from(table.Permissions)
 				.where(and(eq(table.Permissions.bid, parseInt(id)), eq(table.Permissions.uid, user.id)))
+				.then(res => res[0])
 		: null;
 
 	// juggle perms for stuff
@@ -59,10 +61,10 @@ export async function load({ params }) {
 		}
 
 	return {
-    id,
-    board, //returning board data to page to use for displaying name etc
-		perms,
-		notes: board.data
+		id,
+		user,
+		board, //returning board data to page to use for displaying name etc
+		perms
 	};
 }
 
@@ -91,7 +93,7 @@ export const actions: Actions = {
 		if (perms || board.owner === user.id)
 			await db
 				.update(table.Board)
-				.set({ data: notes })
+				.set({ notes }) // update board data with new notes, later
 				.where(eq(table.Board.id, parseInt(params.id)));
 	}
 };

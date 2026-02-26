@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import type { PageProps } from './$types';
+	import Canvas from '$lib/components/Canvas.svelte';
 
 	import type { NoteData } from '$lib/types/NoteData';
 	import { onMount } from 'svelte';
@@ -13,7 +14,10 @@
 	let showDialog = $state(false);
 
 	// svelte-ignore state_referenced_locally
-	let notes: NoteData[] = $state(data.notes || []);
+	const { id, user, board, perms } = data;
+
+	// svelte-ignore state_referenced_locally
+	let notes: NoteData[] = $state(board.notes || []);
 
 	function addNote() {
 		const titleInput = document.getElementById('note-title-input') as HTMLInputElement;
@@ -58,7 +62,7 @@
 		showDialog = false;
 	}
 	onMount(() => {
-	    document.title = `Evinote • ${data.board.name}`;
+		document.title = `Evinote • ${board.name}`;
 
 		dialog = document.getElementById('add-dialog') as HTMLDialogElement;
 		console.log(dialog);
@@ -77,16 +81,20 @@
 
 	$effect(() => {
 		initializeZIndex(notes);
+		console.log({ perms, board, user });
 	});
 </script>
 
-<div class="note-creator">
-	<FancyButton1 onclick={() => (showDialog = true)} width="100px">Add Note</FancyButton1>
-	<form method="post" use:enhance>
-		<input type="hidden" name="notes" value={JSON.stringify(notes)} />
-		<button type="submit">Save notes</button>
-	</form>
-</div>
+<!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
+{#if perms?.perm == 'Write' || board.owner === perms?.uid || (!perms && board.owner === user?.id)}
+	<div class="note-creator">
+		<FancyButton1 onclick={() => (showDialog = true)} style="width: 100px">Add Note</FancyButton1>
+		<form method="post" use:enhance>
+			<input type="hidden" name="notes" value={JSON.stringify(notes)} />
+			<button type="submit">Save notes</button>
+		</form>
+	</div>
+{/if}
 {#if showDialog}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -106,7 +114,8 @@
 		</dialog>
 	</div>
 {/if}
-<div class="note-container">
+
+<Canvas size={board.canvas?.size}>
 	{#each notes as _, i}
 		{console.log('added note')}
 		<Note bind:data={notes[i]} />
@@ -136,7 +145,7 @@
 			]
 		}}
 	/> -->
-</div>
+</Canvas>
 
 <style>
 	.dialog-container {
@@ -201,16 +210,5 @@
 		top: 20px;
 		left: 20px;
 		z-index: 1000;
-	}
-	.note-container {
-		position: absolute;
-		margin: 0;
-		left: 0;
-		top: 0;
-		box-sizing: border-box;
-		width: 100%;
-		height: 100vh;
-		overflow: hidden;
-		border: 5px solid var(--default-text-color);
 	}
 </style>
