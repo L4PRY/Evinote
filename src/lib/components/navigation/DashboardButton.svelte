@@ -1,17 +1,17 @@
 <script lang="ts">
-	let { children, href, symbol } : {children: any, href? : string, symbol: string} = $props();
+	let { children, href, symbol } : {children: any, href? : string, symbol?: any} = $props();
 	import { page } from '$app/state';
-	import * as Icons from '@lucide/svelte';
+	import * as icons from '@lucide/svelte';
 
-	const Icon = Icons[symbol as keyof typeof Icons];
+	const Icon = icons[symbol];
 	function isActive(path : string) {
 		return page.url.pathname === path;
 	}
 </script>
 
 <a href={href}>
-	<div class:active={isActive(href)}>
-		<img src="https://placehold.co/25x25" alt="" />
+	<div class:active={isActive(href || "inactive")}>
+		{#if Icon}<Icon class="symbol" />{/if}
 		{@render children()}
 	</div>
 </a>
@@ -22,13 +22,11 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem;
-        padding-left: 1.5rem;
+        /*justify-content: center;*/
+        padding-left: 1.3rem;
         width: 100%;
         transition: all 0.3s ease-in-out;
         cursor: pointer;
-        border-radius: 5px;
-        margin-left: 2px;
-        margin-right: 2px;
     }
 
     div:not(.active):hover {
@@ -38,14 +36,6 @@
     .active {
         background-color: var(--default-bar-active);
         color: var(--default-bar-color);
-    }
-
-    img {
-        transition: all 0.3s ease-in-out;
-    }
-
-    .active img {
-        filter: invert(100%);
     }
 
 </style>

@@ -3,15 +3,17 @@
 </script>
 
 <aside>
-	<h1>Evinote</h1>
+	<div class="logo-container">
+		<img class="logo" alt="Evinote" src="https://placehold.co/600x400" />
+	</div>
 	<nav>
 		<ul>
-			<li><DashboardButton symbol="" href="/dashboard">Overview</DashboardButton></li>
-			<li><DashboardButton symbol="" href="/asfda">Projects</DashboardButton></li>
-			<li><DashboardButton symbol="" href="asdfa2">Groups</DashboardButton></li>
+			<li><DashboardButton symbol="LayoutDashboard" href="/dashboard">Overview</DashboardButton></li>
+			<li><DashboardButton symbol="NotebookPen" href="/asfda">Projects</DashboardButton></li>
+			<li><DashboardButton symbol="UsersRound" href="asdfa2">Groups</DashboardButton></li>
 		</ul>
 		<ul class="lower">
-			<li><DashboardButton href="/dashboard/settings">Settings</DashboardButton></li>
+			<li><DashboardButton symbol="Settings" href="/dashboard/settings">Settings</DashboardButton></li>
 		</ul>
 	</nav>
 </aside>
@@ -19,12 +21,15 @@
 <div class="bottom-bar"></div>
 
 <style>
-	h1 {
-		font-size: 1.5rem;
-		margin-bottom: 0.5rem;
-		margin-top: 0.5rem;
-		margin-left: 20px;
+	.logo {
+	    font-size: 1.5em;
+		margin: auto;
+		width: 100%;
+		height: 50px;
+		object-fit: cover;
 	}
+
+	.logo:hover{filter: opacity(0);}
 
 	ul {
 		list-style: none;
@@ -38,7 +43,7 @@
 
 	.lower {
 		position: absolute;
-		bottom: 100px;
+		bottom: 0px;
 		width: 100%;
 		border-top: none;
 	}
@@ -61,6 +66,6 @@
 		box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
 		background-color: var(--default-bar-color);
 		border-top: var(--default-border);
-		z-index: 2;
+		z-index: -1;
 	}
 </style>
