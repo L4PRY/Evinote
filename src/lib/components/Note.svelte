@@ -12,6 +12,7 @@
 	import type { NoteData } from '$lib/types/NoteData';
 	import type { File } from '$lib/types/File';
 	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
+	import { parseColor } from '$lib/parseColor';
 	// import DOMPurify from 'dompurify';
 
 	let { data = $bindable() }: { data: NoteData } = $props();
@@ -37,29 +38,7 @@
 
 	$effect(() => {
 		// set colors
-		if (data.color)
-			switch (data.color.type) {
-				case 'oklch': {
-					const [l, c, h, a] = data.color.value;
-					color = `oklch(${l}% ${c} ${h}deg ${a ? '/ ' + a : ''})`;
-					break;
-				}
-				case 'rgb': {
-					const [r, g, b, a] = data.color.value;
-					color = `rgb(${r}, ${g}, ${b} ${a ? '/ ' + a : ''})`;
-					break;
-				}
-				case 'hsl': {
-					const [h, s, l, a] = data.color.value;
-					color = `hsl(${h} ${s}% ${l}%) ${a ? '/ ' + a : ''}`;
-					break;
-				}
-				case 'hex':
-					color = data.color.value;
-					break;
-				default:
-					break;
-			}
+		if (data.color) color = parseColor(data.color);
 	});
 </script>
 
