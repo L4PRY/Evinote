@@ -18,7 +18,7 @@
 	</nav>
 </aside>
 
-<div class="bottom-bar"></div>
+<!-- <div class="bottom-bar"></div> -->
 
 <style>
 	.logo {
@@ -38,8 +38,20 @@
 		border-top: var(--default-border);
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
 	}
+
+	ul:first-child {
+	    padding-top: 5px;
+    }
+
+    ul:last-child {
+	    padding-bottom: 5px;
+    }
+
+    li {
+       margin-bottom: -15px;
+       margin-top: -15px;
+    }
 
 	.lower {
 		position: absolute;
@@ -57,7 +69,7 @@
 		height: 100%;
 	}
 
-	.bottom-bar {
+	/*.bottom-bar {
 		position: absolute;
 		bottom: 0;
 		left: 0;
@@ -67,5 +79,5 @@
 		background-color: var(--default-bar-color);
 		border-top: var(--default-border);
 		z-index: -1;
-	}
+	}*/
 </style>
