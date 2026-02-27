@@ -115,7 +115,24 @@
 	</div>
 {/if}
 
-<Canvas size={board.canvas?.size}>
+<Canvas
+	data={{
+		size: {
+			width: 6400,
+			height: 6400,
+			zoom: 1
+		},
+		background: {
+			type: 'Grid',
+			value: {
+				type: 'Line',
+				background: { type: 'hex', value: '#2a2a2a' },
+				color: { type: 'hex', value: '#444' },
+				width: 1
+			}
+		}
+	}}
+>
 	{#each notes as _, i}
 		{console.log('added note')}
 		<Note bind:data={notes[i]} />

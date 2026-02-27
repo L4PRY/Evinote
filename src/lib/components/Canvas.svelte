@@ -127,9 +127,36 @@
 		canvasElement.releasePointerCapture(e.pointerId);
 	}
 
-	// Prevent scroll wheel events
+	// Zoom with scroll wheel, zooming toward cursor position
 	function handleWheel(e: WheelEvent) {
 		e.preventDefault();
+
+		const oldZoom = canvasData.size.zoom;
+		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
+		const newZoom = Math.min(Math.max(oldZoom + zoomChange, 0.2), 3);
+
+		// if (newZoom === oldZoom) return;
+
+		// Get cursor position relative to the canvas viewport
+		const rect = canvasElement.getBoundingClientRect();
+		const cursorX = e.clientX - rect.left;
+		const cursorY = e.clientY - rect.top;
+
+		// Calculate the content position under the cursor before zoom
+		// (scroll position + cursor position in viewport) / old zoom = content position
+		const contentX = (canvasElement.scrollLeft + cursorX) / oldZoom;
+		const contentY = (canvasElement.scrollTop + cursorY) / oldZoom;
+
+		// Apply the new zoom
+		canvasData.size = { ...canvasData.size, zoom: newZoom };
+
+		// After zoom, adjust scroll so the same content point stays under cursor
+		// content position * new zoom - cursor position in viewport = new scroll position
+		// Use requestAnimationFrame to ensure zoom is applied before adjusting scroll
+		requestAnimationFrame(() => {
+			canvasElement.scrollLeft = contentX * newZoom - cursorX;
+			canvasElement.scrollTop = contentY * newZoom - cursorY;
+		});
 	}
 
 	// Function to update canvas data programmatically
@@ -185,7 +212,6 @@
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
 	onwheel={handleWheel}
-	style:zoom={canvasData.size.zoom}
 	class:dragging={isDragging}
 	role="application"
 	aria-label="Draggable canvas"
@@ -194,8 +220,9 @@
 	<!-- Inner content container that provides the scrollable area -->
 	<div
 		class="canvas-content"
-		bind:this={contentElement}
 		style={backgroundCss}
+		bind:this={contentElement}
+		style:zoom={canvasData.size.zoom}
 		style:width={`${canvasData.size.width}px`}
 		style:height={`${canvasData.size.height}px`}
 	>
@@ -213,11 +240,11 @@
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
-		border: 5px solid var(--default-text-color);
-		/* Enable scrolling but hide scrollbars */
+		border: var(--default-border);
+		/* Enable scrolling with subtle scrollbars */
 		overflow: scroll;
-		scrollbar-width: none;
-		-ms-overflow-style: none;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
 		/* Prevent text selection while dragging */
 		user-select: none;
 		-webkit-user-select: none;
@@ -228,7 +255,27 @@
 	}
 
 	#canvas::-webkit-scrollbar {
-		display: none;
+		width: 8px;
+		height: 8px;
+	}
+
+	#canvas::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	#canvas::-webkit-scrollbar-thumb {
+		background-color: rgba(128, 128, 128, 0.3);
+		border-radius: 4px;
+		border: 2px solid transparent;
+		background-clip: content-box;
+	}
+
+	#canvas::-webkit-scrollbar-thumb:hover {
+		background-color: rgba(128, 128, 128, 0.5);
+	}
+
+	#canvas::-webkit-scrollbar-corner {
+		background: transparent;
 	}
 
 	#canvas.dragging {
