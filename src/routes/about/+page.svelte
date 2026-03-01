@@ -6,6 +6,14 @@
 		document.title = 'Evinote • About';
 	});
 
+	export const load = () => {
+	return {
+		mode: 'scroll'
+	};
+};
+
+
+
 	const team = [
 		{
 			name: 'Mátyás',
@@ -23,7 +31,7 @@
 		},
 		{
 			name: 'Patrik',
-			role: 'Frontend/Backend fejlesztő',
+			role: 'Frontend / Backend fejlesztő',
 			avatar: 'https://github.com/L4PRY.png',
 			githubUsername: 'L4PRY',
 			glowColor: '#f1f1fc'
@@ -105,6 +113,7 @@
 		justify-content: center;
 		align-items: center;
 		margin: 0 auto;
+		margin-top: 25px;
 		border-radius: 20px;
 		background: #333333;
 		background: transparent;

@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 
 	onMount(() => {
-		document.title = "Evinote • Register";
+		document.title = 'Evinote • Register';
 	});
 
 	let { form }: { form: ActionData } = $props();
@@ -15,62 +15,45 @@
 <div class="background" style="background-image: url({backgroundImage});"></div>
 
 <section class="register-wrapper">
-<h1>Register</h1>
-<form method="post" action="?/register" use:enhance>
-	<div class="flex flex-col gap-4 w-full max-w-sm justify-center items-center">
-		<input
-		type="text"
-		name="username"
-		placeholder="Username"
-		class="input-field"
-		/>
-		<input
-		type="password"
-		name="password"
-		placeholder="Password"
-		class="input-field"
-		/>
-	    <input 
-		name="email"
-		type="email"
-		placeholder="Email"
-		class="input-field"
-		/>
-	<button
-		formaction="?/register"
-		class="submit-btn">Register</button>
-	<a href="/auth" class="text-link">Back to Login</a>
-	</div>
-</form>
-<p style="color: red">{form?.message ?? ''}</p>
+	<h1>Register</h1>
+	<form method="post" action="?/register" use:enhance>
+		<div class="flex w-full max-w-sm flex-col items-center justify-center gap-4">
+			<input type="text" name="username" placeholder="Username" class="input-field" />
+			<input type="password" name="password" placeholder="Password" class="input-field" />
+			<input name="email" type="email" placeholder="Email" class="input-field" />
+			<button formaction="?/register" class="submit-btn">Register</button>
+			<a href="/auth" class="text-link">Back to Login</a>
+		</div>
+	</form>
+	<p style="color: red">{form?.message ?? ''}</p>
 </section>
 
 <style>
-/* Háttér */
-.background {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: -1;
-	background-size: cover;
-	background-position: center;
-	background-repeat: no-repeat;
-}
+	/* Háttér */
+	.background {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: -1;
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
+	}
 
-/* Bejelentkezési form */
-.register-wrapper {
-	min-height: 60vh;
-	display: flex;
-	padding: 3rem;
-	width: 100%;
-	max-width: 400px;
-	justify-content: center;
-	flex-direction: column;
-	align-items: center;
-	margin: 0 auto;
-	border-radius: 15px;
+	/* Bejelentkezési form */
+	.register-wrapper {
+		min-height: 60vh;
+		display: flex;
+		padding: 3rem;
+		width: 100%;
+		max-width: 400px;
+		justify-content: center;
+		flex-direction: column;
+		align-items: center;
+		margin: 0 auto;
+		border-radius: 15px;
 		/* üveghatás */
 		/* background: rgba(33, 33, 33, 0.45);  */
 		backdrop-filter: blur(15px);
@@ -82,80 +65,82 @@
 		/* árnyék */
 		box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
-	/* Középre igazítás */
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-}
+		/* Középre igazítás */
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
 
-/* Cím */
-h1 {
-	font-size: 2rem;
-	color: var(--default-text-color);
-	font-weight: 600;
-	margin-bottom: 1.5rem;
-}
+	/* Cím */
+	h1 {
+		font-size: 2rem;
+		color: var(--default-text-color);
+		font-weight: 600;
+		margin-bottom: 1.5rem;
+	}
 
-/* Input mezők */
-.input-field {
-	width: 100%;
-	padding: 0.75rem;
-	border-radius: 8px;
-	border: 1px solid var(--default-border-color);
-	background-color: var(--default-bg-color);
-	font-size: 1rem;
-	transition: border-color 0.3s, box-shadow 0.3s;
-}
+	/* Input mezők */
+	.input-field {
+		width: 100%;
+		padding: 0.75rem;
+		border-radius: 8px;
+		border: 1px solid var(--default-border-color);
+		background-color: var(--default-bg-color);
+		font-size: 1rem;
+		transition:
+			border-color 0.3s,
+			box-shadow 0.3s;
+	}
 
-.input-field:focus {
-	border-color: #3182ce;
-	box-shadow: 0 0 8px rgba(49, 130, 206, 0.6);
-	outline: none;
-}
+	.input-field:focus {
+		border-color: #3182ce;
+		box-shadow: 0 0 8px rgba(49, 130, 206, 0.6);
+		outline: none;
+	}
 
-/* Gomb */
-.submit-btn {
-	width: 100%;
-	padding: 0.75rem;
-	border-radius: 8px;
-	background-color: #3182ce;
-	color: white;
-	font-size: 1.125rem;
-	font-weight: 600;
-	border: none;
-	cursor: pointer;
-	transition: background-color 0.3s ease;
-}
+	/* Gomb */
+	.submit-btn {
+		width: 100%;
+		padding: 0.75rem;
+		border-radius: 8px;
+		background-color: #3182ce;
+		color: white;
+		font-size: 1.125rem;
+		font-weight: 600;
+		border: none;
+		cursor: pointer;
+		transition: background-color 0.3s ease;
+	}
 
-.submit-btn:hover {
-	background-color: #2b6cb0;
-}
+	.submit-btn:hover {
+		background-color: #2b6cb0;
+	}
 
-.submit-btn:focus {
-	outline: none;
-	box-shadow: 0 0 10px rgba(49, 130, 206, 0.8);
-}
+	.submit-btn:focus {
+		outline: none;
+		box-shadow: 0 0 10px rgba(49, 130, 206, 0.8);
+	}
 
-/* Link */
-.text-link {
-	color: #3182ce;
-	font-size: 0.875rem;
-	font-weight: 500;
-	text-decoration: none;
-	transition: color 0.3s;
-}
+	/* Link */
+	.text-link {
+		color: #3182ce;
+		font-size: 0.875rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: color 0.3s;
+	}
 
-.text-link:hover {
-	color: #2b6cb0;
-	text-decoration: underline;
-}
+	.text-link:hover {
+		color: #2b6cb0;
+		text-decoration: underline;
+	}
 
-/* Hiba üzenet */
-.error-message {
-	color: #e53e3e;
-	font-size: 0.875rem;
-	text-align: center;
-	margin-top: 1rem;
-}
+	/* Hiba üzenet */
+	.error-message {
+		color: #e53e3e;
+		font-size: 0.875rem;
+		text-align: center;
+		margin-top: 1rem;
+	}
 </style>

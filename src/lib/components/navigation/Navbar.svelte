@@ -78,7 +78,11 @@
 			<button onclick={() => goto(resolve('/about'))}>About</button>
 		</div>
 		<div class="float-right">
-			<button onclick={() => { goto(resolve('/auth')); }}>Login</button>
+			<button
+				onclick={() => {
+					goto(resolve('/auth'));
+				}}>Login</button
+			>
 		</div>
 	</nav>
 </div>

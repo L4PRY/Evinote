@@ -9,7 +9,7 @@ import { validateEmail, validatePassword, validateUsername } from '$lib/parseInp
 import { env } from '$env/dynamic/private';
 
 export const actions: Actions = {
-	register: async (event) => {
+	register: async event => {
 		const formData = await event.request.formData();
 		const username = formData.get('username')! as string;
 		const email = formData.get('email')! as string;
