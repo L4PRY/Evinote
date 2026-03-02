@@ -5,7 +5,7 @@
 	const MAX_ZOOM = 2;
 	const DEFAULT_ZOOM = 1;
 	const DEFAULT_PERCENTAGE = DEFAULT_ZOOM * 100; // 100%
-	const SNAP_THRESHOLD = 8; // Snap when within 8% of default
+	const SNAP_THRESHOLD = 3; // Snap when within 8% of default
 	const SLOW_DRAG_THRESHOLD = 15; // Velocity threshold for "slow" dragging
 
 	// Convert zoom (0.5-2) to percentage (50-200) for display
@@ -74,26 +74,6 @@
 <div class="zoom-control">
 	<div class="button-group left">
 		<button
-			class="zoom-btn"
-			onclick={zoomOut}
-			disabled={$zoomLevel <= MIN_ZOOM}
-			aria-label="Zoom out"
-			title="Zoom out"
-		>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<line x1="5" y1="12" x2="19" y2="12" />
-			</svg>
-		</button>
-		<div class="separator"></div>
-		<button
 			class="zoom-btn reset"
 			onclick={resetZoom}
 			disabled={$zoomLevel === DEFAULT_ZOOM}
@@ -111,6 +91,26 @@
 			>
 				<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
 				<path d="M3 3v5h5" />
+			</svg>
+		</button>
+		<div class="separator"></div>
+		<button
+			class="zoom-btn"
+			onclick={zoomOut}
+			disabled={$zoomLevel <= MIN_ZOOM}
+			aria-label="Zoom out"
+			title="Zoom out"
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<line x1="5" y1="12" x2="19" y2="12" />
 			</svg>
 		</button>
 	</div>
