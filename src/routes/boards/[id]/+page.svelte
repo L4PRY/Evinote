@@ -82,10 +82,7 @@
 	}
 
 	$effect(() => {
-		initializeZIndex(notes);
-		console.log({ perms, board, user });
-
-		console.log($zoomLevel);
+		if (notes.length > 0) initializeZIndex(notes);
 	});
 </script>
 
