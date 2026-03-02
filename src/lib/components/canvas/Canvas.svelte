@@ -131,6 +131,9 @@
 	function handleWheel(e: WheelEvent) {
 		e.preventDefault();
 
+		if (document.querySelector(".note")?.getAttribute("data-neodrag-state") === "dragging")
+			return;
+
 		const oldZoom = canvasData.size.zoom;
 		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
 		const newZoom = Math.min(Math.max(oldZoom + zoomChange, 0.2), 3);
