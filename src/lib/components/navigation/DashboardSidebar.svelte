@@ -11,7 +11,7 @@
 			<li><DashboardButton symbol="" href="asdfa2">Groups</DashboardButton></li>
 		</ul>
 		<ul class="lower">
-			<li><DashboardButton href="/dashboard/settings">Settings</DashboardButton></li>
+			<li><DashboardButton symbol="" href="/dashboard/settings">Settings</DashboardButton></li>
 		</ul>
 	</nav>
 </aside>

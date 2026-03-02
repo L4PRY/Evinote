@@ -3,18 +3,20 @@
 	import { page } from '$app/state';
 	import * as Icons from '@lucide/svelte';
 
-	const Icon = Icons[symbol as keyof typeof Icons];
+	const Icon = $derived(Icons[symbol as keyof typeof Icons]);
 	function isActive(path : string) {
 		return page.url.pathname === path;
 	}
 </script>
 
+{#if href}
 <a href={href}>
 	<div class:active={isActive(href)}>
 		<img src="https://placehold.co/25x25" alt="" />
 		{@render children()}
 	</div>
 </a>
+{/if}
 
 <style>
     div {
