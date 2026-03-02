@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CanvasData } from '$lib/types/CanvasData';
 	import { parseColor } from '$lib/parseColor';
+	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
 	import type { Snippet } from 'svelte';
 
 	const {
@@ -10,6 +11,9 @@
 		children: Snippet;
 		data: CanvasData;
 	} = $props();
+
+	// add a way for the current visible viewport and canvas to be movable indirectly
+	// needs a bindable for the current viewport size, scroll position and zoom level
 
 	// svelte-ignore state_referenced_locally
 	let canvasData = $state<CanvasData>(data);
@@ -131,14 +135,11 @@
 	function handleWheel(e: WheelEvent) {
 		e.preventDefault();
 
-		if (document.querySelector(".note")?.getAttribute("data-neodrag-state") === "dragging")
-			return;
+		if (document.querySelector('.note')?.getAttribute('data-neodrag-state') === 'dragging') return;
 
-		const oldZoom = canvasData.size.zoom;
+		const oldZoom = $zoomLevel;
 		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
-		const newZoom = Math.min(Math.max(oldZoom + zoomChange, 0.2), 3);
-
-		// if (newZoom === oldZoom) return;
+		const newZoom = Math.min(Math.max(oldZoom + zoomChange, MIN_ZOOM), MAX_ZOOM);
 
 		// Get cursor position relative to the canvas viewport
 		const rect = canvasElement.getBoundingClientRect();
@@ -150,8 +151,8 @@
 		const contentX = (canvasElement.scrollLeft + cursorX) / oldZoom;
 		const contentY = (canvasElement.scrollTop + cursorY) / oldZoom;
 
-		// Apply the new zoom
-		canvasData.size = { ...canvasData.size, zoom: newZoom };
+		// Apply the new zoom via the store
+		zoomLevel.set(newZoom);
 
 		// After zoom, adjust scroll so the same content point stays under cursor
 		// content position * new zoom - cursor position in viewport = new scroll position
@@ -225,9 +226,9 @@
 		class="canvas-content"
 		style={backgroundCss}
 		bind:this={contentElement}
-		style:zoom={canvasData.size.zoom}
 		style:width={`${canvasData.size.width}px`}
 		style:height={`${canvasData.size.height}px`}
+		style:zoom={$zoomLevel}
 	>
 		{@render children()}
 	</div>
