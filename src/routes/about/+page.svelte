@@ -107,7 +107,7 @@
 		min-height: calc(100vh - 80px);
 		display: flex;
 		padding: 5rem;
-		padding-top: 0px;
+		padding-top: 50px;
 		min-width: 800px;
 		width: 50vw;
 		justify-content: center;
@@ -138,7 +138,7 @@
 	h1 {
 		font-size: 3rem;
 		margin-bottom: 1.5rem;
-		color: #f5f5f5;
+		color: var(--default-text-color);
 	}
 
 	.about-text {
@@ -146,7 +146,7 @@
 		margin: 0 auto 3rem auto;
 		font-size: 1.05rem;
 		line-height: 1.7;
-		color: rgba(255, 255, 255, 0.75);
+		color: var(--default-text-color);
 	}
 
 	.team-card {
@@ -155,7 +155,7 @@
 		gap: 1.5rem;
 		padding: 2rem;
 		border-radius: 20px;
-		background: rgba(0, 0, 0, 0.35);
+		background: var(--default-text-color-transparent);
 		backdrop-filter: blur(10px);
 		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 	}
@@ -179,12 +179,13 @@
 	.member h3 {
 		margin: 0.5rem 0 0 0;
 		font-size: 1rem;
-		color: #fff;
+		color: var(--default-text-color);
 	}
 
 	.member span {
 		font-size: 0.85rem;
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--default-text-color);
+		filter: opacity(0.8);
 	}
 
 	.member-link {
@@ -212,8 +213,8 @@
 	}
 
 	.button-link {
-		background: rgba(0, 0, 0, 0.35);
-		color: white;
+		background: var(--default-text-color-transparent);
+		color: var(--default-text-color);
 		padding: 10px 15px;
 		border-radius: 20px;
 		text-decoration: none;

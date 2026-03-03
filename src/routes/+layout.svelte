@@ -16,7 +16,7 @@
 
 <svelte:head></svelte:head>
 
-{#if !isDisallowed}
+{#if !isDisallowed && page.status != 404}
 	<Navbar />
 	<Footer />
 {/if}

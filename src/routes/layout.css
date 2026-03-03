@@ -7,12 +7,13 @@
 	color-scheme: light dark;
 
 	--default-bg-color: light-dark(#efefec, #090715);
+	--default-bg-color-transparent: light-dark(rgba(239, 239, 236, 0.4), rgba(9, 7, 21,0.4));
 	--default-text-color: light-dark(#333b3c, #efefec);
 	--default-blur-color: light-dark(#efefec5d, #0907155d);
-	--button-stroke-color: light-dark(#cccccc7e, #44444486);
-	--border-colors: light-dark(transparent, #281620);
+	--button-stroke-color: light-dark(#cccccc7e, #17141f);
+	--border-colors: light-dark(#cccccc7e, transparent);
 	--default-bar-color: light-dark(#efefec, #06040e);
-	--default-bar-active: light-dark(#301541,#8464b7 );
+	--default-bar-active: light-dark(#301541, #8464b7 );
 
 	--fancycolor-1: #9c20aa;
 	--fancycolor-2: #fb3570;

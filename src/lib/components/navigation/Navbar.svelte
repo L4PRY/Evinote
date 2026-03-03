@@ -133,7 +133,7 @@
 		text-align: center;
 	}
 	.nav-island-divider {
-		width: 1.5px;
+		width: 2px;
 		background: linear-gradient(
 			0deg,
 			var(--default-blur-color) 20%,
@@ -142,15 +142,15 @@
 			var(--default-blur-color) 80%
 		);
 		backdrop-filter: blur(10px);
-		border-top: var(--default-border);
-		border-bottom: var(--default-border);
+		border-top: 1px solid var(--button-stroke-color);
+		border-bottom: 1px solid var(--button-stroke-color);
 		cursor: pointer;
 	}
 	button {
 		padding: 8px;
 		box-sizing: border-box;
 		width: 100px;
-		border: var(--default-border);
+		border: 1px solid var(--button-stroke-color);
 		border-radius: var(--border-radius);
 		background-color: var(--default-blur-color);
 		color: var(--default-text-color);

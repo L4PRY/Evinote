@@ -2,6 +2,20 @@
 	import { page } from '$app/state';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { onMount } from 'svelte';
+
+	onMount(() => {
+		document.title = `Evinote • ${page.status}`;
+		const bckpdl = document.querySelector('#backpedal');
+		if (bckpdl) {
+			bckpdl.style.transition =
+				'transform 0.8s cubic-bezier(0.38,1.07,0.65,0.99), filter 0.5s ease-in-out';
+			bckpdl.style.transform = 'translateY(20vh) translateX(42.5%)';
+			bckpdl.style.filter = 'opacity(0.3)';
+			setInterval(() => {
+				bckpdl.style.transition = 'filter 0.2s ease-in-out';
+			}, 800);
+		}
+	});
 </script>
 
 <div class="main">
@@ -9,6 +23,7 @@
 		<div class="top">
 			<a
 				href="#"
+				id="backpedal"
 				class="backpedal"
 				onclick={e => {
 					e.preventDefault();
@@ -32,7 +47,8 @@
 		height: 100vh;
 		position: fixed;
 		left: 50%;
-		transform: translate(-50%, -7.5%);
+		top: 50vh;
+		transform: translate(-50%, -50%);
 	}
 
 	.infobox {
@@ -46,10 +62,14 @@
 	}
 
 	.backpedal {
+		position: absolute;
 		font-size: 1.5rem;
-		filter: opacity(0.3);
 		text-decoration: underline;
-		transition: filter 0.1s ease-in-out;
+		top: 10vh;
+		left: 0;
+		transform: translateX(42.5%);
+		width: fit-content;
+		filter: opacity(0);
 	}
 
 	.backpedal:hover {

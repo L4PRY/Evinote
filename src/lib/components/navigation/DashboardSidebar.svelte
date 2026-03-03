@@ -9,7 +9,7 @@
 	<nav>
 		<ul>
 			<li><DashboardButton symbol="LayoutDashboard" href="/dashboard">Overview</DashboardButton></li>
-			<li><DashboardButton symbol="NotebookPen" href="/asfda">Projects</DashboardButton></li>
+			<li><DashboardButton symbol="NotebookPen" href="asfda">Projects</DashboardButton></li>
 			<li><DashboardButton symbol="UsersRound" href="asdfa2">Groups</DashboardButton></li>
 		</ul>
 		<ul class="lower">
