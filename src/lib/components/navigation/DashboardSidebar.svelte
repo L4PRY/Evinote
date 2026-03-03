@@ -57,11 +57,10 @@
 		position: absolute;
 		bottom: 0px;
 		width: 100%;
-		border-top: none;
 	}
 
 	aside {
-		position: absolute;
+		position: fixed;
 		width: 150px;
 		box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
 		background-color: var(--default-bar-color);

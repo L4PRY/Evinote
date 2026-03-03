@@ -32,7 +32,8 @@
 
 html {
 	scroll-behavior: smooth;
-	scrollbar-gutter: stable both-edges;
+	scrollbar-gutter: both-edges;
+	scrollbar-width: none;
 }
 
 body {
