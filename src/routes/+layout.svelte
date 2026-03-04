@@ -18,7 +18,7 @@
 
 {#if !isDisallowed && page.status != 404}
 	<Navbar />
-	<Footer />
+	<!-- <Footer /> -->
 {/if}
 
 {@render children()}

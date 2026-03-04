@@ -1,11 +1,13 @@
 <script lang="ts">
 	import * as icons from '@lucide/svelte';
-	let { symbol, size, strokeWidth }: { symbol: string, size?: number, strokeWidth?: number } = $props();
+	import type { Icon as IconType } from '@lucide/svelte';
+	let { symbol, size, strokeWidth }: { symbol: string; size?: number; strokeWidth?: number } =
+		$props();
 
-	const Icon = icons[symbol];
+	const Icon = $derived((icons as Record<string, any>)[symbol]);
 </script>
 
-{#if symbol}
+{#if Icon}
 	<Icon style="display: inline-block;" size={size || 32} strokeWidth={strokeWidth || 1} />
 {/if}
 
