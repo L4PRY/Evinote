@@ -1,4 +1,5 @@
 <script lang="ts">
+    import DashboardTab from '$lib/components/dash/DashboardTab.svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
@@ -14,7 +15,7 @@
 </script>
 
 <div class="site-content">
-    <p>Your boards:</p>
+    <DashboardTab>Your boards</DashboardTab>
     {#await boards then resolvedBoards}
 	{#if resolvedBoards.length === 0}
 		<p>You have no boards yet.</p>
