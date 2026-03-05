@@ -55,14 +55,17 @@
 
 	function hamburgerToggle() {
 		const navIsland = document.querySelector('.nav-island');
+		const nav = document.querySelector('nav');
 		if (navIsland) {
 			if (!hamburgerVisible) {
 				navIsland.style.display = 'flex';
 				navIsland.style.height = 'fit-content';
+				nav.style.borderRadius = '20px 20px 5px 5px';
 				hamburgerVisible = true;
 			} else {
 				navIsland.style.display = 'none';
 				navIsland.style.height = '0vh';
+				nav.style.borderRadius = '20px';
 				hamburgerVisible = false;
 			}
 		}
@@ -185,7 +188,7 @@
 			cursor: pointer;
 		}
 		.login-island {
-		    display: none;
+			display: none;
 		}
 		button {
 			padding: 8px;
@@ -257,7 +260,6 @@
 			z-index: 10;
 			top: 0;
 			margin-top: -150px;
-			backdrop-filter: blur(5px);
 			gap: 20px;
 			background: linear-gradient(
 				180deg,
@@ -266,6 +268,7 @@
 			);
 			border-radius: 20px;
 			border: 1px solid var(--default-stroke-color);
+			transition: height 0.5s ease-in-out;
 		}
 
 		.float-right .login {
@@ -292,25 +295,40 @@
 			text-align: center;
 			top: 50px;
 			width: 90vw;
-			background-color: rgba(12, 12, 12, 1);
+			/*background-color: light-dark(#e2dde2, #13091a);*/
 
-			/*background: linear-gradient(
+			background: linear-gradient(
 				180deg,
-				light-dark(transparent, rgba(200, 200, 250, 0.05)),
-				light-dark(rgba(0, 0, 100, 0.05), transparent)
-			);*/
+				light-dark(rgba(0, 0, 100, 0.05), transparent),
+				light-dark(transparent, rgba(200, 200, 250, 0.05))
+			);
 
-			border-radius: 20px;
+			border-radius: 5px 5px 20px 20px;
 			border: 1px solid var(--default-stroke-color);
 			height: 0;
 			display: none;
 			overflow: hidden;
-			transition: height 0.5s ease-in-out;
+			transition: all 0.5s ease-in-out;
+		}
+
+		nav::before,
+		.nav-island::before {
+			backdrop-filter: blur(5px);
+			content: '';
+			display: block;
+			height: 100%;
+			width: 100%;
+			position: absolute;
+			left: 0;
+			top: 0;
+			z-index: -99;
+			border: 1px solid transparent;
+			border-radius: inherit;
 		}
 
 		.login-island {
-            display: inline-block;
-        }
+			display: inline-block;
+		}
 
 		.nav-island button {
 			width: 100%;
