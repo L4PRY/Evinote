@@ -61,7 +61,7 @@
 				navIsland.style.height = 'fit-content';
 				hamburgerVisible = true;
 			} else {
-				// navIsland.style.display = 'none';
+				navIsland.style.display = 'none';
 				navIsland.style.height = '0vh';
 				hamburgerVisible = false;
 			}
@@ -184,6 +184,9 @@
 			border-bottom: 1px solid var(--button-stroke-color);
 			cursor: pointer;
 		}
+		.login-island {
+		    display: none;
+		}
 		button {
 			padding: 8px;
 			box-sizing: border-box;
@@ -285,6 +288,7 @@
 			display: flex;
 			gap: 1px;
 			flex-direction: column;
+			align-items: center;
 			text-align: center;
 			top: 50px;
 			width: 90vw;
@@ -305,7 +309,7 @@
 		}
 
 		.login-island {
-            display: flex;
+            display: inline-block;
         }
 
 		.nav-island button {
