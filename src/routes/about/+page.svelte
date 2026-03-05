@@ -108,7 +108,6 @@
 		display: flex;
 		padding: 5rem;
 		padding-top: 50px;
-		min-width: 800px;
 		width: 50vw;
 		justify-content: center;
 		align-items: center;
@@ -128,6 +127,8 @@
 
 		/* árnyék */
 		box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+		margin-bottom: 500px;
 	}
 
 	.about-content {
@@ -247,4 +248,20 @@
 		border-radius: 50%;
 		filter: opacity(0.8);
 	}
+
+	@media (max-width: 768px) {
+        .about-wrapper {
+            width: 90vw;
+            padding: 2rem;
+            margin-top: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+        }
+
+        .about-text {
+            font-size: 1rem;
+        }
+    }
 </style>

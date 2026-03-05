@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	let scrollY = $state(0);
@@ -10,23 +10,29 @@
 
 	function navbarExpand() {
 		const nav = document.querySelector('nav');
-		const navWidth = nav?.offsetWidth;
+		if (!nav) return;
 
-		if (scrollY > 5 || outerWidth < 600) {
-			nav?.style.setProperty('transition', 'all 0.15s ease-in-out');
-			nav?.style.setProperty('backdrop-filter', 'blur(5px)');
-			nav?.style.setProperty('border', 'var(--default-border)');
-			nav?.style.setProperty('width', `clamp(50vw, calc(${navWidth}px + 20%), calc(50vw + 20%))`);
-		} else {
-			nav?.style.setProperty('backdrop-filter', 'none');
-			nav?.style.setProperty('border', '1px solid transparent');
-			nav?.style.setProperty('width', '50vw');
+		if (outerWidth > 600) {
+			if (scrollY > 50) {
+				nav.style.transition = 'all 0.15s ease-in-out';
+				nav.style.backdropFilter = 'blur(5px)';
+				nav.style.width = '70vw';
+				nav.style.border = '1px solid var(--button-stroke-color)';
+			} else {
+				// Reset to default styles
+				nav.style.transition = 'all 0.15s ease-in-out';
+				nav.style.backdropFilter = 'none';
+				nav.style.border = '1px solid transparent';
+				nav.style.width = '50vw';
+			}
 		}
 	}
 
 	function navbarAnimationToggle() {
 		const nav = document.querySelector('nav');
-		nav?.style.setProperty('transition', 'none');
+		if (nav) {
+			nav.style.transition = 'none';
+		}
 	}
 
 	function navHide() {
@@ -49,15 +55,21 @@
 
 	onMount(() => {
 		if (!navVisible) navShow();
+
+		// Add scroll event listener
+		window.onscroll = () => {
+			scrollY = window.scrollY;
+			navbarExpand();
+		};
+
+		// Cleanup on destroy
+		onDestroy(() => {
+			window.onscroll = null;
+		});
 	});
 </script>
 
-<svelte:window
-	bind:scrollY
-	bind:outerWidth
-	on:scroll={navbarExpand}
-	on:resize={navbarAnimationToggle}
-/>
+<svelte:window bind:scrollY bind:outerWidth on:resize={navbarAnimationToggle} />
 
 <div class="main">
 	<nav>
@@ -216,6 +228,7 @@
 			position: fixed;
 			transform: translateX(-50%);
 			z-index: 10;
+			top: 0;
 			margin-top: -150px;
 			transition: all 0.15s ease-in-out;
 			backdrop-filter: blur(5px);
@@ -232,7 +245,8 @@
 			border: 1px solid light-dark(rgba(59, 50, 100, 0.2), rgba(100, 100, 160, 0.2));
 		}
 
-		.nav-island, .float-right {
+		.nav-island,
+		.float-right {
 			display: none;
 		}
 
@@ -240,7 +254,5 @@
 			font-size: 1.5rem;
 			margin-left: 20px;
 		}
-
-
 	}
 </style>

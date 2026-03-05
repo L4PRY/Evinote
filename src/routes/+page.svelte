@@ -90,4 +90,16 @@
 		margin-top: 1rem;
 		width: 80%;
 	}
+
+	@media (max-width: 600px) {
+        .side-by-side {
+            flex-direction: column;
+            gap: 10px;
+            width: 90vw;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+        }
+    }
 </style>
