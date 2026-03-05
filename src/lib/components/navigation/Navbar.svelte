@@ -2,11 +2,11 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount, onDestroy } from 'svelte';
-	import { afterNavigate } from '$app/navigation';
-	import { page } from '$app/state';
+	import LucideSymbol from '../frontend/LucideSymbol.svelte';
 	let scrollY = $state(0);
 	let outerWidth = $state(0);
 	let navVisible = $state(false);
+	let hamburgerVisible = $state(false);
 
 	function navbarExpand() {
 		const nav = document.querySelector('nav');
@@ -53,6 +53,21 @@
 		}
 	}
 
+	function hamburgerToggle() {
+		const navIsland = document.querySelector('.nav-island');
+		if (navIsland) {
+			if (!hamburgerVisible) {
+				navIsland.style.display = 'flex';
+				navIsland.style.height = 'fit-content';
+				hamburgerVisible = true;
+			} else {
+				// navIsland.style.display = 'none';
+				navIsland.style.height = '0vh';
+				hamburgerVisible = false;
+			}
+		}
+	}
+
 	onMount(() => {
 		if (!navVisible) navShow();
 
@@ -88,13 +103,20 @@
 			<button>Dashboard</button>
 			<div class="nav-island-divider"></div>
 			<button onclick={() => goto(resolve('/about'))}>About</button>
+			<button class="login-island" onclick={() => goto(resolve('/auth'))}>Login</button>
 		</div>
 		<div class="float-right">
 			<button
+				class="login"
 				onclick={() => {
 					goto(resolve('/auth'));
 				}}>Login</button
 			>
+			<div class="hamburger">
+				<button style="cursor: pointer;" onclick={hamburgerToggle}>
+					<LucideSymbol symbol={'Menu'} size={32} strokeWidth={2} />
+				</button>
+			</div>
 		</div>
 	</nav>
 </div>
@@ -139,6 +161,9 @@
 		.float-right {
 			justify-self: flex-end;
 			margin-right: 10px;
+		}
+		.float-right .hamburger {
+			display: none;
 		}
 		.nav-island {
 			display: flex;
@@ -226,33 +251,68 @@
 			min-width: fit-content;
 			max-width: 100%;
 			position: fixed;
-			transform: translateX(-50%);
 			z-index: 10;
 			top: 0;
 			margin-top: -150px;
-			transition: all 0.15s ease-in-out;
 			backdrop-filter: blur(5px);
-			border: 1px solid transparent;
 			gap: 20px;
-			background-color: var(--default-bg-color);
-
 			background: linear-gradient(
 				180deg,
 				light-dark(transparent, rgba(200, 200, 250, 0.05)),
 				light-dark(rgba(0, 0, 100, 0.05), transparent)
 			);
 			border-radius: 20px;
-			border: 1px solid light-dark(rgba(59, 50, 100, 0.2), rgba(100, 100, 160, 0.2));
+			border: 1px solid var(--default-stroke-color);
 		}
 
-		.nav-island,
-		.float-right {
+		.float-right .login {
 			display: none;
+		}
+
+		.hamburger {
+			display: flex;
+			margin-right: 20px;
+			padding: 2px;
 		}
 
 		.float-left {
 			font-size: 1.5rem;
 			margin-left: 20px;
+		}
+
+		.nav-island {
+			position: fixed;
+			display: flex;
+			gap: 1px;
+			flex-direction: column;
+			text-align: center;
+			top: 50px;
+			width: 90vw;
+			background-color: rgba(12, 12, 12, 1);
+
+			/*background: linear-gradient(
+				180deg,
+				light-dark(transparent, rgba(200, 200, 250, 0.05)),
+				light-dark(rgba(0, 0, 100, 0.05), transparent)
+			);*/
+
+			border-radius: 20px;
+			border: 1px solid var(--default-stroke-color);
+			height: 0;
+			display: none;
+			overflow: hidden;
+			transition: height 0.5s ease-in-out;
+		}
+
+		.login-island {
+            display: flex;
+        }
+
+		.nav-island button {
+			width: 100%;
+			padding: 15px;
+			font-size: 1.2rem;
+			cursor: pointer;
 		}
 	}
 </style>
