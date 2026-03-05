@@ -59,15 +59,13 @@
 			onDrag: dragData => {
 				// Update position while keeping the current z-index
 				notePosition = { ...dragData.offset, z: notePosition.z };
-			},
-			onDragEnd: () => {
-				// Sync final position back to parent data
 				data = { ...data, position: notePosition };
 			}
 		})
 	])}
 	class="note"
 	title={data.title}
+	id={data.title ?? undefined}
 	style:background-color={color}
 	style:z-index={notePosition.z}
 >

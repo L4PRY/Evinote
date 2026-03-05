@@ -1,22 +1,130 @@
-import { writable } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 
-// store current size of the visible part of the canvas (viewport)
-// store the position from the top left part of the canvas to the top right part of the viewport
-
-export const viewportBounds = writable({
-	width: 0,
-	height: 0
-});
-
-export const viewportPosition = writable({
-	x: 0,
-	y: 0
-});
-
-function updateViewportBounds(width: number, height: number) {
-	viewportBounds.set({ width, height });
+// Viewport dimensions (visible area of the canvas)
+export interface ViewportBounds {
+	width: number;
+	height: number;
 }
 
-function updateViewportPosition(x: number, y: number) {
-	viewportPosition.set({ x, y });
+// Scroll position (offset from canvas origin)
+export interface ViewportPosition {
+	left: number;
+	top: number;
+}
+
+// Canvas total size
+export interface CanvasSize {
+	width: number;
+	height: number;
+}
+
+// Create the stores
+const createViewportBoundsStore = () => {
+	const { subscribe, set, update } = writable<ViewportBounds>({
+		width: 0,
+		height: 0
+	});
+
+	return {
+		subscribe,
+		set,
+		update,
+		setSize: (width: number, height: number) => set({ width, height })
+	};
+};
+
+const createViewportPositionStore = () => {
+	const { subscribe, set, update } = writable<ViewportPosition>({
+		left: 0,
+		top: 0
+	});
+
+	return {
+		subscribe,
+		set,
+		update,
+		setPosition: (left: number, top: number) => set({ left, top }),
+		scrollTo: (left: number, top: number) => set({ left, top }),
+		scrollBy: (deltaLeft: number, deltaTop: number) => {
+			update(pos => ({
+				left: pos.left + deltaLeft,
+				top: pos.top + deltaTop
+			}));
+		}
+	};
+};
+
+const createCanvasSizeStore = () => {
+	const { subscribe, set, update } = writable<CanvasSize>({
+		width: 0,
+		height: 0
+	});
+
+	return {
+		subscribe,
+		set,
+		update,
+		setSize: (width: number, height: number) => set({ width, height })
+	};
+};
+
+export const viewportBounds = createViewportBoundsStore();
+export const viewportPosition = createViewportPositionStore();
+export const canvasSize = createCanvasSizeStore();
+
+// Derived store that combines viewport info for the mini viewport
+export const viewportInfo = derived(
+	[viewportBounds, viewportPosition, canvasSize],
+	([$bounds, $position, $canvas]) => ({
+		// Viewport dimensions
+		viewportWidth: $bounds.width,
+		viewportHeight: $bounds.height,
+		// Scroll position
+		scrollLeft: $position.left,
+		scrollTop: $position.top,
+		// Canvas dimensions
+		canvasWidth: $canvas.width,
+		canvasHeight: $canvas.height,
+		// Computed values
+		maxScrollLeft: Math.max(0, $canvas.width - $bounds.width),
+		maxScrollTop: Math.max(0, $canvas.height - $bounds.height),
+		// Viewport position as percentage of canvas
+		scrollLeftPercent: $canvas.width > 0 ? ($position.left / $canvas.width) * 100 : 0,
+		scrollTopPercent: $canvas.height > 0 ? ($position.top / $canvas.height) * 100 : 0,
+		// Viewport size as percentage of canvas
+		viewportWidthPercent: $canvas.width > 0 ? ($bounds.width / $canvas.width) * 100 : 100,
+		viewportHeightPercent: $canvas.height > 0 ? ($bounds.height / $canvas.height) * 100 : 100
+	})
+);
+
+// Helper to clamp scroll position within bounds
+export function clampScrollPosition(
+	left: number,
+	top: number,
+	canvasWidth: number,
+	canvasHeight: number,
+	viewportWidth: number,
+	viewportHeight: number
+): ViewportPosition {
+	return {
+		left: Math.max(0, Math.min(left, canvasWidth - viewportWidth)),
+		top: Math.max(0, Math.min(top, canvasHeight - viewportHeight))
+	};
+}
+
+// Utility to get current values synchronously
+export function getViewportInfo() {
+	return get(viewportInfo);
+}
+
+export function getViewportPosition() {
+	return get(viewportPosition);
+}
+
+export function getViewportBounds() {
+	return get(viewportBounds);
+}
+
+export function getCanvasSize() {
+	return get(canvasSize);
 }

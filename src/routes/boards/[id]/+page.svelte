@@ -10,6 +10,7 @@
 	import type { NoteData } from '$lib/types/NoteData';
 	import { onMount } from 'svelte';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
+	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';
 
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
@@ -164,6 +165,7 @@
 		}}
 	/> -->
 </Canvas>
+<MiniViewport {notes} />
 
 <style>
 	.dialog-container {

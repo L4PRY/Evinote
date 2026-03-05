@@ -2,6 +2,7 @@
 	import type { CanvasData } from '$lib/types/CanvasData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
+	import { viewportBounds, viewportPosition, canvasSize } from '$lib/stores/viewportBounds';
 	import type { Snippet } from 'svelte';
 
 	const {
@@ -17,6 +18,9 @@
 
 	// svelte-ignore state_referenced_locally
 	let canvasData = $state<CanvasData>(data);
+
+	// Track if canvas is being dragged (to prevent feedback loops with MiniViewport)
+	let isCanvasDragging = $state(false);
 
 	// Drag state
 	let isDragging = $state(false);
@@ -103,6 +107,7 @@
 		if (e.target !== canvasElement && e.target !== contentElement) return;
 
 		isDragging = true;
+		isCanvasDragging = true;
 		dragStartX = e.clientX;
 		dragStartY = e.clientY;
 		scrollStartX = canvasElement.scrollLeft;
@@ -128,6 +133,7 @@
 		if (!isDragging) return;
 
 		isDragging = false;
+		isCanvasDragging = false;
 		canvasElement.releasePointerCapture(e.pointerId);
 	}
 
@@ -205,6 +211,66 @@
 			canvasElement.scrollTop = maxScrollY / 2;
 		}
 	}
+
+	// Update stores when canvas element is available and on scroll
+	function updateViewportStores() {
+		if (!canvasElement) return;
+
+		// Update viewport bounds (visible area dimensions)
+		viewportBounds.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
+
+		// Update scroll position
+		viewportPosition.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+
+		// Update canvas size (taking zoom into account for scrollable area)
+		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
+	}
+
+	// Handle scroll events (including from MiniViewport store changes)
+	function handleScroll() {
+		if (isCanvasDragging) {
+			// If we're dragging, just update the store
+			viewportPosition.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+		}
+	}
+
+	// Initialize viewport stores on mount and observe resize
+	$effect(() => {
+		if (!canvasElement) return;
+
+		// Initial update
+		updateViewportStores();
+
+		// Create ResizeObserver to track viewport size changes
+		const resizeObserver = new ResizeObserver(() => {
+			updateViewportStores();
+		});
+
+		resizeObserver.observe(canvasElement);
+
+		// Cleanup on unmount
+		return () => {
+			resizeObserver.disconnect();
+		};
+	});
+
+	// Listen to viewportPosition store changes (from MiniViewport dragging)
+	$effect(() => {
+		const unsubscribe = viewportPosition.subscribe(pos => {
+			// Only apply if we're not currently dragging the canvas
+			if (!isCanvasDragging && canvasElement) {
+				canvasElement.scrollLeft = pos.left;
+				canvasElement.scrollTop = pos.top;
+			}
+		});
+
+		return unsubscribe;
+	});
+
+	// Update canvas size when canvas data changes
+	$effect(() => {
+		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -216,6 +282,7 @@
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
 	onwheel={handleWheel}
+	onscroll={handleScroll}
 	class:dragging={isDragging}
 	role="application"
 	aria-label="Draggable canvas"
@@ -240,7 +307,7 @@
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: 100vh;
+		height: 100%;
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
