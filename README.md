@@ -6,7 +6,7 @@ Notetaking and information sharing webapp made with sveltekit and postgres. ✨
 * [Specification sheet](/../../issues/5)
 * [DB Schema](/../../issues/1)
 
-# main active branches:
+## main active branches:
 * [frontend](https://github.com/L4PRY/Evinote/tree/frontend)
 * [notes-notes-canvas](https://github.com/L4PRY/Evinote/tree/feat-notes-canvas)
 * [backend](https://github.com/L4PRY/Evinote/tree/backend)
