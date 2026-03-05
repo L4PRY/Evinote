@@ -117,7 +117,7 @@
 			>
 			<div class="hamburger">
 				<button style="cursor: pointer;" onclick={hamburgerToggle}>
-					<LucideSymbol symbol={'Menu'} size={32} strokeWidth={2} />
+					<LucideSymbol symbol={'Menu'} size={64} strokeWidth={2} />
 				</button>
 			</div>
 		</div>
@@ -267,7 +267,7 @@
 				light-dark(rgba(0, 0, 100, 0.05), transparent)
 			);
 			border-radius: 20px;
-			border: 1px solid var(--default-stroke-color);
+			/*border: 1px solid var(--default-stroke-color);*/
 			transition: height 0.5s ease-in-out;
 		}
 
@@ -277,8 +277,17 @@
 
 		.hamburger {
 			display: flex;
-			margin-right: 20px;
 			padding: 2px;
+		}
+
+		.hamburger button {
+			transform: scale(0.5);
+			transform-origin: center;
+			transition: all 0.1s ease-in-out;
+		}
+
+		.hamburger button:active {
+			transform: scale(0.45);
 		}
 
 		.float-left {
@@ -289,11 +298,11 @@
 		.nav-island {
 			position: fixed;
 			display: flex;
-			gap: 1px;
+			gap: 2px;
 			flex-direction: column;
 			align-items: center;
 			text-align: center;
-			top: 50px;
+			top: 52px;
 			width: 90vw;
 			/*background-color: light-dark(#e2dde2, #13091a);*/
 
@@ -304,11 +313,19 @@
 			);
 
 			border-radius: 5px 5px 20px 20px;
-			border: 1px solid var(--default-stroke-color);
+			/*border: 1px solid var(--default-stroke-color);*/
 			height: 0;
 			display: none;
 			overflow: hidden;
 			transition: all 0.5s ease-in-out;
+		}
+
+		.nav-island button {
+			background-color: var(--default-blur-color);
+		}
+
+		.nav-island button:hover {
+		    backdrop-filter: opacity(5);
 		}
 
 		nav::before,
@@ -322,11 +339,12 @@
 			left: 0;
 			top: 0;
 			z-index: -99;
-			border: 1px solid transparent;
 			border-radius: inherit;
+			border: 1px solid var(--default-stroke-color);
 		}
 
 		.login-island {
+		    margin-top: 1px;
 			display: inline-block;
 		}
 

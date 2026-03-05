@@ -9,7 +9,7 @@
 		if (bckpdl) {
 			bckpdl.style.transition =
 				'transform 0.8s cubic-bezier(0.38,1.07,0.65,0.99), filter 0.5s ease-in-out';
-			bckpdl.style.transform = 'translateY(20vh) translateX(42.5%)';
+			bckpdl.style.transform = 'translateY(50%) translateX(42.5%)';
 			bckpdl.style.filter = 'opacity(0.3)';
 			setInterval(() => {
 				bckpdl.style.transition = 'filter 0.2s ease-in-out';
@@ -59,17 +59,17 @@
 
 	.top {
 		width: 100%;
+		display: flex;
 	}
 
 	.backpedal {
-		position: absolute;
+		position: relative;
 		font-size: 1.5rem;
 		text-decoration: underline;
-		top: 10vh;
-		left: 0;
-		transform: translateX(42.5%);
 		width: fit-content;
 		filter: opacity(0);
+		transform-origin: left;
+		transform: translateY(-100%) translateX(42.5%);
 	}
 
 	.backpedal:hover {
