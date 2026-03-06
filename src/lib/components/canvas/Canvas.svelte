@@ -2,7 +2,7 @@
 	import type { CanvasData } from '$lib/types/CanvasData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
-	import { viewportBounds, viewportPosition, canvasSize } from '$lib/stores/viewportBounds';
+	import { bounds, viewportpositionSize } from '$lib/stores/viewportBounds';
 	import type { Snippet } from 'svelte';
 
 	const {
@@ -217,10 +217,10 @@
 		if (!canvasElement) return;
 
 		// Update viewport bounds (visible area dimensions)
-		viewportBounds.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
+		bounds.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
 
 		// Update scroll position
-		viewportPosition.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+		position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
 
 		// Update canvas size (taking zoom into account for scrollable area)
 		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
@@ -230,7 +230,7 @@
 	function handleScroll() {
 		if (isCanvasDragging) {
 			// If we're dragging, just update the store
-			viewportPosition.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+			position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
 		}
 	}
 
@@ -256,7 +256,7 @@
 
 	// Listen to viewportPosition store changes (from MiniViewport dragging)
 	$effect(() => {
-		const unsubscribe = viewportPosition.subscribe(pos => {
+		const unsubscribe = position.subscribe(pos => {
 			// Only apply if we're not currently dragging the canvas
 			if (!isCanvasDragging && canvasElement) {
 				canvasElement.scrollLeft = pos.left;

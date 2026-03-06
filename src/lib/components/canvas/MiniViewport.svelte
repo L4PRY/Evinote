@@ -1,46 +1,35 @@
 <script lang="ts">
-	import { draggable, bounds, BoundsFrom, position, events } from '@neodrag/svelte';
+	import {
+		draggable,
+		bounds as dragBounds,
+		BoundsFrom,
+		position as dragPosition,
+		events,
+		Compartment
+	} from '@neodrag/svelte';
 	import type { NoteData } from '$lib/types/NoteData';
 	import { parseColor } from '$lib/parseColor';
-	import {
-		viewportBounds,
-		viewportPosition,
-		canvasSize,
-		clampScrollPosition
-	} from '$lib/stores/viewportBounds';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
+	import { bounds, position, canvasSize, clampScrollPosition } from '$lib/stores/viewport';
 
-	// Props
-	let {
-		notes = [],
-		miniWidth = 200,
-		miniHeight = 150
-	}: {
-		notes: NoteData[];
-		miniWidth?: number;
-		miniHeight?: number;
-	} = $props();
+	let { notes = [] as NoteData[], miniWidth = 200, miniHeight = 150 } = $props();
 
-	// Track if we're currently dragging to prevent feedback loops
-	let isDragging = $state(false);
-
-	// Store note bounds - populated client-side only via $effect
 	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
 
-	// Calculate scale factor between mini viewport and actual canvas
+	let isDragging = $state(false);
+
+	let effectiveCanvasWidth = $derived($canvasSize.width * $zoomLevel);
+	let effectiveCanvasHeight = $derived($canvasSize.height * $zoomLevel);
+
 	let scale = $derived.by(() => {
 		if ($canvasSize.width === 0 || $canvasSize.height === 0) return 1;
-		// Scale based on canvas size to fit within mini viewport
+
 		const scaleX = miniWidth / $canvasSize.width;
 		const scaleY = miniHeight / $canvasSize.height;
 		return Math.min(scaleX, scaleY);
 	});
 
-	// Effective zoom for calculations (canvas content is scaled by zoom)
-	let effectiveCanvasWidth = $derived($canvasSize.width * $zoomLevel);
-	let effectiveCanvasHeight = $derived($canvasSize.height * $zoomLevel);
-
-	// Scale factor for the zoomed canvas
+	// Scale factor for the zoomed canvas - MUST be defined before currentPosition
 	let zoomedScale = $derived.by(() => {
 		if (effectiveCanvasWidth === 0 || effectiveCanvasHeight === 0) return 1;
 		const scaleX = miniWidth / effectiveCanvasWidth;
@@ -48,76 +37,65 @@
 		return Math.min(scaleX, scaleY);
 	});
 
-	// Viewport indicator dimensions (scaled)
-	let viewportIndicatorWidth = $derived($viewportBounds.width * zoomedScale);
-	let viewportIndicatorHeight = $derived($viewportBounds.height * zoomedScale);
+	let viewportIndicatorWidth = $derived($bounds.width * zoomedScale);
+	let viewportIndicatorHeight = $derived($bounds.height * zoomedScale);
 
-	// Viewport indicator position (scaled from scroll position)
-	let viewportIndicatorLeft = $derived($viewportPosition.left * zoomedScale);
-	let viewportIndicatorTop = $derived($viewportPosition.top * zoomedScale);
+	let viewportIndicatorLeft = $derived($position.left * zoomedScale);
+	let viewportIndicatorTop = $derived($position.top * zoomedScale);
 
-	// Sync position from store when not dragging
-	$effect(() => {
-		if (!isDragging) {
-			currentPosition = {
-				x: viewportIndicatorLeft,
-				y: viewportIndicatorTop
-			};
-		}
+	let currentPosition = $derived.by(() => {
+		return {
+			x: viewportIndicatorLeft,
+			y: viewportIndicatorTop
+		};
 	});
 
-	// Handle drag events to update viewport position
 	function handleDrag(data: { offset: { x: number; y: number } }) {
-		// Update local position immediately for smooth dragging
-		currentPosition = { x: data.offset.x, y: data.offset.y };
-
-		// Convert mini viewport position back to actual scroll position
 		const newScrollLeft = data.offset.x / zoomedScale;
 		const newScrollTop = data.offset.y / zoomedScale;
 
-		// Clamp and update the viewport position store
 		const clamped = clampScrollPosition(
 			newScrollLeft,
 			newScrollTop,
 			effectiveCanvasWidth,
 			effectiveCanvasHeight,
-			$viewportBounds.width,
-			$viewportBounds.height
+			$bounds.width,
+			$bounds.height
 		);
 
-		viewportPosition.scrollTo(clamped.left, clamped.top);
+		position.scrollTo(clamped.left, clamped.top);
 	}
 
-	// Update note bounds when notes change (client-side only)
 	$effect(() => {
-		const updateBounds = () => {
-			noteBounds = notes.map(note => {
-				const element = document.getElementById(note.title ?? '');
-				if (element) {
-					return { noteId: note.title ?? '', rect: element.getBoundingClientRect() };
-				}
-				return { noteId: note.title ?? '', rect: new DOMRect(0, 0, 0, 0) };
-			});
-		};
-
-		// Initial update
-		updateBounds();
-
-		// Also update after a short delay to catch any late-rendering notes
-		const timeout = setTimeout(updateBounds, 100);
-
-		return () => clearTimeout(timeout);
+		noteBounds = notes.map(note => {
+			const element = document.getElementById(note.title ?? '');
+			if (element) {
+				return { noteId: note.title ?? '', rect: element.getBoundingClientRect() };
+			}
+			return { noteId: note.title ?? '', rect: new DOMRect(0, 0, 0, 0) };
+		});
 	});
+
+	$effect(() => {
+		$inspect(isDragging, currentPosition);
+	});
+
+	// two way controls could be implemented in a way that actually uses 2 divs,
+	// one for when the viewport is being dragged around on the canvas,
+	// and one for when it's being dragged in the mini view.
+	// when dragging on the canvas, hide the mini-dragger and show
+	//
+	// wait this is stupid
+	// how the fuck could i make it so that it updates seamessly while dragging
+	// on the canvas and on the mini-viewport???????????
 </script>
 
 <div class="mini-viewport-container" style:width="{miniWidth}px" style:height="{miniHeight}px">
-	<!-- Mini canvas background showing the full canvas area -->
 	<div
 		class="mini-canvas"
 		style:width="{effectiveCanvasWidth * zoomedScale}px"
 		style:height="{effectiveCanvasHeight * zoomedScale}px"
 	>
-		<!-- Note indicators -->
 		{#each notes as note, i (note.title ?? i)}
 			{@const pos = { left: note.position.x * scale, top: note.position.y * scale }}
 			{@const color = parseColor(note.color)}
@@ -141,24 +119,17 @@
 			></div>
 		{/each}
 
-		<!-- Viewport indicator (draggable) -->
 		<div
 			{@attach draggable([
-				bounds(BoundsFrom.parent()),
-				position({
-					current: currentPosition
-				}),
+				dragBounds(BoundsFrom.parent()),
 				events({
-					onDragStart: () => {
-						isDragging = true;
-					},
 					onDrag: handleDrag,
-					onDragEnd: () => {
-						isDragging = false;
-					}
-				})
+					onDragStart: () => (isDragging = true),
+					onDragEnd: () => (isDragging = false)
+				}),
+				dragPosition({ default: currentPosition })
 			])}
-			class="viewport-indicator"
+			class={'viewport-indicator'}
 			style:width="{Math.max(viewportIndicatorWidth, 10)}px"
 			style:height="{Math.max(viewportIndicatorHeight, 10)}px"
 			role="button"
