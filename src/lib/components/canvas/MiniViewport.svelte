@@ -5,7 +5,7 @@
 		BoundsFrom,
 		position as dragPosition,
 		events,
-		Compartment
+		disabled
 	} from '@neodrag/svelte';
 	import type { NoteData } from '$lib/types/NoteData';
 	import { parseColor } from '$lib/parseColor';
@@ -50,6 +50,10 @@
 		};
 	});
 
+	// const positionComp = Compartment.of(() =>
+	// 	isDragging ? null : dragPosition({ default: currentPosition })
+	// );
+
 	function handleDrag(data: { offset: { x: number; y: number } }) {
 		const newScrollLeft = data.offset.x / zoomedScale;
 		const newScrollTop = data.offset.y / zoomedScale;
@@ -77,7 +81,7 @@
 	});
 
 	$effect(() => {
-		$inspect(isDragging, currentPosition);
+		$inspect(isDragging, positionComp.current, currentPosition);
 	});
 
 	// two way controls could be implemented in a way that actually uses 2 divs,
@@ -121,13 +125,14 @@
 
 		<div
 			{@attach draggable([
+				disabled(),
+				dragPosition({ default: currentPosition }),
 				dragBounds(BoundsFrom.parent()),
 				events({
 					onDrag: handleDrag,
 					onDragStart: () => (isDragging = true),
 					onDragEnd: () => (isDragging = false)
-				}),
-				dragPosition({ default: currentPosition })
+				})
 			])}
 			class={'viewport-indicator'}
 			style:width="{Math.max(viewportIndicatorWidth, 10)}px"
@@ -175,20 +180,21 @@
 		border: 2px solid rgba(100, 150, 255, 0.8);
 		background-color: rgba(100, 150, 255, 0.15);
 		border-radius: 3px;
-		cursor: grab;
+		/*cursor: grab;*/
 		transition:
 			border-color 0.15s ease,
 			background-color 0.15s ease;
 	}
 
-	.viewport-indicator:hover {
-		border-color: rgba(130, 180, 255, 1);
-		background-color: rgba(100, 150, 255, 0.25);
-	}
+	/*.viewport-indicator:hover {*/
+	/*border-color: rgba(130, 180, 255, 1);
+		background-color: rgba(100, 150, 255, 0.25);*/
+	/*cursor: not-allowed;*/
+	/*}*/
 
-	.viewport-indicator:active {
+	/*.viewport-indicator:active {
 		cursor: grabbing;
 		border-color: rgba(150, 200, 255, 1);
 		background-color: rgba(100, 150, 255, 0.35);
-	}
+	}*/
 </style>
