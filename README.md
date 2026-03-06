@@ -13,7 +13,7 @@ Notetaking and information sharing webapp made with sveltekit and postgres. ✨
 
 ## setup devenv
 prequisites:
-- [podman](https://podman.io) or [docker](https://docker.com)
+- [docker](https://docker.com)
 - [node.js](https://nodejs.org/en/download/)
 
 ### 1. install dependencies
@@ -23,10 +23,6 @@ npm install
 
 ### 2. start database
 ```bash
-# podman
-npm run db:start
-
-# docker
 npm run docker:db:start
 ```
 
