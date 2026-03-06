@@ -68,13 +68,13 @@ const createCanvasSizeStore = () => {
 	};
 };
 
-export const viewportBounds = createViewportBoundsStore();
-export const viewportPosition = createViewportPositionStore();
+export const bounds = createViewportBoundsStore();
+export const position = createViewportPositionStore();
 export const canvasSize = createCanvasSizeStore();
 
 // Derived store that combines viewport info for the mini viewport
 export const viewportInfo = derived(
-	[viewportBounds, viewportPosition, canvasSize],
+	[bounds, position, canvasSize],
 	([$bounds, $position, $canvas]) => ({
 		// Viewport dimensions
 		viewportWidth: $bounds.width,
@@ -118,11 +118,11 @@ export function getViewportInfo() {
 }
 
 export function getViewportPosition() {
-	return get(viewportPosition);
+	return get(position);
 }
 
 export function getViewportBounds() {
-	return get(viewportBounds);
+	return get(bounds);
 }
 
 export function getCanvasSize() {
