@@ -1,13 +1,16 @@
 <script lang="ts">
-	import Note from '$lib/components/Note.svelte';
+	import Note from '$lib/components/canvas/Note.svelte';
 	import { enhance } from '$app/forms';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import type { PageProps } from './$types';
-	import Canvas from '$lib/components/Canvas.svelte';
+	import Canvas from '$lib/components/canvas/Canvas.svelte';
+	import ZoomControl from '$lib/components/canvas/ZoomControl.svelte';
+	import { zoomLevel } from '$lib/stores/zoomLevel';
 
 	import type { NoteData } from '$lib/types/NoteData';
 	import { onMount } from 'svelte';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
+	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';
 
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
@@ -80,8 +83,7 @@
 	}
 
 	$effect(() => {
-		initializeZIndex(notes);
-		console.log({ perms, board, user });
+		if (notes.length > 0) initializeZIndex(notes);
 	});
 </script>
 
@@ -115,12 +117,12 @@
 	</div>
 {/if}
 
+<ZoomControl />
 <Canvas
 	data={{
 		size: {
-			width: 6400,
-			height: 6400,
-			zoom: 1
+			width: 3200,
+			height: 3200
 		},
 		background: {
 			type: 'Grid',
@@ -163,6 +165,7 @@
 		}}
 	/> -->
 </Canvas>
+<MiniViewport {notes} />
 
 <style>
 	.dialog-container {

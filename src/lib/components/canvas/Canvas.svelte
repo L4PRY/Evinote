@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { CanvasData } from '$lib/types/CanvasData';
 	import { parseColor } from '$lib/parseColor';
+	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
+	import { bounds, canvasSize, position } from '$lib/stores/viewport';
 	import type { Snippet } from 'svelte';
 
 	const {
@@ -11,8 +13,14 @@
 		data: CanvasData;
 	} = $props();
 
+	// add a way for the current visible viewport and canvas to be movable indirectly
+	// needs a bindable for the current viewport size, scroll position and zoom level
+
 	// svelte-ignore state_referenced_locally
 	let canvasData = $state<CanvasData>(data);
+
+	// Track if canvas is being dragged (to prevent feedback loops with MiniViewport)
+	let isCanvasDragging = $state(false);
 
 	// Drag state
 	let isDragging = $state(false);
@@ -99,6 +107,7 @@
 		if (e.target !== canvasElement && e.target !== contentElement) return;
 
 		isDragging = true;
+		isCanvasDragging = true;
 		dragStartX = e.clientX;
 		dragStartY = e.clientY;
 		scrollStartX = canvasElement.scrollLeft;
@@ -124,6 +133,7 @@
 		if (!isDragging) return;
 
 		isDragging = false;
+		isCanvasDragging = false;
 		canvasElement.releasePointerCapture(e.pointerId);
 	}
 
@@ -131,11 +141,11 @@
 	function handleWheel(e: WheelEvent) {
 		e.preventDefault();
 
-		const oldZoom = canvasData.size.zoom;
-		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
-		const newZoom = Math.min(Math.max(oldZoom + zoomChange, 0.2), 3);
+		if (document.querySelector('.note')?.getAttribute('data-neodrag-state') === 'dragging') return;
 
-		// if (newZoom === oldZoom) return;
+		const oldZoom = $zoomLevel;
+		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
+		const newZoom = Math.min(Math.max(oldZoom + zoomChange, MIN_ZOOM), MAX_ZOOM);
 
 		// Get cursor position relative to the canvas viewport
 		const rect = canvasElement.getBoundingClientRect();
@@ -147,8 +157,8 @@
 		const contentX = (canvasElement.scrollLeft + cursorX) / oldZoom;
 		const contentY = (canvasElement.scrollTop + cursorY) / oldZoom;
 
-		// Apply the new zoom
-		canvasData.size = { ...canvasData.size, zoom: newZoom };
+		// Apply the new zoom via the store
+		zoomLevel.set(newZoom);
 
 		// After zoom, adjust scroll so the same content point stays under cursor
 		// content position * new zoom - cursor position in viewport = new scroll position
@@ -201,6 +211,66 @@
 			canvasElement.scrollTop = maxScrollY / 2;
 		}
 	}
+
+	// Update stores when canvas element is available and on scroll
+	function updateViewportStores() {
+		if (!canvasElement) return;
+
+		// Update viewport bounds (visible area dimensions)
+		bounds.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
+
+		// Update scroll position
+		position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+
+		// Update canvas size (taking zoom into account for scrollable area)
+		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
+	}
+
+	// Handle scroll events (including from MiniViewport store changes)
+	function handleScroll() {
+		if (isCanvasDragging) {
+			// If we're dragging, just update the store
+			position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+		}
+	}
+
+	// Initialize viewport stores on mount and observe resize
+	$effect(() => {
+		if (!canvasElement) return;
+
+		// Initial update
+		updateViewportStores();
+
+		// Create ResizeObserver to track viewport size changes
+		const resizeObserver = new ResizeObserver(() => {
+			updateViewportStores();
+		});
+
+		resizeObserver.observe(canvasElement);
+
+		// Cleanup on unmount
+		return () => {
+			resizeObserver.disconnect();
+		};
+	});
+
+	// Listen to viewportPosition store changes (from MiniViewport dragging)
+	$effect(() => {
+		const unsubscribe = position.subscribe(pos => {
+			// Only apply if we're not currently dragging the canvas
+			if (!isCanvasDragging && canvasElement) {
+				canvasElement.scrollLeft = pos.left;
+				canvasElement.scrollTop = pos.top;
+			}
+		});
+
+		return unsubscribe;
+	});
+
+	// Update canvas size when canvas data changes
+	$effect(() => {
+		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -212,6 +282,7 @@
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
 	onwheel={handleWheel}
+	onscroll={handleScroll}
 	class:dragging={isDragging}
 	role="application"
 	aria-label="Draggable canvas"
@@ -222,9 +293,9 @@
 		class="canvas-content"
 		style={backgroundCss}
 		bind:this={contentElement}
-		style:zoom={canvasData.size.zoom}
 		style:width={`${canvasData.size.width}px`}
 		style:height={`${canvasData.size.height}px`}
+		style:zoom={$zoomLevel}
 	>
 		{@render children()}
 	</div>
@@ -236,7 +307,7 @@
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: 100vh;
+		height: 100%;
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;

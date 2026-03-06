@@ -8,5 +8,5 @@ export type CanvasData = {
 		| { type: 'Solid'; value: Color } // solid color
 		| { type: 'Grid'; value: Grid } // dotted or line grid type shi
 		| { type: 'Custom'; value: string }; // custom css background
-	size: { width: number; height: number; zoom: number };
+	size: { width: number; height: number }; // zoom has been moved to a store
 };

@@ -4,7 +4,7 @@ export function parseColor(color: Color): string {
 	switch (color.type) {
 		case 'oklch': {
 			const [l, c, h, a] = color.value;
-			return `oklch(${l}% ${c} ${h}deg ${a ? '/ ' + a : ''})`;
+			return `oklch(${l}% ${c}% ${h}deg ${a ? '/ ' + a : ''})`;
 		}
 		case 'rgb': {
 			const [r, g, b, a] = color.value;

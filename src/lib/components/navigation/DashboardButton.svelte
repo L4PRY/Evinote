@@ -16,6 +16,7 @@
 		{@render children()}
 	</div>
 </a>
+{/if}
 
 <style>
 	div {

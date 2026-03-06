@@ -53,8 +53,8 @@ export async function load({ params }) {
 				break;
 			case 'Private':
 				// only owner and users with perms can read or write
-				if (board.owner !== user?.id || !perms) {
-					routeLogger.warn(`User ${user?.id} does not have permissions to view board ${id}`);
+				if (board.owner !== user?.id || perms) {
+					routeLogger.warn(`${perms} - User ${user?.id} does not have permissions to view board ${id}, owner is ${board.owner}`);
 					error(403, 'forbidden');
 				}
 				break;
