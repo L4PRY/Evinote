@@ -2,7 +2,7 @@
 	import type { CanvasData } from '$lib/types/CanvasData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
-	import { bounds, viewportpositionSize } from '$lib/stores/viewportBounds';
+	import { bounds, canvasSize, position } from '$lib/stores/viewport';
 	import type { Snippet } from 'svelte';
 
 	const {
