@@ -18,7 +18,7 @@
 		border: var(--default-border);
 		border-radius: var(--border-radius);
 		background-color: var(--default-blur-color);
-		color: var(--default-text-color);
+		color: #efefec;
 		/* backdrop-filter: blur(5px); */
 		cursor: pointer;
 		transition: all 0.15s ease-in-out;

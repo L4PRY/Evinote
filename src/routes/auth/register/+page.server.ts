@@ -1,4 +1,4 @@
-import { hash } from '@node-rs/argon2';
+// import { hash } from '@node-rs/argon2';
 import { scryptSync } from 'node:crypto';
 import { fail, redirect } from '@sveltejs/kit';
 import * as auth from '$lib/server/auth';
@@ -26,15 +26,16 @@ export const actions: Actions = {
 		}
 
 		const passhash: string =
-			env.USE_LEGACY_HASH == '1'
-				? scryptSync(password, 'dev-use-do-not-use-in-prod', 32).toString('hex')
-				: await hash(password, {
-						// recommended minimum parameters
-						memoryCost: 19456,
-						timeCost: 2,
-						outputLen: 32,
-						parallelism: 1
-					});
+			// env.USE_LEGACY_HASH == '1'
+				// ? 
+				scryptSync(password, 'dev-use-do-not-use-in-prod', 32).toString('hex')
+				// : await hash(password, {
+				// 		// recommended minimum parameters
+				// 		memoryCost: 19456,
+				// 		timeCost: 2,
+				// 		outputLen: 32,
+				// 		parallelism: 1
+				// 	});
 
 		console.log(passhash);
 
