@@ -24,8 +24,8 @@
 	// Track if we're currently dragging to prevent feedback loops
 	let isDragging = $state(false);
 
-	// Stateful position for neodrag - synced from store when not dragging
-	let currentPosition = $state({ x: 0, y: 0 });
+	// Store note bounds - populated client-side only via $effect
+	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
 
 	// Calculate scale factor between mini viewport and actual canvas
 	let scale = $derived.by(() => {
@@ -87,6 +87,27 @@
 
 		viewportPosition.scrollTo(clamped.left, clamped.top);
 	}
+
+	// Update note bounds when notes change (client-side only)
+	$effect(() => {
+		const updateBounds = () => {
+			noteBounds = notes.map(note => {
+				const element = document.getElementById(note.title ?? '');
+				if (element) {
+					return { noteId: note.title ?? '', rect: element.getBoundingClientRect() };
+				}
+				return { noteId: note.title ?? '', rect: new DOMRect(0, 0, 0, 0) };
+			});
+		};
+
+		// Initial update
+		updateBounds();
+
+		// Also update after a short delay to catch any late-rendering notes
+		const timeout = setTimeout(updateBounds, 100);
+
+		return () => clearTimeout(timeout);
+	});
 </script>
 
 <div class="mini-viewport-container" style:width="{miniWidth}px" style:height="{miniHeight}px">
@@ -100,8 +121,15 @@
 		{#each notes as note, i (note.title ?? i)}
 			{@const pos = { left: note.position.x * scale, top: note.position.y * scale }}
 			{@const color = parseColor(note.color)}
-			{@const noteIndicatorWidth = Math.max(6, 12 * scale)}
-			{@const noteIndicatorHeight = Math.max(4, 8 * scale)}
+			{@const noteBound = noteBounds[i]}
+			{@const noteIndicatorWidth =
+				noteBound && noteBound.rect.width > 0
+					? noteBound.rect.width * scale
+					: Math.max(6, 12 * scale)}
+			{@const noteIndicatorHeight =
+				noteBound && noteBound.rect.height > 0
+					? noteBound.rect.height * scale
+					: Math.max(4, 8 * scale)}
 			<div
 				class="note-indicator"
 				style:left="{pos.left}px"
