@@ -80,9 +80,9 @@
 		});
 	});
 
-	$effect(() => {
-		$inspect(isDragging, positionComp.current, currentPosition);
-	});
+	// $effect(() => {
+	// 	$inspect(isDragging, positionComp.current, currentPosition);
+	// });
 
 	// two way controls could be implemented in a way that actually uses 2 divs,
 	// one for when the viewport is being dragged around on the canvas,
