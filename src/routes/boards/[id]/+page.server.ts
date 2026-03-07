@@ -5,9 +5,9 @@ import { and, eq } from 'drizzle-orm';
 import { requireLogin } from '$lib/server/auth';
 import { error } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import type { NoteData } from '$lib/types/NoteData';
+import type { NoteData } from '$lib/types/canvas/NoteData';
 import { checkLogin } from '$lib/server/auth';
-import type { CanvasData } from '$lib/types/CanvasData.js';
+import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
 
 export async function load({ params }) {
 	const { id } = params;

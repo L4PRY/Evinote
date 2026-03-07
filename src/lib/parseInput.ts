@@ -1,4 +1,4 @@
-import { Email, Username } from './types/Regex';
+import { Email, Username } from './types/auth/Regex';
 
 export const validateUsername = (username: unknown): username is string =>
 	typeof username === 'string' &&

@@ -7,7 +7,7 @@
 	import ZoomControl from '$lib/components/canvas/ZoomControl.svelte';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 
-	import type { NoteData } from '$lib/types/NoteData';
+	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import { onMount } from 'svelte';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
 	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';

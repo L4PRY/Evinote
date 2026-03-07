@@ -7,7 +7,7 @@
 		events,
 		disabled
 	} from '@neodrag/svelte';
-	import type { NoteData } from '$lib/types/NoteData';
+	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { bounds, position, canvasSize, clampScrollPosition } from '$lib/stores/viewport';

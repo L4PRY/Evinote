@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-export const MIN_ZOOM = 0.5;
+export const MIN_ZOOM = 0.55;
 export const MAX_ZOOM = 2;
 export const DEFAULT_ZOOM = 1;
 export const STEP = 0.1;

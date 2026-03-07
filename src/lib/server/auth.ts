@@ -5,6 +5,7 @@ import * as table from '$lib/server/db/schema';
 import { getRequestEvent } from '$app/server';
 import type { PostgresError } from 'postgres';
 import { authLogger } from './logger';
+import type { AuthenticatedUser } from '../types/auth/AuthenticatedUser';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
@@ -12,19 +13,6 @@ const RENEW_THRESHOLD = DAY_IN_MS * 15;
 const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 
 export const sessionCookieName = '.EVISECURITY';
-
-export type AuthenticatedUser = NonNullable<
-	Awaited<ReturnType<typeof validateSessionToken>>['user']
->;
-
-export type AuthenticatedSession = NonNullable<
-	Awaited<ReturnType<typeof validateSessionToken>>['session']
->;
-
-export type AuthContext = {
-	user: AuthenticatedUser;
-	session: AuthenticatedSession;
-};
 
 export function generateSecureRandomString(): string {
 	// Human readable alphabet (a-z, 0-9 without l, o, 0, 1 to avoid confusion)

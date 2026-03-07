@@ -1,22 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
-
-// Viewport dimensions (visible area of the canvas)
-export interface ViewportBounds {
-	width: number;
-	height: number;
-}
-
-// Scroll position (offset from canvas origin)
-export interface ViewportPosition {
-	left: number;
-	top: number;
-}
-
-// Canvas total size
-export interface CanvasSize {
-	width: number;
-	height: number;
-}
+import type { ViewportBounds } from '../types/stores/ViewportBounds';
+import type { ViewportPosition } from '../types/stores/ViewportPosition';
+import type { CanvasSize } from '../types/stores/CanvasSize';
 
 // Create the stores
 const createViewportBoundsStore = () => {

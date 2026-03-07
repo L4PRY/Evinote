@@ -10,8 +10,8 @@ import {
 	pgEnum,
 	pgTable
 } from 'drizzle-orm/pg-core';
-import type { CanvasData } from '$lib/types/CanvasData';
-import type { NoteData } from '$lib/types/NoteData';
+import type { CanvasData } from '$lib/types/canvas/CanvasData';
+import type { NoteData } from '$lib/types/canvas/NoteData';
 
 export const auth = pgSchema('auth');
 export const app = pgSchema('app');

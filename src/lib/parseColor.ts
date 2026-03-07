@@ -1,4 +1,4 @@
-import type { Color } from './types/Color';
+import type { Color } from './types/canvas/Color';
 
 export function parseColor(color: Color): string {
 	switch (color.type) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CanvasData } from '$lib/types/CanvasData';
+	import type { CanvasData } from '$lib/types/canvas/CanvasData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
 	import { bounds, canvasSize, position } from '$lib/stores/viewport';
