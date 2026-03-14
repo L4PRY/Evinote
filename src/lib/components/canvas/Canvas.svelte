@@ -216,22 +216,9 @@
 	function updateViewportStores() {
 		if (!canvasElement) return;
 
-		// Update viewport bounds (visible area dimensions)
 		bounds.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
-
-		// Update scroll position
 		position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
-
-		// Update canvas size (taking zoom into account for scrollable area)
 		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
-	}
-
-	// Handle scroll events (including from MiniViewport store changes)
-	function handleScroll() {
-		if (isCanvasDragging) {
-			// If we're dragging, just update the store
-			position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
-		}
 	}
 
 	// Initialize viewport stores on mount and observe resize
@@ -282,7 +269,7 @@
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
 	onwheel={handleWheel}
-	onscroll={handleScroll}
+	onscroll={updateViewportStores}
 	class:dragging={isDragging}
 	role="application"
 	aria-label="Draggable canvas"

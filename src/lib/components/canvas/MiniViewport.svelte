@@ -11,7 +11,7 @@
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { bounds, position, canvasSize, clampScrollPosition } from '$lib/stores/viewport';
 
-	let { notes = [] as NoteData[], miniWidth = 200, miniHeight = 150 } = $props();
+	let { notes = [] as NoteData[], size = 200 } = $props();
 
 	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
 
@@ -21,16 +21,16 @@
 	let scale = $derived.by(() => {
 		if ($canvasSize.width === 0 || $canvasSize.height === 0) return 1;
 
-		const scaleX = miniWidth / $canvasSize.width;
-		const scaleY = miniHeight / $canvasSize.height;
+		const scaleX = size / $canvasSize.width;
+		const scaleY = size / $canvasSize.height;
 		return Math.min(scaleX, scaleY);
 	});
 
 	// Scale factor for the zoomed canvas - MUST be defined before currentPosition
 	let zoomedScale = $derived.by(() => {
 		if (effectiveCanvasWidth === 0 || effectiveCanvasHeight === 0) return 1;
-		const scaleX = miniWidth / effectiveCanvasWidth;
-		const scaleY = miniHeight / effectiveCanvasHeight;
+		const scaleX = size / effectiveCanvasWidth;
+		const scaleY = size / effectiveCanvasHeight;
 		return Math.min(scaleX, scaleY);
 	});
 
@@ -69,7 +69,7 @@
 	// on the canvas and on the mini-viewport???????????
 </script>
 
-<div class="mini-viewport-container" style:width="{miniWidth}px" style:height="{miniHeight}px">
+<div class="mini-viewport-container" style:height="{size}px" style:width="{size}px">
 	<div
 		class="mini-canvas"
 		style:width="{effectiveCanvasWidth * zoomedScale}px"
@@ -149,8 +149,10 @@
 		position: absolute;
 		border: 2px solid rgba(100, 150, 255, 0.8);
 		background-color: rgba(100, 150, 255, 0.15);
-		border-radius: 3px;
+		border-radius: 8px;
 		/*cursor: grab;*/
+		margin-top: 1px;
+		/*margin-bottom: 1px;*/
 		transition:
 			border-color 0.15s ease,
 			background-color 0.15s ease;
