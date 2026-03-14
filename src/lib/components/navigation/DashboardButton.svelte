@@ -11,12 +11,11 @@
 <a {href}>
 	<div class:active={isActive(href || 'inactive')}>
 		{#if symbol}
-			<LucideSymbol symbol={symbol} size={42} strokeWidth={1.5} />
+			<LucideSymbol {symbol} size={42} strokeWidth={1.5} />
 		{/if}
 		{@render children()}
 	</div>
 </a>
-{/if}
 
 <style>
 	div {
