@@ -4,7 +4,6 @@
 		bounds as dragBounds,
 		BoundsFrom,
 		position as dragPosition,
-		events,
 		disabled
 	} from '@neodrag/svelte';
 	import type { NoteData } from '$lib/types/canvas/NoteData';
@@ -15,8 +14,6 @@
 	let { notes = [] as NoteData[], miniWidth = 200, miniHeight = 150 } = $props();
 
 	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
-
-	let isDragging = $state(false);
 
 	let effectiveCanvasWidth = $derived($canvasSize.width * $zoomLevel);
 	let effectiveCanvasHeight = $derived($canvasSize.height * $zoomLevel);
@@ -43,32 +40,10 @@
 	let viewportIndicatorLeft = $derived($position.left * zoomedScale);
 	let viewportIndicatorTop = $derived($position.top * zoomedScale);
 
-	let currentPosition = $derived.by(() => {
-		return {
-			x: viewportIndicatorLeft,
-			y: viewportIndicatorTop
-		};
-	});
-
-	// const positionComp = Compartment.of(() =>
-	// 	isDragging ? null : dragPosition({ default: currentPosition })
-	// );
-
-	function handleDrag(data: { offset: { x: number; y: number } }) {
-		const newScrollLeft = data.offset.x / zoomedScale;
-		const newScrollTop = data.offset.y / zoomedScale;
-
-		const clamped = clampScrollPosition(
-			newScrollLeft,
-			newScrollTop,
-			effectiveCanvasWidth,
-			effectiveCanvasHeight,
-			$bounds.width,
-			$bounds.height
-		);
-
-		position.scrollTo(clamped.left, clamped.top);
-	}
+	let currentPosition = $derived.by(() => ({
+		x: viewportIndicatorLeft,
+		y: viewportIndicatorTop
+	}));
 
 	$effect(() => {
 		noteBounds = notes.map(note => {
@@ -126,13 +101,8 @@
 		<div
 			{@attach draggable([
 				disabled(),
-				dragPosition({ default: currentPosition }),
-				dragBounds(BoundsFrom.parent()),
-				events({
-					onDrag: handleDrag,
-					onDragStart: () => (isDragging = true),
-					onDragEnd: () => (isDragging = false)
-				})
+				dragPosition({ current: currentPosition }),
+				dragBounds(BoundsFrom.parent())
 			])}
 			class={'viewport-indicator'}
 			style:width="{Math.max(viewportIndicatorWidth, 10)}px"
