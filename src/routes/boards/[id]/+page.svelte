@@ -88,7 +88,7 @@
 </script>
 
 <!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
-{#if perms?.perm == 'Write' || board.owner === perms?.uid || (!perms && board.owner === user?.id)}
+{#if board.owner === user?.id || perms?.perm === 'Write'}
 	<div class="note-creator">
 		<FancyButton1 onclick={() => (showDialog = true)} style="width: 100px">Add Note</FancyButton1>
 		<form method="post" use:enhance>

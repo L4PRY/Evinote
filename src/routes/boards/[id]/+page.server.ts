@@ -8,10 +8,11 @@ import type { Actions } from './$types';
 import type { NoteData } from '$lib/types/canvas/NoteData';
 import { checkLogin } from '$lib/server/auth';
 import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
+import { checkAccessPerms, checkUserCanModify } from '$lib/server/perms';
 
 export async function load({ params }) {
 	const { id } = params;
-	const user = checkLogin();
+	const sessionUser = checkLogin();
 
 	routeLogger.info(`Loading board with id ${id}`);
 
@@ -26,6 +27,15 @@ export async function load({ params }) {
 		error(404, 'board not found');
 	}
 
+	// get the full user record if logged in
+	const user = sessionUser
+		? await db
+				.select()
+				.from(table.User)
+				.where(eq(table.User.id, sessionUser.id))
+				.then(res => res[0])
+		: null;
+
 	// get perms for current user and board if any
 
 	const perms = user
@@ -36,29 +46,7 @@ export async function load({ params }) {
 				.then(res => res[0])
 		: null;
 
-	// juggle perms for stuff
-	// so like if the board is private, we either check for board.owner === user.id or perms.bid === board.id && read || write perms
-
-	if (user && user.role !== 'Admin')
-		switch (board.type) {
-			case 'Public':
-				// anyone can read, only owner and users with write perms can write
-				break;
-			case 'Unlisted':
-				// anybody can read, only owner and users with perms can write, is not searchable, only accessible through the link
-				if (!perms) {
-					routeLogger.warn(`User ${user?.id} does not have permissions to view board ${id}`);
-					error(403, 'forbidden');
-				}
-				break;
-			case 'Private':
-				// only owner and users with perms can read or write
-				if (board.owner !== user?.id || perms) {
-					routeLogger.warn(`${perms} - User ${user?.id} does not have permissions to view board ${id}, owner is ${board.owner}`);
-					error(403, 'forbidden');
-				}
-				break;
-		}
+	checkAccessPerms(board, user, perms);
 
 	return {
 		id,
@@ -70,11 +58,17 @@ export async function load({ params }) {
 
 export const actions: Actions = {
 	default: async ({ request, params }) => {
-		const user = requireLogin();
+		const sessionUser = requireLogin();
 		const formData = await request.formData();
 		const notes = JSON.parse(formData.get('notes') as string) as NoteData[];
 		routeLogger.info(`User requested to update board no. ${params.id}`);
 		routeLogger.info(`notes is ${JSON.stringify(notes)}`);
+
+		const user = await db
+			.select()
+			.from(table.User)
+			.where(eq(table.User.id, sessionUser.id))
+			.then(res => res[0]);
 
 		const perms = await db
 			.select()
@@ -90,7 +84,7 @@ export const actions: Actions = {
 			.where(eq(table.Board.id, parseInt(params.id)))
 			.then(res => res[0]);
 
-		if (perms || board.owner === user.id)
+		if (checkUserCanModify(board, user, perms))
 			await db
 				.update(table.Board)
 				.set({ notes }) // update board data with new notes, later

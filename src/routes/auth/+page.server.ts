@@ -1,4 +1,4 @@
-// import { verify } from '@node-rs/argon2';
+import { verify } from '@node-rs/argon2';
 import { scryptSync } from 'node:crypto';
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
@@ -43,16 +43,15 @@ export const actions: Actions = {
 		}
 
 		const validPassword =
-			// env.USE_LEGACY_HASH == '1'
-				// ? 
-				scryptSync(password, 'dev-use-do-not-use-in-prod', 32).toString('hex') ===
+			env.USE_LEGACY_HASH == '1'
+				? scryptSync(password, 'dev-use-do-not-use-in-prod', 32).toString('hex') ===
 					existingUser.passhash
-				// : await verify(existingUser.passhash, password, {
-				// 		memoryCost: 19456,
-				// 		timeCost: 2,
-				// 		outputLen: 32,
-				// 		parallelism: 1
-				// 	});
+				: await verify(existingUser.passhash, password, {
+						memoryCost: 19456,
+						timeCost: 2,
+						outputLen: 32,
+						parallelism: 1
+					});
 
 		if (!validPassword) {
 			return fail(400, { message: 'Incorrect username or password' });
