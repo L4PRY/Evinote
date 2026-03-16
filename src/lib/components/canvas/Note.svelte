@@ -9,8 +9,8 @@
 		position,
 		events
 	} from '@neodrag/svelte';
-	import type { NoteData } from '$lib/types/NoteData';
-	import type { File } from '$lib/types/File';
+	import type { NoteData } from '$lib/types/canvas/NoteData';
+	import type { File } from '$lib/types/canvas/File';
 	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
 	import { parseColor } from '$lib/parseColor';
 	// import DOMPurify from 'dompurify';
@@ -38,7 +38,8 @@
 
 	$effect(() => {
 		// set colors
-		if (data.color) color = parseColor(data.color);
+		if (typeof data.color !== 'string') color = parseColor(data.color);
+		$inspect(sanitizedContent)
 	});
 </script>
 
@@ -83,6 +84,7 @@
 					{@const mimeType = file.mime.toString()}
 					{@const url = file.location.toString()}
 
+					<!-- todo later, get and check types via the server, then validate if its on the allowlist, if not then do something to stop it from loading idk -->
 					{#if mimeType.startsWith('image/')}
 						<img src={url} alt="" loading="lazy" />
 					{:else if mimeType.startsWith('video/')}
@@ -140,6 +142,7 @@
 
 	.entry {
 		border-top: var(--default-border);
+		word-wrap: break-word;
 	}
 
 	.note {
