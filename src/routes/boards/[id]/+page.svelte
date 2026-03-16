@@ -206,7 +206,7 @@
 >
 	{#each notes as _, i}
 		{console.log('added note')}
-		<Note bind:data={notes[i]} />
+		<Note bind:data={notes[i]} remove={() => notes.splice(i, 1)}/>
 	{/each}
 </Canvas>
 <MiniViewport {notes} />

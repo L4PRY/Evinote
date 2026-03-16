@@ -13,9 +13,10 @@
 	import type { File } from '$lib/types/canvas/File';
 	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
 	import { parseColor } from '$lib/parseColor';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	// import DOMPurify from 'dompurify';
 
-	let { data = $bindable() }: { data: NoteData } = $props();
+	let { data = $bindable(), remove }: { data: NoteData, remove: () => void } = $props();
 
 	// Capture initial position as static value for position plugin (non-reactive)
 	const initialPosition = { x: data.position.x, y: data.position.y };
@@ -70,7 +71,11 @@
 	style:background-color={color}
 	style:z-index={notePosition.z}
 >
+	<div class="top-container">
 	<div class="handle" unselectable="on">Drag me</div>
+		<button onclick={remove} aria-label="Delete note" title="Delete note">Delete me <LucideSymbol symbol={"x"} size={42} strokeWidth={1.5}/></button>
+	</div>
+
 	<h1>{data.title}</h1>
 	<code>[{Math.floor(notePosition.x)}, {Math.floor(notePosition.y)}, {notePosition.z}]</code>
 	<div class="note-content">
@@ -88,13 +93,13 @@
 					{#if mimeType.startsWith('image/')}
 						<img src={url} alt="" loading="lazy" />
 					{:else if mimeType.startsWith('video/')}
-						<video controls preload="metadata">
+						<video crossorigin="anonymous" controls preload="metadata">
 							<source src={url} type={mimeType} />
 							<track kind="captions" />
 							Your browser does not support the video tag.
 						</video>
 					{:else if mimeType.startsWith('audio/')}
-						<audio controls preload="metadata">
+						<audio crossorigin="anonymous" preload="metadata">
 							<source src={url} type={mimeType} />
 							Your browser does not support the audio tag.
 						</audio>
