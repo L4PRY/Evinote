@@ -1,4 +1,4 @@
-import { Email, Username } from './types/auth/Regex';
+import { Email, URLFile, Username } from './types/Regex';
 
 export const validateUsername = (username: unknown): username is string =>
 	typeof username === 'string' &&
@@ -11,3 +11,9 @@ export const validatePassword = (password: unknown): password is string =>
 
 export const validateEmail = (email: unknown): email is string =>
 	typeof email === 'string' && Email.test(email);
+
+export const validateUrl= (url: unknown): url is string => 
+	typeof url === 'string' &&
+	url.length >= 3 &&
+	url.length <= 2048 &&
+	URLFile.test(url);
