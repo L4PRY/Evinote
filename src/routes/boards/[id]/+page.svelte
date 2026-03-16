@@ -5,12 +5,14 @@
 	import type { PageProps } from './$types';
 	import Canvas from '$lib/components/canvas/Canvas.svelte';
 	import ZoomControl from '$lib/components/canvas/ZoomControl.svelte';
-	import { zoomLevel } from '$lib/stores/zoomLevel';
 
 	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import { onMount } from 'svelte';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
 	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';
+	import { validateUrl } from '$lib/parseInput';
+	import type { File } from '$lib/types/canvas/File';
+	import type { Color } from '$lib/types/canvas/Color';
 
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
@@ -29,33 +31,69 @@
 		const contentTextarea = document.getElementById('note-data-input') as HTMLTextAreaElement;
 
 		const title = titleInput.value.trim() || null;
-		const colorType = colorTypeSelect.value as 'hex' | 'rgb' | 'hsl' | 'oklch';
-		const colorValueStr = colorValueInput.value.trim();
-		const contentStr = contentTextarea.value;
+		const colorType = colorTypeSelect.value as Color['type'];
+		const colorValueStr = colorValueInput.value.trim() || '0,0,0'; // default to black if empty
+		const contentStr = contentTextarea.value.trim();
 
-		// Parse color value based on type
-		let color: NoteData['color'];
-		if (colorType === 'hex') {
-			color = { type: 'hex', value: colorValueStr };
-		} else {
-			// Parse comma-separated numbers for rgb, hsl, oklch
-			const colorValues = colorValueStr.split(',').map(v => parseFloat(v.trim()));
-			color = { type: colorType, value: colorValues as [number, number, number] };
-		}
+		let color: NoteData['color'] =
+			colorType === 'hex'
+				? { type: 'hex', value: colorValueStr }
+				: {
+						type: colorType,
+						value: colorValueStr.split(',').map(v => parseFloat(v.trim())) as [
+							number,
+							number,
+							number
+						]
+					};
 
 		// Parse comma-separated content
-		const content = contentStr
-			.split(',')
-			.map(s => s.trim())
-			.filter(s => s.length > 0);
+		const parseContent = async (contentStr: string): Promise<NoteData['content']> => {
+			const contentArray = contentStr.split(',').map(s => s.trim());
 
-		notes.push({
-			title,
-			position: { x: 0, y: 0, z: 0 },
-			color,
-			content
-		});
+			// Process each entry asynchronously
+			const processedContent = await Promise.all(
+				contentArray.map(async s => {
+					console.log('validating', s);
+					if (validateUrl(s)) {
+						try {
+							// Perform HEAD request to determine MIME type
+							const response = await fetch(s, { method: 'HEAD' });
+							if (response.ok) {
+								const mime = response.headers.get('Content-Type') ?? '';
+								console.log('mime type', mime);
+								return { mime, location: s };
+							} else {
+								console.log('failed to fetch url, treating as text', s);
+								return s;
+							}
+						} catch (err) {
+							console.log('error fetching url, treating as text', s, err);
+							return s;
+						}
+					} else {
+						console.log('not a valid url, treating as text', s);
+						return s;
+					}
+				})
+			);
 
+			return processedContent;
+		};
+
+		// Call the async function and wait for the content to be processed
+		(async () => {
+			const content = await parseContent(contentStr);
+
+			notes.push({
+				title,
+				position: { x: 0, y: 0, z: 0 },
+				color,
+				content
+			});
+
+		})();
+		
 		// Clear inputs after adding
 		titleInput.value = '';
 		colorValueInput.value = '';
@@ -118,28 +156,16 @@
 {/if}
 
 <ZoomControl />
-<Canvas
-	data={{
-		size: {
-			width: 3200,
-			height: 3200
-		},
-		background: {
-			type: 'Grid',
-			value: {
-				type: 'Line',
-				background: { type: 'hex', value: '#2a2a2a' },
-				color: { type: 'hex', value: '#444' },
-				width: 1
-			}
-		}
-	}}
+<!-- <Canvas
+	data={
+
+	}
 >
 	{#each notes as _, i}
 		{console.log('added note')}
 		<Note bind:data={notes[i]} />
 	{/each}
-	<!-- <Note
+	<Note
 		data={{
 			title: 'uhm',
 			position: { x: 0, y: 0, z: 0 },
@@ -163,7 +189,25 @@
 				}
 			]
 		}}
-	/> -->
+	/>
+</Canvas> -->
+<Canvas
+	data={data.board.canvas ?? {
+		size: {
+			width: 3200,
+			height: 3200
+		},
+		background: {
+			type: 'Custom',
+			value:
+				'conic-gradient(#dc57af 90deg,#a80f75 90deg 180deg,#dc57af 180deg 270deg,#a80f75 270deg);'
+		}
+	}}
+>
+	{#each notes as _, i}
+		{console.log('added note')}
+		<Note bind:data={notes[i]} />
+	{/each}
 </Canvas>
 <MiniViewport {notes} />
 
