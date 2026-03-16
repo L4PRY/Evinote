@@ -46,18 +46,27 @@
 	}));
 
 	$effect(() => {
+		$inspect('resizing', $zoomLevel, zoomedScale, scale);
 		noteBounds = notes.map(note => {
 			const element = document.getElementById(note.title ?? '');
 			if (element) {
-				return { noteId: note.title ?? '', rect: element.getBoundingClientRect() };
+				const rect = element.getBoundingClientRect();
+				return {
+					noteId: note.title ?? '',
+					rect: new DOMRect(
+						rect.left / $zoomLevel,
+						rect.top / $zoomLevel,
+						rect.width / $zoomLevel,
+						rect.height / $zoomLevel,
+					)
+				};
 			}
 			return { noteId: note.title ?? '', rect: new DOMRect(0, 0, 0, 0) };
 		});
 	});
-
-	// $effect(() => {
-	// 	$inspect(isDragging, positionComp.current, currentPosition);
-	// });
+	$effect(() => {
+		$inspect(notes, noteBounds);
+	});
 
 	// two way controls could be implemented in a way that actually uses 2 divs,
 	// one for when the viewport is being dragged around on the canvas,
@@ -121,7 +130,6 @@
 		right: 20px;
 		background-color: rgba(30, 30, 35, 0.9);
 		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
 		overflow: hidden;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 		z-index: 1000;
@@ -149,7 +157,6 @@
 		position: absolute;
 		border: 2px solid rgba(100, 150, 255, 0.8);
 		background-color: rgba(100, 150, 255, 0.15);
-		border-radius: 8px;
 		/*cursor: grab;*/
 		margin-top: 1px;
 		/*margin-bottom: 1px;*/
