@@ -1,5 +1,6 @@
 <script lang="ts">
     import DashboardTab from '$lib/components/dash/DashboardTab.svelte';
+    import DashboardBox from '$lib/components/dash/DashboardBox.svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
@@ -24,7 +25,7 @@
 	<ul>
 		{#each resolvedBoards as board (board.id)}
 			<li>
-				<a href={resolve(`/boards/${board.id}`)}>{board.name}</a>
+			    <DashboardBox href={resolve(`/boards/${board.id}`)} name={board.name}></DashboardBox>
 			</li>
 		{/each}
 	</ul>
