@@ -8,8 +8,10 @@
 </script>
 
 {#if Icon}
-	<Icon style="display: inline-block;" size={size || 32} strokeWidth={strokeWidth || 1} />
+	<Icon
+		style="display: inline-block;"
+		class="icon"
+		size={size || 32}
+		strokeWidth={strokeWidth || 1}
+	/>
 {/if}
-
-<style>
-</style>

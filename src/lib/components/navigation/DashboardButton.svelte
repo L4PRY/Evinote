@@ -24,7 +24,7 @@
 		gap: 0.7rem;
 		padding: 0.75rem;
 		cursor: pointer;
-		transition: all 0.2s ease-in-out;
+		transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 		z-index: 99;
 		width: 200px;
 		height: 60px;
@@ -42,16 +42,21 @@
 	}
 
 	div:not(.active):hover {
-		transition: all 0.1s ease-in;
-		background-color: rgba(200, 200, 255, 0.05);
+		background-color: var(--default-blur-hover-color);
 		box-sizing: content-box;
-		border-radius: 10px;
-		text-shadow: 2px 2px 2px 5px white;
+		border-radius: 15px;
+		transform: scale(0.53);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		transform-origin: 15px;
+	}
+
+	div:not(.active):active {
+		transform: scale(0.48);
 	}
 
 	.active {
 		transition:
-			all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+			all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
 			color 0s;
 		background-color: var(--default-bar-active);
 		color: var(--default-bar-color);

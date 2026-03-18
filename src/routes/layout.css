@@ -31,6 +31,7 @@
 
 	--default-blur-hover-color: light-dark(#efefecaf, #5454702b);
 	font-smooth: always;
+	-webkit-font-smoothing: subpixel-antialiased;
 }
 
 html {

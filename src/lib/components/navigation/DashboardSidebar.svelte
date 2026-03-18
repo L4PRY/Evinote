@@ -8,12 +8,16 @@
 	</div>
 	<nav>
 		<ul>
-			<li><DashboardButton symbol="LayoutDashboard" href="/dashboard">Overview</DashboardButton></li>
+			<li>
+				<DashboardButton symbol="LayoutDashboard" href="/dashboard">Overview</DashboardButton>
+			</li>
 			<li><DashboardButton symbol="NotebookPen" href="asfda">Projects</DashboardButton></li>
 			<li><DashboardButton symbol="UsersRound" href="asdfa2">Groups</DashboardButton></li>
 		</ul>
 		<ul class="lower">
-			<li><DashboardButton symbol="Settings" href="/dashboard/settings">Settings</DashboardButton></li>
+			<li>
+				<DashboardButton symbol="Settings" href="/dashboard/settings">Settings</DashboardButton>
+			</li>
 		</ul>
 	</nav>
 </aside>
@@ -22,14 +26,18 @@
 
 <style>
 	.logo {
-	    font-size: 1.5em;
+		font-size: 1.5em;
 		margin: auto;
 		width: 100%;
 		height: 50px;
 		object-fit: cover;
+		filter: grayscale(100%);
+		transition: filter 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 	}
 
-	.logo:hover{filter: opacity(0);}
+	.logo:hover {
+		filter: grayscale(0%);
+	}
 
 	ul {
 		list-style: none;
@@ -41,17 +49,17 @@
 	}
 
 	ul:first-child {
-	    padding-top: 5px;
-    }
+		padding-top: 5px;
+	}
 
-    ul:last-child {
-	    padding-bottom: 5px;
-    }
+	ul:last-child {
+		padding-bottom: 5px;
+	}
 
-    li {
-       margin-bottom: -15px;
-       margin-top: -15px;
-    }
+	li {
+		margin-bottom: -15px;
+		margin-top: -15px;
+	}
 
 	.lower {
 		position: absolute;
@@ -66,6 +74,14 @@
 		background-color: var(--default-bar-color);
 		border-right: var(--default-border);
 		height: 100%;
+		transition:
+			box-shadow 0.3s ease,
+			border-color 0.3s ease;
+	}
+
+	aside:hover {
+		box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
+		border-color: var(--button-stroke-color);
 	}
 
 	/*.bottom-bar {
