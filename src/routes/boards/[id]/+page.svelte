@@ -13,6 +13,7 @@
 	import { validateUrl } from '$lib/parseInput';
 	import type { File } from '$lib/types/canvas/File';
 	import type { Color } from '$lib/types/canvas/Color';
+	import { generateSecureRandomString } from '$lib/randomString';
 
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
@@ -91,6 +92,7 @@
 			const content = await parseContent(contentStr);
 
 			notes.push({
+				id: generateSecureRandomString(),
 				title,
 				position: { x: 0, y: 0, z: 0 },
 				color,
@@ -126,6 +128,7 @@
 
 	$effect(() => {
 		if (notes.length > 0) initializeZIndex(notes);
+		$inspect(notes);
 	});
 </script>
 
