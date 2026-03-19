@@ -1,4 +1,5 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
+import { requireLogin } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
@@ -80,9 +81,7 @@ export async function PUT(event: RequestEvent) {
 		.set({
 			username: body.username,
 			email: body.email,
-			...(requestingUser.role === 'Admin' && body.role
-				? { role: body.role }
-				: {})
+			...(requestingUser.role === 'Admin' && body.role ? { role: body.role } : {})
 		})
 		.where(eq(table.User.id, userId));
 
@@ -90,35 +89,31 @@ export async function PUT(event: RequestEvent) {
 }
 
 export async function DELETE(event: RequestEvent) {
-	try {
-		const { params } = event;
+	const { params } = event;
 
-		const userId = Number(params.id);
+	if (event.locals.user?.role !== 'Admin') return json({ error: 'Forbidden' }, { status: 403 });
 
-		if (isNaN(userId)) {
-			return json({ error: 'Invalid user ID' }, { status: 400 });
-		}
+	const userId = Number(params.id);
 
-		const existing = await db
-			.select()
-			.from(table.User)
-			.where(eq(table.User.id, userId))
-			.then((res) => res[0]);
-
-		if (!existing) {
-			return json({ error: 'User not found' }, { status: 404 });
-		}
-
-		await db.delete(table.Session).where(eq(table.Session.userId, userId));
-
-		await db.delete(table.Board).where(eq(table.Board.owner, userId));
-
-		await db.delete(table.User).where(eq(table.User.id, userId));
-
-		return json({ message: 'User deleted' });
-
-	} catch (err) {
-		console.error('DELETE ERROR:', err);
-		return json({ error: 'Server error' }, { status: 500 });
+	if (isNaN(userId)) {
+		return json({ error: 'Invalid user ID' }, { status: 400 });
 	}
+
+	const existing = await db
+		.select()
+		.from(table.User)
+		.where(eq(table.User.id, userId))
+		.then((res) => res[0]);
+
+	if (!existing) {
+		return json({ error: 'User not found' }, { status: 404 });
+	}
+
+	await db.delete(table.Session).where(eq(table.Session.userId, userId));
+
+	await db.delete(table.Board).where(eq(table.Board.owner, userId));
+
+	await db.delete(table.User).where(eq(table.User.id, userId));
+
+	return json({ message: 'User deleted' });
 }
