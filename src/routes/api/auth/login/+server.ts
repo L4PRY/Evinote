@@ -71,13 +71,13 @@ export async function POST(event: RequestEvent) {
 
     const session = sessions[0];
 
-    // Beállítjuk a session token-t cookie-ban
-    cookies.set('.EVI_API', session.token, {
-        httpOnly: true,
-        path: '/',
-        secure: true,
-        sameSite: 'strict'
-    });
+	// Beállítjuk a session token-t cookie-ban
+	event.setHeaders({
+		Authorization: `Bearer ${session.token}`
+	});
 
-    return new Response(JSON.stringify({ message: 'Login successful' }), { status: 200 });
+	return json(
+		{ message: 'Login successful, check authorization header on the response for your api key.' },
+		{ status: 200 }
+	);
 }
