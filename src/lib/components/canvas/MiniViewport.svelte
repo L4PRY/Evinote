@@ -46,7 +46,6 @@
 	}));
 
 	$effect(() => {
-		$inspect('resizing', $zoomLevel, zoomedScale, scale);
 		noteBounds = notes.map(note => {
 			const element = document.getElementById(note.title ?? '');
 			if (element) {
@@ -57,15 +56,12 @@
 						rect.left / $zoomLevel,
 						rect.top / $zoomLevel,
 						rect.width / $zoomLevel,
-						rect.height / $zoomLevel,
+						rect.height / $zoomLevel
 					)
 				};
 			}
 			return { noteId: note.title ?? '', rect: new DOMRect(0, 0, 0, 0) };
 		});
-	});
-	$effect(() => {
-		$inspect(notes, noteBounds);
 	});
 
 	// two way controls could be implemented in a way that actually uses 2 divs,
@@ -116,6 +112,7 @@
 			class={'viewport-indicator'}
 			style:width="{Math.max(viewportIndicatorWidth, 10)}px"
 			style:height="{Math.max(viewportIndicatorHeight, 10)}px"
+			style:opacity={viewportIndicatorWidth > 100 && viewportIndicatorHeight > 100 ? 0.8 : 0.5}
 			role="button"
 			aria-label="Drag to move viewport position"
 			tabindex="0"
@@ -136,6 +133,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		transition: opacity 0.15s ease;
 	}
 
 	.mini-canvas {

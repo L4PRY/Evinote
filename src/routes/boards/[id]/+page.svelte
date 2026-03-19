@@ -58,7 +58,12 @@
 					if (validateUrl(s)) {
 						try {
 							// Perform HEAD request to determine MIME type
-							const response = await fetch(s, { method: 'HEAD' });
+							const response = await fetch(s, {
+								method: 'HEAD',
+								headers: {
+									'User-Agent': 'Evinote/1.0 (github.com/L4PRY/Evinote)' // Set a custom User-Agent
+								}
+							});
 							if (response.ok) {
 								const mime = response.headers.get('Content-Type') ?? '';
 								console.log('mime type', mime);
@@ -91,9 +96,8 @@
 				color,
 				content
 			});
-
 		})();
-		
+
 		// Clear inputs after adding
 		titleInput.value = '';
 		colorValueInput.value = '';
@@ -206,7 +210,7 @@
 >
 	{#each notes as _, i}
 		{console.log('added note')}
-		<Note bind:data={notes[i]} remove={() => notes.splice(i, 1)}/>
+		<Note bind:data={notes[i]} remove={() => notes.splice(i, 1)} />
 	{/each}
 </Canvas>
 <MiniViewport {notes} />

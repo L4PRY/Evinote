@@ -30,7 +30,7 @@
 			// entry
 			typeof entry === 'string'
 				? DOMPurify.sanitize(entry, {
-						ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li']
+						ALLOWED_TAGS: ['code', 'b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li']
 					})
 				: entry
 		)
@@ -39,7 +39,6 @@
 	$effect(() => {
 		// set colors
 		if (typeof data.color !== 'string') color = parseColor(data.color);
-		$inspect(sanitizedContent, typeof sanitizedContent);
 	});
 </script>
 
