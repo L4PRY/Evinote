@@ -14,9 +14,9 @@
 	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
 	import { parseColor } from '$lib/parseColor';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
-	// import DOMPurify from 'dompurify';
+	import DOMPurify from 'isomorphic-dompurify';
 
-	let { data = $bindable(), remove }: { data: NoteData, remove: () => void } = $props();
+	let { data = $bindable(), remove }: { data: NoteData; remove: () => void } = $props();
 
 	// Capture initial position as static value for position plugin (non-reactive)
 	const initialPosition = { x: data.position.x, y: data.position.y };
@@ -25,22 +25,21 @@
 	let notePosition = $state(data.position);
 	let color = $state('var(--default-bg-color)');
 
-	// what the fuck vite, messing with my imports and shit
 	let sanitizedContent = $derived(
-		data.content.map(
-			entry => entry
-			// typeof entry === 'string'
-			// ? DOMPurify.sanitize(entry, {
-			// ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li']
-			// })
-			// : entry
+		data.content?.map(entry =>
+			// entry
+			typeof entry === 'string'
+				? DOMPurify.sanitize(entry, {
+						ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li']
+					})
+				: entry
 		)
 	);
 
 	$effect(() => {
 		// set colors
 		if (typeof data.color !== 'string') color = parseColor(data.color);
-		$inspect(sanitizedContent)
+		$inspect(sanitizedContent, typeof sanitizedContent);
 	});
 </script>
 
@@ -72,8 +71,10 @@
 	style:z-index={notePosition.z}
 >
 	<div class="top-container">
-	<div class="handle" unselectable="on">Drag me</div>
-		<button onclick={remove} aria-label="Delete note" title="Delete note">Delete me <LucideSymbol symbol={"x"} size={42} strokeWidth={1.5}/></button>
+		<div class="handle" unselectable="on">Drag me</div>
+		<button onclick={remove} aria-label="Delete note" title="Delete note"
+			>Delete me <LucideSymbol symbol={'x'} size={42} strokeWidth={1.5} /></button
+		>
 	</div>
 
 	<h1>{data.title}</h1>
