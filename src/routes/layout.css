@@ -4,47 +4,63 @@
 @import 'tailwindcss';
 
 :root {
-    color-scheme: light dark;
+	color-scheme: light dark;
 
-    --default-bg-color:   light-dark(#efefec, #090715);
-    --default-text-color: light-dark(#333b3c, #efefec);
-    --default-blur-color: light-dark(#efefec5d, #0907155d);   
-    --button-stroke-color: light-dark(#cccccc7e, #44444486);
+	--default-bg-color: light-dark(#efefec, #090715);
+	--default-bg-color-transparent: light-dark(rgba(239, 239, 236, 0.4), rgba(9, 7, 21,0.4));
+	--default-text-color: light-dark(#333b3c, #efefec);
+	--default-blur-color: light-dark(#efefec5d, #0907155d);
+	--default-stroke-color: light-dark(rgba(59, 50, 100, 0.2), rgba(100, 100, 160, 0.2));
+	--button-stroke-color: light-dark(#cccccc7e, #17141f);
+	--border-colors: light-dark(#cccccc7e, transparent);
+	--default-bar-color: light-dark(#efefec, #06040e);
+	--default-bar-active: light-dark(#301541, #8464b7 );
 
-    --fancycolor-1: #9c20aa;
-    --fancycolor-2: #fb3570;
-    --fancygradient: linear-gradient(135deg, var(--fancycolor-1), var(--fancycolor-2));
 
-    --default-border: 1px solid var(--button-stroke-color);
-    --border-radius: 12px;
+	--fancycolor-1: #9c20aa;
+	--fancycolor-2: #fb3570;
+	--fancygradient: linear-gradient(135deg, var(--fancycolor-1), var(--fancycolor-2));
+	--textgradient: linear-gradient(
+        180deg,
+        light-dark(rgba(51, 59, 60, 0.5), rgba(239, 239, 236, 0.5)),
+        light-dark( rgba(239, 239, 236, 1), rgba(51, 59, 60, 0.5))
+    );
 
-    --default-blur-hover-color: light-dark(#efefecaf, #5454702b); 
+	--default-border: 1px solid var(--border-colors);
+	--border-radius: 12px;
+
+	--default-blur-hover-color: light-dark(#efefecaf, #5454702b);
+	font-smooth: always;
+	-webkit-font-smoothing: subpixel-antialiased;
 }
 
 html {
-    scroll-behavior: smooth;
-    scrollbar-gutter: stable both-edges;
+	scroll-behavior: smooth;
+	scrollbar-gutter: both-edges;
+	scrollbar-width: none;
 }
 
 body {
-    background-color: var(--default-bg-color);
-    color: var(--default-text-color);
-    margin: 0;
-    padding: 0;
+	background-color: var(--default-bg-color);
+	color: var(--default-text-color);
+	margin: 0;
+	padding: 0;
 
-    font-family: "DM Sans", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
-
-    margin: 20px;
+	font-family: 'DM Sans', sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 500;
+	font-style: normal;
 }
 
 .content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+	max-width: 1200px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+p, h1, h2, h3, span, a {
+    user-select: none;
 }

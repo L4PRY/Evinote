@@ -13,6 +13,9 @@ node_modules
 pnpm-lock.*
 pnpm-workspace.*
 
+.svelte-kit
+.svelte
+
 # OS
 .DS_Store
 Thumbs.db
