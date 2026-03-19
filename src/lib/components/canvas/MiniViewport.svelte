@@ -47,11 +47,11 @@
 
 	$effect(() => {
 		noteBounds = notes.map(note => {
-			const element = document.getElementById(note.title ?? '');
+			const element = document.getElementById(note.id ?? note.title);
 			if (element) {
 				const rect = element.getBoundingClientRect();
 				return {
-					noteId: note.title ?? '',
+					noteId: note.id ?? note.title,
 					rect: new DOMRect(
 						rect.left / $zoomLevel,
 						rect.top / $zoomLevel,
@@ -60,7 +60,7 @@
 					)
 				};
 			}
-			return { noteId: note.title ?? '', rect: new DOMRect(0, 0, 0, 0) };
+			return { noteId: note.id ?? note.title, rect: new DOMRect(0, 0, 0, 0) };
 		});
 	});
 
@@ -80,7 +80,7 @@
 		style:width="{effectiveCanvasWidth * zoomedScale}px"
 		style:height="{effectiveCanvasHeight * zoomedScale}px"
 	>
-		{#each notes as note, i (note.title ?? i)}
+		{#each notes as note, i (note.id ?? note.title)}
 			{@const pos = { left: note.position.x * scale, top: note.position.y * scale }}
 			{@const color = parseColor(note.color)}
 			{@const noteBound = noteBounds[i]}

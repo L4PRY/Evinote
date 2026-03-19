@@ -15,6 +15,7 @@
 	import { parseColor } from '$lib/parseColor';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import DOMPurify from 'isomorphic-dompurify';
+	import { generateSecureRandomString } from '$lib/randomString';
 
 	let { data = $bindable(), remove }: { data: NoteData; remove: () => void } = $props();
 
@@ -65,7 +66,7 @@
 	])}
 	class="note"
 	title={data.title}
-	id={data.title ?? undefined}
+	id={data.id ?? data.title}
 	style:background-color={color}
 	style:z-index={notePosition.z}
 >
@@ -82,7 +83,6 @@
 		{#each sanitizedContent as entry, i}
 			<div class="entry">
 				{#if typeof entry === 'string'}
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<p>{@html entry}</p>
 				{:else}
 					{@const file = entry as File}
