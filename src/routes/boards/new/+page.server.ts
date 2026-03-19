@@ -7,7 +7,7 @@ import * as table from '$lib/server/db/schema';
 export const load = async () => requireLogin();
 
 export const actions: Actions = {
-	create: async (event) => {
+	create: async event => {
 		const formData = await event.request.formData();
 		const name = formData.get('name');
 		const access = formData.get('access');
@@ -23,7 +23,12 @@ export const actions: Actions = {
 				name: name as string,
 				type: access as 'Public' | 'Unlisted' | 'Private',
 				owner: event.locals.user!.id,
-				updated: new Date(Date.now())
+				updated: new Date(Date.now()),
+				canvas: {
+					size: { width: 3200, height: 3200, zoom: 1 },
+					background: { type: 'Solid', value: { type: 'rgb', value: [255, 255, 255, 1] } }
+				},
+				notes: []
 			})
 			.returning();
 

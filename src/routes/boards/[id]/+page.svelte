@@ -1,18 +1,28 @@
 <script lang="ts">
-	import Note from '$lib/components/Note.svelte';
+	import Note from '$lib/components/canvas/Note.svelte';
 	import { enhance } from '$app/forms';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import type { PageProps } from './$types';
-	import type { NoteData } from '$lib/types/NoteData';
+	import Canvas from '$lib/components/canvas/Canvas.svelte';
+	import ZoomControl from '$lib/components/canvas/ZoomControl.svelte';
+
+	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import { onMount } from 'svelte';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
+	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';
+	import { validateUrl } from '$lib/parseInput';
+	import type { File } from '$lib/types/canvas/File';
+	import type { Color } from '$lib/types/canvas/Color';
 
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
 	let showDialog = $state(false);
 
 	// svelte-ignore state_referenced_locally
-	let notes: NoteData[] = $state(data.notes || []);
+	const { id, user, board, perms } = data;
+
+	// svelte-ignore state_referenced_locally
+	let notes: NoteData[] = $state(board.notes || []);
 
 	function addNote() {
 		const titleInput = document.getElementById('note-title-input') as HTMLInputElement;
@@ -21,32 +31,72 @@
 		const contentTextarea = document.getElementById('note-data-input') as HTMLTextAreaElement;
 
 		const title = titleInput.value.trim() || null;
-		const colorType = colorTypeSelect.value as 'hex' | 'rgb' | 'hsl' | 'oklch';
-		const colorValueStr = colorValueInput.value.trim();
-		const contentStr = contentTextarea.value;
+		const colorType = colorTypeSelect.value as Color['type'];
+		const colorValueStr = colorValueInput.value.trim() || '0,0,0'; // default to black if empty
+		const contentStr = contentTextarea.value.trim();
 
-		// Parse color value based on type
-		let color: NoteData['color'];
-		if (colorType === 'hex') {
-			color = { type: 'hex', value: colorValueStr };
-		} else {
-			// Parse comma-separated numbers for rgb, hsl, oklch
-			const colorValues = colorValueStr.split(',').map(v => parseFloat(v.trim()));
-			color = { type: colorType, value: colorValues as [number, number, number] };
-		}
+		let color: NoteData['color'] =
+			colorType === 'hex'
+				? { type: 'hex', value: colorValueStr }
+				: {
+						type: colorType,
+						value: colorValueStr.split(',').map(v => parseFloat(v.trim())) as [
+							number,
+							number,
+							number
+						]
+					};
 
 		// Parse comma-separated content
-		const content = contentStr
-			.split(',')
-			.map(s => s.trim())
-			.filter(s => s.length > 0);
+		const parseContent = async (contentStr: string): Promise<NoteData['content']> => {
+			const contentArray = contentStr.split(',').map(s => s.trim());
 
-		notes.push({
-			title,
-			position: { x: 0, y: 0, z: 0 },
-			color,
-			content
-		});
+			// Process each entry asynchronously
+			const processedContent = await Promise.all(
+				contentArray.map(async s => {
+					console.log('validating', s);
+					if (validateUrl(s)) {
+						try {
+							// Perform HEAD request to determine MIME type
+							const response = await fetch(s, {
+								method: 'HEAD',
+								headers: {
+									'User-Agent': 'Evinote/1.0 (github.com/L4PRY/Evinote)' // Set a custom User-Agent
+								}
+							});
+							if (response.ok) {
+								const mime = response.headers.get('Content-Type') ?? '';
+								console.log('mime type', mime);
+								return { mime, location: s };
+							} else {
+								console.log('failed to fetch url, treating as text', s);
+								return s;
+							}
+						} catch (err) {
+							console.log('error fetching url, treating as text', s, err);
+							return s;
+						}
+					} else {
+						console.log('not a valid url, treating as text', s);
+						return s;
+					}
+				})
+			);
+
+			return processedContent;
+		};
+
+		// Call the async function and wait for the content to be processed
+		(async () => {
+			const content = await parseContent(contentStr);
+
+			notes.push({
+				title,
+				position: { x: 0, y: 0, z: 0 },
+				color,
+				content
+			});
+		})();
 
 		// Clear inputs after adding
 		titleInput.value = '';
@@ -57,6 +107,8 @@
 		showDialog = false;
 	}
 	onMount(() => {
+		document.title = `Evinote • ${board.name}`;
+
 		dialog = document.getElementById('add-dialog') as HTMLDialogElement;
 		console.log(dialog);
 	});
@@ -73,17 +125,20 @@
 	}
 
 	$effect(() => {
-		initializeZIndex(notes);
+		if (notes.length > 0) initializeZIndex(notes);
 	});
 </script>
 
-<div class="note-creator">
-	<FancyButton1 onclick={() => (showDialog = true)} width="100px">Add Note</FancyButton1>
-	<form method="post" use:enhance>
-		<input type="hidden" name="notes" value={JSON.stringify(notes)} />
-		<button type="submit">Save notes</button>
-	</form>
-</div>
+<!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
+{#if board.owner === user?.id || perms?.perm === 'Write'}
+	<div class="note-creator">
+		<FancyButton1 onclick={() => (showDialog = true)} style="width: 100px">Add Note</FancyButton1>
+		<form method="post" use:enhance>
+			<input type="hidden" name="notes" value={JSON.stringify(notes)} />
+			<button type="submit">Save notes</button>
+		</form>
+	</div>
+{/if}
 {#if showDialog}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -103,12 +158,18 @@
 		</dialog>
 	</div>
 {/if}
-<div class="note-container">
+
+<ZoomControl />
+<!-- <Canvas
+	data={
+
+	}
+>
 	{#each notes as _, i}
 		{console.log('added note')}
 		<Note bind:data={notes[i]} />
 	{/each}
-	<!-- <Note
+	<Note
 		data={{
 			title: 'uhm',
 			position: { x: 0, y: 0, z: 0 },
@@ -132,8 +193,27 @@
 				}
 			]
 		}}
-	/> -->
-</div>
+	/>
+</Canvas> -->
+<Canvas
+	data={data.board.canvas ?? {
+		size: {
+			width: 3200,
+			height: 3200
+		},
+		background: {
+			type: 'Custom',
+			value:
+				'conic-gradient(#dc57af 90deg,#a80f75 90deg 180deg,#dc57af 180deg 270deg,#a80f75 270deg);'
+		}
+	}}
+>
+	{#each notes as _, i}
+		{console.log('added note')}
+		<Note bind:data={notes[i]} remove={() => notes.splice(i, 1)} />
+	{/each}
+</Canvas>
+<MiniViewport {notes} />
 
 <style>
 	.dialog-container {
@@ -198,16 +278,5 @@
 		top: 20px;
 		left: 20px;
 		z-index: 1000;
-	}
-	.note-container {
-		position: absolute;
-		margin: 0;
-		left: 0;
-		top: 0;
-		box-sizing: border-box;
-		width: 100%;
-		height: 100vh;
-		overflow: hidden;
-		border: 5px solid var(--default-text-color);
 	}
 </style>

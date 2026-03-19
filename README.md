@@ -17,6 +17,7 @@ prequisites:
 - [node.js](https://nodejs.org/en/download/)
 
 ### 1. install dependencies
+
 ```bash
 npm install
 ```
@@ -27,11 +28,13 @@ npm run docker:db:start
 ```
 
 ### 3. push schema to database
+
 ```bash
 npm run db:push
 ```
 
 ### 4. start dev server
+
 ```bash
 npm run dev
 ```

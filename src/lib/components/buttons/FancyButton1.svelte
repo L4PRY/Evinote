@@ -1,9 +1,10 @@
 <script lang="ts">
-	let { onclick, style, children } : {onclick: () => any, style: string, children: () => any} = $props();
+	let { onclick, style, children }: { onclick: () => any; style?: string; children: () => any } =
+		$props();
 </script>
 
 <div>
-	<button class="fancybutton" style={style} onclick={onclick}>
+	<button class="fancybutton" {style} {onclick}>
 		{@render children()}
 	</button>
 </div>
@@ -17,7 +18,7 @@
 		box-sizing: border-box;
 		border-radius: var(--border-radius);
 		background-color: var(--default-blur-color);
-		color: var(--default-text-color);
+		color: #efefec;
 		/* backdrop-filter: blur(5px); */
 		cursor: pointer;
 		transition: all 0.05s ease-in-out;
