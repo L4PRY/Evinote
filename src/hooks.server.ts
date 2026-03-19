@@ -4,7 +4,9 @@ import * as auth from '$lib/server/auth';
 import { authLogger, routeLogger } from '$lib/server/logger';
 
 const handleAuth: Handle = async ({ event, resolve }) => {
-	const sessionToken = event.cookies.get(auth.sessionCookieName);
+	const sessionToken =
+		event.cookies.get(auth.sessionCookieName) ??
+		event.request.headers.get('authorization')?.replace('Bearer ', '');
 	authLogger.info(`got session token: ${sessionToken}`);
 
 	if (!sessionToken || typeof sessionToken === 'undefined' || sessionToken === 'undefined') {
