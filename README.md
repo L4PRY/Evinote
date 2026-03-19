@@ -6,10 +6,14 @@ Notetaking and information sharing webapp made with sveltekit and postgres. ✨
 * [Specification sheet](/../../issues/5)
 * [DB Schema](/../../issues/1)
 
+## main active branches:
+* [frontend](https://github.com/L4PRY/Evinote/tree/frontend)
+* [notes-notes-canvas](https://github.com/L4PRY/Evinote/tree/feat-notes-canvas)
+* [backend](https://github.com/L4PRY/Evinote/tree/backend)
+
 ## setup devenv
 prequisites:
-
-- [podman](https://podman.io) or [docker](https://docker.com)
+- [docker](https://docker.com)
 - [node.js](https://nodejs.org/en/download/)
 
 ### 1. install dependencies
@@ -20,10 +24,6 @@ npm install
 
 ### 2. start database
 ```bash
-# podman
-npm run db:start
-
-# docker
 npm run docker:db:start
 ```
 
