@@ -155,9 +155,11 @@
 		color: var(--default-text-color);
 		box-shadow: 0 0 10px var(--default-text-color);
 		margin-bottom: 16px;
-		width: 15rem;
+		width: fit-content;
 		height: fit-content;
 		position: absolute;
 		border-radius: 5px;
+		min-width: 200px;
+		max-width: 500px;
 	}
 </style>
