@@ -6,6 +6,7 @@ import { getRequestEvent } from '$app/server';
 import type { PostgresError } from 'postgres';
 import { authLogger } from './logger';
 import type { AuthenticatedUser } from '../types/auth/AuthenticatedUser';
+import { generateSecureRandomString } from '$lib/randomString';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
