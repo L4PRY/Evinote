@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import ThemeToggler from '$lib/components/frontend/ThemeToggler.svelte';
 	
 	const links = [
 		{ href: '/dashboard/settings', label: 'Account' },
@@ -8,23 +9,33 @@
 </script>
 
 <nav class="settings-nav">
-	{#each links as link}
-		<a 
-			href={link.href} 
-			class="nav-link" 
-			class:active={page.url.pathname === link.href}
-		>
-			{link.label}
-		</a>
-	{/each}
+	<div class="nav-links">
+		{#each links as link}
+			<a 
+				href={link.href} 
+				class="nav-link" 
+				class:active={page.url.pathname === link.href}
+			>
+				{link.label}
+			</a>
+		{/each}
+	</div>
+	
+	<ThemeToggler />
 </nav>
 
 <style>
 	.settings-nav {
 		display: flex;
-		gap: 16px;
+		justify-content: space-between;
+		align-items: center;
 		border-bottom: 1px solid var(--button-stroke-color);
 		padding-bottom: 0.5rem;
+	}
+
+	.nav-links {
+		display: flex;
+		gap: 16px;
 	}
 
 	.nav-link {

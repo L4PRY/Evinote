@@ -21,5 +21,8 @@
 		padding: 3rem;
 		margin-left: 150px;
 		padding-top: 2rem;
+		padding-bottom: 3rem;
+		display: flex;
+		flex-direction: column;
 	}
 </style>
