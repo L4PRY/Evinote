@@ -3,7 +3,7 @@
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
 	import { bounds, canvasSize, position } from '$lib/stores/viewport';
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 
 	const {
 		children,
@@ -21,6 +21,7 @@
 
 	// Track if canvas is being dragged (to prevent feedback loops with MiniViewport)
 	let isCanvasDragging = $state(false);
+	let shiftHeld = $state(false);
 
 	// Drag state
 	let isDragging = $state(false);
@@ -108,6 +109,8 @@
 
 		isDragging = true;
 		isCanvasDragging = true;
+
+		// add gliding logic to this, later
 		dragStartX = e.clientX;
 		dragStartY = e.clientY;
 		scrollStartX = canvasElement.scrollLeft;
@@ -139,6 +142,7 @@
 
 	// Zoom with scroll wheel, zooming toward cursor position
 	function handleWheel(e: WheelEvent) {
+		if (shiftHeld) return; // Only zoom when Shift is held
 		e.preventDefault();
 
 		if (document.querySelector('.note')?.getAttribute('data-neodrag-state') === 'dragging') return;
@@ -167,6 +171,10 @@
 			canvasElement.scrollLeft = contentX * newZoom - cursorX;
 			canvasElement.scrollTop = contentY * newZoom - cursorY;
 		});
+	}
+
+	function handleScroll(e: Event) {
+		updateViewportStores();
 	}
 
 	// Function to update canvas data programmatically
@@ -223,6 +231,7 @@
 
 	// Initialize viewport stores on mount and observe resize
 	$effect(() => {
+		$inspect(shiftHeld);
 		if (!canvasElement) return;
 
 		// Initial update
@@ -258,6 +267,12 @@
 	$effect(() => {
 		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
 	});
+
+	onMount(() => {
+		window.addEventListener('keydown', e => e.key === 'Shift' && (shiftHeld = true));
+
+		window.addEventListener('keyup', e => e.key === 'Shift' && (shiftHeld = false));
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -269,7 +284,7 @@
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
 	onwheel={handleWheel}
-	onscroll={updateViewportStores}
+	onscroll={handleScroll}
 	class:dragging={isDragging}
 	role="application"
 	aria-label="Draggable canvas"
