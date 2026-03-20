@@ -47,10 +47,10 @@
 						<span class="current-session-badge">Current Session</span>
 					{:else}
 						<button
-							class="sign-out-btn"
+							class="close-session-btn"
 							formaction="?/invalidate"
 						>
-							Sign out
+							Close this session
 						</button>
 					{/if}
 				</form>
@@ -138,25 +138,25 @@
 		border-radius: 5px;
 	}
 
-	.sign-out-btn {
-		background-color: transparent;
+	.close-session-btn {
+		background-color: var(--default-blur-color);
 		color: var(--fancycolor-2);
-		border: 2px solid var(--fancycolor-2);
+		border: none;
 		padding: 0.5rem 1rem;
 		border-radius: 5px;
 		cursor: pointer;
-		font-size: 0.95rem;
+		font-size: 0.9rem;
 		font-weight: 600;
 		transition: all 0.2s ease-in-out;
 	}
 
-	.sign-out-btn:hover {
+	.close-session-btn:hover {
 		background-color: var(--fancycolor-2);
 		color: white;
 		text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 	}
 
-	.sign-out-btn:active {
+	.close-session-btn:active {
 		transform: scale(0.95);
 	}
 </style>
