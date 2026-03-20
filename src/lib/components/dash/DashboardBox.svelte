@@ -1,31 +1,36 @@
 <script lang="ts">
-	const { href, name, src, type = "board" }: { href: any; name: string; src: string, type?: "createNew" | "board" } = $props();
+	const {
+		href,
+		name = '',
+		src = '',
+		type = 'board'
+	}: { href: any; name?: string; src?: string; type?: 'createNew' | 'board' } = $props();
 
 	import LucideSymbol from '../frontend/LucideSymbol.svelte';
 </script>
 
-{#if type === "board"}
+{#if type === 'board'}
 	<a {href} class="dashboard-box">
 		<div class="preview-container">
 			<div class="placeholder">
-				<img src={src} alt="" />
+				<img {src} alt="" />
 			</div>
 		</div>
 		<div class="info">
 			<h3>{name}</h3>
 			<div class="arrow">
 				<p>
-				Go to board
-				<LucideSymbol symbol="ArrowRight" size={20} strokeWidth={1.5} />
-			</p>
+					Go to board
+					<LucideSymbol symbol="ArrowRight" size={20} strokeWidth={1.5} />
+				</p>
+			</div>
 		</div>
-	</div>
 	</a>
-{:else if type === "createNew"}
+{:else if type === 'createNew'}
 	<a {href} class="dashboard-box">
 		<div class="preview-container">
 			<div class="placeholder">
-				<img src={src} alt="" />
+				<LucideSymbol symbol="Plus" size={42} strokeWidth={1.5} />
 			</div>
 		</div>
 	</a>
