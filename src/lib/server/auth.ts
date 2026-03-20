@@ -1,11 +1,12 @@
-import { type RequestEvent, redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { type RequestEvent, error, redirect } from '@sveltejs/kit';
+import { eq, and } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { getRequestEvent } from '$app/server';
 import type { PostgresError } from 'postgres';
 import { authLogger } from './logger';
 import type { AuthenticatedUser } from '../types/auth/AuthenticatedUser';
+import { generateSecureRandomString } from '$lib/randomString';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
@@ -13,23 +14,6 @@ const RENEW_THRESHOLD = DAY_IN_MS * 15;
 const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 
 export const sessionCookieName = '.EVISECURITY';
-
-export function generateSecureRandomString(): string {
-	// Human readable alphabet (a-z, 0-9 without l, o, 0, 1 to avoid confusion)
-	const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789';
-
-	// Generate 24 bytes = 192 bits of entropy.
-	// We're only going to use 5 bits per byte so the total entropy will be 192 * 5 / 8 = 120 bits
-	const bytes = new Uint8Array(24);
-	crypto.getRandomValues(bytes);
-
-	let id = '';
-	for (let i = 0; i < bytes.length; i++) {
-		// >> 3 "removes" the right-most 3 bits of the byte
-		id += alphabet[bytes[i] >> 3];
-	}
-	return id;
-}
 
 export function requireLogin(): AuthenticatedUser {
 	const { locals } = getRequestEvent();
@@ -127,7 +111,9 @@ export async function invalidateSession(sessionId: string) {
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date) {
 	event.cookies.set(sessionCookieName, token, {
 		expires: expiresAt,
-		path: '/'
+		path: '/',
+		httpOnly: true,
+		secure: false
 	});
 }
 
@@ -135,4 +121,41 @@ export function deleteSessionTokenCookie(event: RequestEvent) {
 	event.cookies.delete(sessionCookieName, {
 		path: '/'
 	});
+}
+
+export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
+	const { locals } = getRequestEvent();
+
+	const user = locals.user as AuthenticatedUser | null;
+
+	const perms = user
+		? db
+				.select()
+				.from(table.Permissions)
+				.where(and(eq(table.Permissions.bid, board.id), eq(table.Permissions.uid, user.id)))
+		: null;
+
+	if (user && user.role !== 'Admin') {
+		switch (board.type) {
+			case 'Public':
+				// anyone can read, only owner and users with write perms can write
+				break;
+			case 'Unlisted':
+				// anybody can read, only owner and users with perms can write, is not searchable, only accessible through the link
+				if (!perms) {
+					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
+					error(403, 'forbidden');
+				}
+				break;
+			case 'Private':
+				// only owner and users with perms can read or write
+				if (board.owner !== user?.id || !perms) {
+					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
+					error(403, 'forbidden');
+				}
+				break;
+		}
+	}
+
+	return perms;
 }
