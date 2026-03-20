@@ -8,7 +8,7 @@
 		const bckpdl = document.querySelector('#backpedal');
 		if (bckpdl) {
 			bckpdl.style.transition =
-				'transform 0.8s cubic-bezier(0.38,1.07,0.65,0.99), filter 0.5s ease-in-out';
+				'transform 0.3s cubic-bezier(0.38,1.07,0.65,0.99), filter 0.2s ease-in-out';
 			bckpdl.style.transform = 'translateY(50%) translateX(42.5%)';
 			bckpdl.style.filter = 'opacity(0.3)';
 			setInterval(() => {
