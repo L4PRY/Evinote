@@ -49,16 +49,15 @@
 		display: flex;
 		padding: 3rem;
 		width: 100%;
-		max-width: 400px;
+		height: 100%;
 		justify-content: center;
 		flex-direction: column;
 		align-items: center;
 		margin: 0 auto;
 		border-radius: 15px;
 		/* üveghatás */
-		/* background: rgba(33, 33, 33, 0.45);  */
+		/* background: rgba(33, 33, 33, 0.8); */
 		backdrop-filter: blur(15px);
-		-webkit-backdrop-filter: blur(15px);
 
 		/* keret */
 		border: 2px solid rgba(207, 24, 24, 0.1);
@@ -67,7 +66,7 @@
 		box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
 		/* Középre igazítás */
-		position: absolute;
+		position: fixed;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
