@@ -27,7 +27,7 @@
 		</div>
 	</a>
 {:else if type === 'createNew'}
-	<a {href} class="dashboard-box">
+	<a {href} class="dashboard-box create-new">
 		<div class="preview-container">
 			<div class="placeholder">
 				<LucideSymbol symbol="Plus" size={42} strokeWidth={1.5} />
@@ -57,8 +57,16 @@
 	.dashboard-box:hover {
 		transform: translateY(-4px);
 		box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.5);
-		border-color: var(--button-stroke-color);
+		border: 1px solid var(--default-stroke-color);
 		background-color: var(--default-blur-hover-color);
+	}
+
+	.create-new {
+		border: none;
+	}
+
+	.create-new:hover {
+		border: none;
 	}
 
 	.preview-container {
