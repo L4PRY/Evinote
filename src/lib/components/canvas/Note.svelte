@@ -15,15 +15,15 @@
 	import { parseColor } from '$lib/parseColor';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import DOMPurify from 'isomorphic-dompurify';
+	import { onMount } from 'svelte';
 
 	let { data = $bindable(), remove }: { data: NoteData; remove: () => void } = $props();
 
-	let note: HTMLDivElement | null = $state(null);
+	let note: HTMLDivElement;
 
 	// Capture initial position as static value for position plugin (non-reactive)
 	const initialPosition = { x: data.position.x, y: data.position.y };
 
-	// svelte-ignore state_referenced_locally
 	let notePosition = $state(data.position);
 	let noteSize = $state(data.size);
 	let color = $state('var(--default-bg-color)');
@@ -107,9 +107,8 @@
 							Your browser does not support the video tag.
 						</video>
 					{:else if mimeType.startsWith('audio/')}
-						<audio crossorigin="anonymous" preload="metadata">
-							<source src={url} type={mimeType} />
-							Your browser does not support the audio tag.
+						<audio controls preload="metadata" src={url}>
+							Your browser does not support the audio element.
 						</audio>
 					{:else if mimeType === 'application/pdf'}
 						<object
