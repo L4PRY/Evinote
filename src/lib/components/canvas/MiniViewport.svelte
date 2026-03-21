@@ -89,6 +89,7 @@
 				style:top="{pos.top}px"
 				style:width="{noteIndicatorWidth}px"
 				style:height="{noteIndicatorHeight}px"
+				style:z-index={note.position.z}
 				style:background-color={color}
 				title={note.title ?? 'Note'}
 			></div>
