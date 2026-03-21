@@ -325,6 +325,7 @@
 		touch-action: none;
 		/* Cursor feedback */
 		cursor: grab;
+		overscroll-behavior: none;
 	}
 
 	#canvas::-webkit-scrollbar {
