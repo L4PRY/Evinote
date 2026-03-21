@@ -166,7 +166,7 @@
 		width: fit-content;
 		height: fit-content;
 		position: absolute;
-		border-radius: 5px;
+		border-radius: 0 0 5px 5px;
 		min-width: 150px;
 		max-width: 500px;
 		min-height: min(100px, max-content);
@@ -175,6 +175,15 @@
 		resize: both;
 		scrollbar-width: none;
 		overscroll-behavior: none;
+		&::-webkit-resizer {
+			background: transparent;
+			border-right: 2px solid white;
+			border-bottom: 2px solid white;
+			border-radius: 0 0 5px 0;
+			&:focus {
+				border-color: var(--default-bg-color);
+			}
+		}
 	}
 
 	.entry img {
