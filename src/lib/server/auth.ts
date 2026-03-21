@@ -35,19 +35,17 @@ let layer = 0;
 export async function createSession(userId: number, description: string, location: string) {
 	try {
 		layer++;
-		const result = await db.transaction(async tx =>
-			tx
-				.insert(table.Session)
-				.values({
-					token: generateSecureRandomString(),
-					userId,
-					description,
-					iat: new Date(),
-					eat: new Date(Date.now() + DAY_IN_MS * 30),
-					location,
-				})
-				.returning()
-		);
+		const result = await db
+			.insert(table.Session)
+			.values({
+				token: generateSecureRandomString(),
+				userId,
+				description,
+				iat: new Date(),
+				eat: new Date(Date.now() + DAY_IN_MS * 30),
+				location
+			})
+			.returning();
 
 		layer = 0;
 		return result;
@@ -59,7 +57,7 @@ export async function createSession(userId: number, description: string, locatio
 				throw new Error('Failed to create unique session token after multiple attempts');
 			}
 			createSession(userId, description, location);
-		}
+		} else throw new Error('Failed to create session', { cause: error });
 	}
 }
 export async function validateSessionToken(token: string) {
