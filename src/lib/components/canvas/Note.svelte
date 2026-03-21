@@ -15,15 +15,17 @@
 	import { parseColor } from '$lib/parseColor';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import DOMPurify from 'isomorphic-dompurify';
-	import { generateSecureRandomString } from '$lib/randomString';
 
 	let { data = $bindable(), remove }: { data: NoteData; remove: () => void } = $props();
+
+	let note: HTMLDivElement | null = $state(null);
 
 	// Capture initial position as static value for position plugin (non-reactive)
 	const initialPosition = { x: data.position.x, y: data.position.y };
 
 	// svelte-ignore state_referenced_locally
 	let notePosition = $state(data.position);
+	let noteSize = $state(data.size);
 	let color = $state('var(--default-bg-color)');
 
 	let sanitizedContent = $derived(
@@ -69,6 +71,11 @@
 	id={data.id ?? data.title}
 	style:background-color={color}
 	style:z-index={notePosition.z}
+	bind:this={note}
+	bind:clientWidth={noteSize.width}
+	bind:clientHeight={noteSize.height}
+	style:width={noteSize.width + 'px'}
+	style:height={noteSize.height + 'px'}
 >
 	<div class="top-container">
 		<div class="handle" unselectable="on">Drag me</div>
@@ -78,7 +85,8 @@
 	</div>
 
 	<h1>{data.title}</h1>
-	<code>[{Math.floor(notePosition.x)}, {Math.floor(notePosition.y)}, {notePosition.z}]</code>
+	<code>[{Math.floor(notePosition.x)}x {Math.floor(notePosition.y)}y {notePosition.z}z]</code>
+	<code>[{Math.floor(noteSize.width)}w x {Math.floor(noteSize.height)}h]</code>
 	<div class="note-content">
 		{#each sanitizedContent as entry, i}
 			<div class="entry">
@@ -159,7 +167,21 @@
 		height: fit-content;
 		position: absolute;
 		border-radius: 5px;
-		min-width: 200px;
+		min-width: 150px;
 		max-width: 500px;
+		min-height: min(100px, max-content);
+		max-height: max-content;
+		overflow: scroll;
+		resize: both;
+		scrollbar-width: none;
+		overscroll-behavior: none;
+	}
+
+	.entry img {
+		object-fit: cover;
+		width: 100%;
+		border-radius: 5px;
+		padding: 10px;
+		height: auto;
 	}
 </style>
