@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/state';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { onMount } from 'svelte';
 
+	let bckpdl: HTMLButtonElement;
 	onMount(() => {
 		document.title = `Evinote • ${page.status}`;
-		const bckpdl = document.querySelector('#backpedal');
 		if (bckpdl) {
 			bckpdl.style.transition =
 				'transform 0.3s cubic-bezier(0.38,1.07,0.65,0.99), filter 0.2s ease-in-out';
@@ -21,10 +21,10 @@
 <div class="main">
 	<div class="infobox">
 		<div class="top">
-			<a
-				href="#"
+			<button
 				id="backpedal"
 				class="backpedal"
+				bind:this={bckpdl}
 				onclick={e => {
 					e.preventDefault();
 					window.history.back();
@@ -32,10 +32,10 @@
 			>
 				<LucideSymbol symbol="CornerDownLeft" />
 				Back to last page
-			</a>
+			</button>
 		</div>
 		<h1>{page.status}</h1>
-		<p class="error-msg">{page.error.message ? page.error.message : 'Uknown error'}</p>
+		<p class="error-msg">{page.error?.message ?? 'Uknown error'}</p>
 	</div>
 </div>
 
