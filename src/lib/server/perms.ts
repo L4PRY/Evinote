@@ -1,6 +1,12 @@
 import { Board, User, Permissions, permission } from '$lib/server/db/schema';
 import { error } from '@sveltejs/kit';
 import { routeLogger } from './logger';
+import { getRequestEvent } from '$app/server';
+import type { AuthenticatedUser } from '$lib/types/auth/AuthenticatedUser';
+import { and, eq } from 'drizzle-orm';
+import { db } from './db';
+import * as table from './db/schema';
+import { authLogger } from './logger';
 
 export function checkAccessPerms(
 	board: typeof Board.$inferSelect,
@@ -50,3 +56,40 @@ export const checkUserCanModify = (
 
 // 	return false;
 // }
+
+export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
+	const { locals } = getRequestEvent();
+
+	const user = locals.user as AuthenticatedUser | null;
+
+	const perms = user
+		? db
+				.select()
+				.from(table.Permissions)
+				.where(and(eq(table.Permissions.bid, board.id), eq(table.Permissions.uid, user.id)))
+		: null;
+
+	if (user && user.role !== 'Admin') {
+		switch (board.type) {
+			case 'Public':
+				// anyone can read, only owner and users with write perms can write
+				break;
+			case 'Unlisted':
+				// anybody can read, only owner and users with perms can write, is not searchable, only accessible through the link
+				if (!perms) {
+					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
+					error(403, 'forbidden');
+				}
+				break;
+			case 'Private':
+				// only owner and users with perms can read or write
+				if (board.owner !== user?.id || !perms) {
+					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
+					error(403, 'forbidden');
+				}
+				break;
+		}
+	}
+
+	return perms;
+}
