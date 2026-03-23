@@ -1,19 +1,21 @@
 <script lang="ts">
+	// components
 	import Note from '$lib/components/canvas/Note.svelte';
-	import { enhance } from '$app/forms';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
-	import type { PageProps } from './$types';
 	import Canvas from '$lib/components/canvas/Canvas.svelte';
 	import ZoomControl from '$lib/components/canvas/ZoomControl.svelte';
-
-	import type { NoteData } from '$lib/types/canvas/NoteData';
-	import { onMount } from 'svelte';
-	import { initializeZIndex } from '$lib/stores/noteZIndex';
 	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';
-	import { validateUrl } from '$lib/parseInput';
-	import type { File } from '$lib/types/canvas/File';
+
+	// types and utils
+	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import type { Color } from '$lib/types/canvas/Color';
+	import { initializeZIndex } from '$lib/stores/noteZIndex';
+	import { validateUrl } from '$lib/parseInput';
 	import { generateSecureRandomString } from '$lib/randomString';
+
+	import type { PageProps } from './$types';
+	import { onMount } from 'svelte';
+	import { enhance } from '$app/forms';
 
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
@@ -110,23 +112,27 @@
 		// Hide the dialog
 		showDialog = false;
 	}
+
 	onMount(() => {
 		document.title = `Evinote • ${board.name}`;
 
 		dialog = document.getElementById('add-dialog') as HTMLDialogElement;
 		console.log(dialog);
+
+		// Expose notes to window for debugging in dev mode
+		(window as any).notes = notes;
 	});
 
-	function saveNotes() {
-		// ok how do i
-		// uhh
-		// wait holon id just use a form for it i think
-		// so what else needs work now...
-		// adding note-sub components to notes (more related to notes though)
-		// programmatically extracing the data from said notes thing
-		// make this fucking thing be hidden for once god damn it
-		//
-	}
+	// function saveNotes() {
+	// 	// ok how do i
+	// 	// uhh
+	// 	// wait holon id just use a form for it i think
+	// 	// so what else needs work now...
+	// 	// adding note-sub components to notes (more related to notes though)
+	// 	// programmatically extracing the data from said notes thing
+	// 	// make this fucking thing be hidden for once god damn it
+	// 	//
+	// }
 
 	$effect(() => {
 		if (notes.length > 0) initializeZIndex(notes);
