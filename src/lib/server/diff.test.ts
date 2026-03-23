@@ -84,13 +84,13 @@ describe('diffNotes', () => {
 	});
 
 	it('should handle removing notes', () => {
-		const oldNotes = [createMockNote({ id: '1' }), createMockNote({ id: '2' })];
-		const newNotes = [createMockNote({ id: '1' })];
+		const oldNotes = [createMockNote({ id: 'foo' }), createMockNote({ id: 'bar' })];
+		const newNotes = [createMockNote({ id: 'foo' })];
 
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(result).toHaveLength(1);
-		expect(result[0].id).toBe('1');
+		expect(result[0].id).toBe('foo');
 	});
 
 	it('should handle complex nested changes', () => {
@@ -127,15 +127,23 @@ describe('diffNotes', () => {
 		expect(newNotes[0].title).toBe('Updated');
 	});
 
-	it('should gracefully merge', () => {
-		const oldNotes = [createMockNote({ id: '1', title: 'Original' })];
+	it('should gracefully handle 3 way merges', () => {
+		// the board has a common origin (eg 1 note with the id of 'foo')
+		// a person adds another note with the id of 'foo', then saves it
+		// then a new person, who hasn't had their changes update yet,
+		// adds another note called 'baz'
+		// in the end there should be 3 notes with [foo, bar, baz]
 
-		const branch1 = [...oldNotes, createMockNote({ id: '2', title: 'Branch 1 Note' })];
-		const branch2 = [...oldNotes, createMockNote({ id: '3', title: 'Branch 2 Note' })];
+		const origin = [createMockNote({ id: 'foo' })];
+		const user1 = [createMockNote({ id: 'foo' }), createMockNote({ id: 'bar' })];
+		const user2 = [createMockNote({ id: 'foo' }), createMockNote({ id: 'baz' })];
 
-		let merge = diffNotes(oldNotes, branch1);
-		merge = diffNotes(merge, branch2);
+		const merge1 = diffNotes(origin, user1);
+		const merge2 = diffNotes(merge1, user2);
 
-		expect(merge).toHaveLength(3);
+		expect(merge2).toHaveLength(3);
+		expect(merge2.find(note => note.id === 'foo')).toBeDefined();
+		expect(merge2.find(note => note.id === 'bar')).toBeDefined();
+		expect(merge2.find(note => note.id === 'baz')).toBeDefined();
 	});
 });
