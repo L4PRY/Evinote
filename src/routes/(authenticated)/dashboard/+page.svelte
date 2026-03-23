@@ -34,8 +34,6 @@
 			{/each}
 			<DashboardBox
 				href={resolve(`/boards/new`)}
-				src="https://placehold.co/600x400"
-				name="Create new board"
 				type="createNew"
 			></DashboardBox>
 		</ul>

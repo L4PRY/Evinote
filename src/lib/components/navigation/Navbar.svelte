@@ -71,6 +71,12 @@
 		}
 	}
 
+	function closeHamburger() {
+		if (hamburgerVisible) {
+			hamburgerToggle();
+		}
+	}
+
 	onMount(() => {
 		if (!navVisible) navShow();
 
@@ -96,17 +102,17 @@
 		<a
 			class="float-left"
 			href="/"
-			onclick={() => goto(resolve('/'))}
+			onclick={() => { closeHamburger(); goto(resolve('/')); }}
 			style="cursor: pointer;"
 			aria-label="Home">Evinote</a
 		>
 		<div class="nav-island">
-			<button>Explore</button>
-			<div class="nav-island-divider"></div>
-			<button>Dashboard</button>
-			<div class="nav-island-divider"></div>
-			<button onclick={() => goto(resolve('/about'))}>About</button>
-			<button class="login-island" onclick={() => goto(resolve('/auth'))}>Login</button>
+			<button onclick={closeHamburger}>Explore</button>
+			<div class="nav-island-divider" aria-hidden="true"></div>
+			<button onclick={closeHamburger}>Dashboard</button>
+			<div class="nav-island-divider" aria-hidden="true"></div>
+			<button onclick={() => { closeHamburger(); goto(resolve('/about')); }}>About</button>
+			<button class="login-island" onclick={() => { closeHamburger(); goto(resolve('/auth')); }}>Login</button>
 		</div>
 		<div class="float-right">
 			<button
@@ -226,12 +232,12 @@
 			border-top-right-radius: 0;
 			border-bottom-right-radius: 0;
 		}
-		.nav-island button:last-child {
+		.nav-island button:not(:first-child) {
 			border-left: none;
 			border-top-left-radius: 0;
 			border-bottom-left-radius: 0;
 		}
-		.nav-island button:not(:first-child):not(:last-child) {
+		.nav-island button:nth-child(3) {
 			border-left: none;
 			border-right: none;
 			border-radius: 0;

@@ -59,8 +59,9 @@
 					if (validateUrl(s)) {
 						try {
 							// Perform HEAD request to determine MIME type
-							const response = await fetch(s, {
+							const response = await fetch(`/proxy?url=${encodeURIComponent(s)}`, {
 								method: 'HEAD',
+
 								headers: {
 									'User-Agent': 'Evinote/1.0 (github.com/L4PRY/Evinote)' // Set a custom User-Agent
 								}
@@ -95,6 +96,7 @@
 				id: generateSecureRandomString(),
 				title,
 				position: { x: 0, y: 0, z: 0 },
+				size: { width: 200, height: 200 },
 				color,
 				content
 			});

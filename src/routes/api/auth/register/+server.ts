@@ -38,7 +38,7 @@ export async function POST({ request, cookies }) {
 
 		const userAgent = 'api-' + (request.headers.get('user-agent') ?? 'unkown');
 
-		const sessionResult = await auth.createSession(userId, userAgent);
+		const sessionResult = await auth.createSession(userId, userAgent, '');
 
 		if (!sessionResult || sessionResult.length === 0) {
 			return new Response(JSON.stringify({ error: 'Failed to create session' }), { status: 500 });

@@ -30,7 +30,8 @@ export const Session = pgTable(
 			.references(() => User.id),
 		iat: timestamp('issued_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		eat: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
-		description: text('description')
+		description: text('description'),
+		location: text('location')
 	},
 	table => [
 		index('session_user').on(table.id, table.userId),

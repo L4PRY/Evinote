@@ -5,11 +5,10 @@
 	//import Divider from '$lib/components/frontend/Divider.svelte';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import { onMount } from 'svelte';
-	import { redirect } from '@sveltejs/kit';
-	import { afterNavigate } from '$app/navigation';
 
 	onMount(() => {
 		document.title = 'Evinote • Welcome';
+
 		contentShow();
 	});
 

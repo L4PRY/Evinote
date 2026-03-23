@@ -1,11 +1,12 @@
-import { type RequestEvent, error, redirect } from '@sveltejs/kit';
-import { eq, and } from 'drizzle-orm';
+import { type RequestEvent, redirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { getRequestEvent } from '$app/server';
 import type { PostgresError } from 'postgres';
 import { authLogger } from './logger';
 import type { AuthenticatedUser } from '../types/auth/AuthenticatedUser';
+import { generateSecureRandomString } from '$lib/randomString';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
@@ -31,21 +32,20 @@ export function checkLogin(): AuthenticatedUser | null {
 }
 
 let layer = 0;
-export async function createSession(userId: number, description: string) {
+export async function createSession(userId: number, description: string, location: string) {
 	try {
 		layer++;
-		const result = await db.transaction(async tx =>
-			tx
-				.insert(table.Session)
-				.values({
-					token: generateSecureRandomString(),
-					userId,
-					description,
-					iat: new Date(),
-					eat: new Date(Date.now() + DAY_IN_MS * 30)
-				})
-				.returning()
-		);
+		const result = await db
+			.insert(table.Session)
+			.values({
+				token: generateSecureRandomString(),
+				userId,
+				description,
+				iat: new Date(),
+				eat: new Date(Date.now() + DAY_IN_MS * 30),
+				location
+			})
+			.returning();
 
 		layer = 0;
 		return result;
@@ -56,8 +56,8 @@ export async function createSession(userId: number, description: string) {
 				layer = 0;
 				throw new Error('Failed to create unique session token after multiple attempts');
 			}
-			createSession(userId, description);
-		}
+			createSession(userId, description, location);
+		} else throw new Error('Failed to create session', { cause: error });
 	}
 }
 export async function validateSessionToken(token: string) {
@@ -119,41 +119,4 @@ export function deleteSessionTokenCookie(event: RequestEvent) {
 	event.cookies.delete(sessionCookieName, {
 		path: '/'
 	});
-}
-
-export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
-	const { locals } = getRequestEvent();
-
-	const user = locals.user as AuthenticatedUser | null;
-
-	const perms = user
-		? db
-				.select()
-				.from(table.Permissions)
-				.where(and(eq(table.Permissions.bid, board.id), eq(table.Permissions.uid, user.id)))
-		: null;
-
-	if (user && user.role !== 'Admin') {
-		switch (board.type) {
-			case 'Public':
-				// anyone can read, only owner and users with write perms can write
-				break;
-			case 'Unlisted':
-				// anybody can read, only owner and users with perms can write, is not searchable, only accessible through the link
-				if (!perms) {
-					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
-					error(403, 'forbidden');
-				}
-				break;
-			case 'Private':
-				// only owner and users with perms can read or write
-				if (board.owner !== user?.id || !perms) {
-					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
-					error(403, 'forbidden');
-				}
-				break;
-		}
-	}
-
-	return perms;
 }

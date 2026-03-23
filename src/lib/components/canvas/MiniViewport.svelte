@@ -46,21 +46,12 @@
 	}));
 
 	$effect(() => {
+		$inspect('notebounds update ran');
 		noteBounds = notes.map(note => {
-			const element = document.getElementById(note.id ?? note.title);
-			if (element) {
-				const rect = element.getBoundingClientRect();
-				return {
-					noteId: note.id ?? note.title,
-					rect: new DOMRect(
-						rect.left / $zoomLevel,
-						rect.top / $zoomLevel,
-						rect.width / $zoomLevel,
-						rect.height / $zoomLevel
-					)
-				};
-			}
-			return { noteId: note.id ?? note.title, rect: new DOMRect(0, 0, 0, 0) };
+			return {
+				noteId: note.id ?? note.title,
+				rect: new DOMRect(note.position.x, note.position.y, note.size.width, note.size.height)
+			};
 		});
 	});
 
@@ -98,6 +89,7 @@
 				style:top="{pos.top}px"
 				style:width="{noteIndicatorWidth}px"
 				style:height="{noteIndicatorHeight}px"
+				style:z-index={note.position.z}
 				style:background-color={color}
 				title={note.title ?? 'Note'}
 			></div>
