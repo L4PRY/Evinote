@@ -1,4 +1,4 @@
-import { diffNotes } from './diff';
+import { diffNotes } from '$lib/server/diff';
 import { describe, it, expect, vi } from 'vitest';
 import type { NoteData } from '$lib/types/canvas/NoteData';
 
