@@ -2,53 +2,57 @@ import type { NoteData } from '$lib/types/canvas/NoteData';
 import diff from 'microdiff';
 import { saveLogger } from './logger';
 
-/**
- * Helper function to set a value at a given path in an object
- */
-function setAtPath(obj: any, path: (string | number)[], value: any): void {
-	let current = obj;
-	for (let i = 0; i < path.length - 1; i++) {
-		const key = path[i];
-		if (!(key in current)) {
-			current[key] = typeof path[i + 1] === 'number' ? [] : {};
-		}
-		current = current[key];
-	}
-	current[path[path.length - 1]] = value;
-}
-
-/**
- * Helper function to delete a value at a given path in an object
- */
-function deleteAtPath(obj: any, path: (string | number)[]): void {
-	let current = obj;
-	for (let i = 0; i < path.length - 1; i++) {
-		const key = path[i];
-		current = current[key];
-	}
-	delete current[path[path.length - 1]];
-}
-
 export function diffNotes(oldNotes: NoteData[], newNotes: NoteData[]) {
-	const differences = diff(oldNotes, newNotes);
-
 	saveLogger.info('Calculating differences between old and new notes', {
-		differences
+		oldNotes,
+		newNotes
 	});
 
-	const mergedNotes = [...oldNotes];
+	const differences = diff(oldNotes, newNotes);
 
-	for (const difference of differences) {
-		switch (difference.type) {
-			case 'CREATE':
-				setAtPath(mergedNotes, difference.path, difference.value);
-				break;
-			case 'REMOVE':
-				deleteAtPath(mergedNotes, difference.path);
-				break;
-			case 'CHANGE':
-				setAtPath(mergedNotes, difference.path, difference.value);
-				break;
+	// Find indices that microdiff explicitly considers "removed"
+	// This happens when the new array is shorter and an item is missing.
+	// If an item is replaced by another (e.g., id changes), microdiff reports a CHANGE, not a REMOVE at the root level.
+	const removedIndices = new Set<number>();
+	for (const d of differences) {
+		if (d.type === 'REMOVE' && d.path.length === 1 && typeof d.path[0] === 'number') {
+			removedIndices.add(d.path[0]);
+		}
+	}
+
+	const explicitlyRemovedIds = new Set<string>();
+	for (const idx of removedIndices) {
+		if (oldNotes[idx]) {
+			explicitlyRemovedIds.add(oldNotes[idx].id);
+		}
+	}
+
+	const mergedNotes: NoteData[] = [];
+	const mergedMap = new Map<string, number>();
+
+	// Preserve old notes that were not explicitly removed
+	for (let i = 0; i < oldNotes.length; i++) {
+		const oldNote = oldNotes[i];
+		if (!explicitlyRemovedIds.has(oldNote.id)) {
+			const copied = JSON.parse(JSON.stringify(oldNote));
+			mergedNotes.push(copied);
+			mergedMap.set(copied.id, mergedNotes.length - 1);
+		}
+	}
+
+	// Apply updates and additions from newNotes
+	for (const newNote of newNotes) {
+		const noteId = newNote.id;
+
+		if (mergedMap.has(noteId)) {
+			// Update existing note with new values
+			const index = mergedMap.get(noteId)!;
+			mergedNotes[index] = JSON.parse(JSON.stringify(newNote));
+		} else {
+			// Add completely new note
+			const copied = JSON.parse(JSON.stringify(newNote));
+			mergedNotes.push(copied);
+			mergedMap.set(copied.id, mergedNotes.length - 1);
 		}
 	}
 
