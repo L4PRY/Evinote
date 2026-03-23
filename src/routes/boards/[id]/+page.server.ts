@@ -9,6 +9,7 @@ import type { NoteData } from '$lib/types/canvas/NoteData';
 import { checkLogin } from '$lib/server/auth';
 import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
 import { checkAccessPerms, checkUserCanModify } from '$lib/server/perms';
+import { diffNotes } from '$lib/server/diff';
 
 export async function load({ params }) {
 	const { id } = params;
@@ -62,7 +63,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const notes = JSON.parse(formData.get('notes') as string) as NoteData[];
 		routeLogger.info(`User requested to update board no. ${params.id}`);
-		routeLogger.info(`notes is ${JSON.stringify(notes)}`);
+		// routeLogger.info(`notes is ${JSON.stringify(notes)}`);
 
 		const user = await db
 			.select()
@@ -84,10 +85,13 @@ export const actions: Actions = {
 			.where(eq(table.Board.id, parseInt(params.id)))
 			.then(res => res[0]);
 
+		// diff notes on server and sent by client here
+
 		if (checkUserCanModify(board, user, perms))
 			await db
 				.update(table.Board)
-				.set({ notes }) // update board data with new notes, later
+				.set({ notes: diffNotes(board.notes as NoteData[], notes) })
+				// .set({ notes })
 				.where(eq(table.Board.id, parseInt(params.id)));
 	}
 };
