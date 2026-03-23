@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as icons from '@lucide/svelte';
-	import type { Icon as IconType } from '@lucide/svelte';
 	let { symbol, size, strokeWidth }: { symbol: string; size?: number; strokeWidth?: number } =
 		$props();
 

@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onMount, onDestroy } from 'svelte';
-	import LucideSymbol from '../frontend/LucideSymbol.svelte';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	let scrollY = $state(0);
 	let outerWidth = $state(0);
 	let navVisible = $state(false);

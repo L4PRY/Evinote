@@ -1,7 +1,7 @@
 <script lang="ts">
 	const { children, href, symbol }: { children: any; href?: string; symbol?: string } = $props();
 	import { page } from '$app/state';
-	import LucideSymbol from '../frontend/LucideSymbol.svelte';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 
 	function isActive(path: string) {
 		let targetPath = path;
