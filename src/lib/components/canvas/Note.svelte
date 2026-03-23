@@ -159,7 +159,6 @@
 
 	.note {
 		background-color: var(--default-bg-color);
-		color: var(--default-text-color);
 		box-shadow: 0 0 10px var(--default-text-color);
 		margin-bottom: 16px;
 		width: fit-content;
@@ -183,6 +182,11 @@
 				border-color: var(--default-bg-color);
 			}
 		}
+	}
+
+	.note > * {
+		/*color: var(--default-text-color);*/
+		color: white;
 	}
 
 	.entry img {
