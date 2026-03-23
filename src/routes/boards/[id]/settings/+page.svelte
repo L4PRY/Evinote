@@ -1,0 +1,255 @@
+<script lang="ts">
+	import { type Grid } from '$lib/types/canvas/Grid';
+	import type { PageProps } from './$types';
+	const { params, data }: PageProps = $props();
+
+	let { board, contributors } = data;
+	const { id, user, canModify } = data;
+
+	// State for add contributor dialog
+	let showAddContributorDialog = $state(false);
+
+	// State for delete dialog
+	let showDeleteDialog = $state(false);
+	let deleteEmail = $state('');
+	let deletePassword = $state('');
+
+	// Check if user is the owner
+	const isOwner = user?.id === board.owner;
+
+	let settings = $state({
+		boardName: board.name,
+		boardType: board.type,
+		canvasWidth: board.canvas?.size.width,
+		canvasHeight: board.canvas?.size.height,
+		backgroundType: board.canvas?.background.type,
+		backgroundValue: board.canvas?.background.value,
+		gridType:
+			board.canvas?.background.type === 'Grid'
+				? (board.canvas.background.value as Grid).type
+				: null,
+		gridColor:
+			board.canvas?.background.type === 'Grid'
+				? (board.canvas.background.value as Grid).color
+				: null,
+		gridSize:
+			board.canvas?.background.type === 'Grid'
+				? (board.canvas.background.value as Grid).size
+				: null,
+		gridBg:
+			board.canvas?.background.type === 'Grid'
+				? (board.canvas.background.value as Grid).color
+				: null
+	});
+</script>
+
+<h1>{board.name}</h1>
+<p>{canModify ? 'You can modify the settings' : "You can't modify the settings"}</p>
+
+{#if canModify}
+	<!-- Contributors Section -->
+	<section>
+		<h2>Contributors</h2>
+		<table>
+			<thead>
+				<tr>
+					<th>Email</th>
+					<th>Permission</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each contributors as contributor (contributor.id)}
+					<tr>
+						<td>{contributor.username || 'Unknown'}</td>
+						<td>{contributor.permission}</td>
+						<td>
+							<form method="POST" action="?/removeuser" style="display: inline;">
+								<input type="hidden" name="userId" value={contributor.id} />
+								<button type="submit">Remove</button>
+							</form>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+
+		<div style="margin-top: 1rem;">
+			<button onclick={() => (showAddContributorDialog = true)}>Add Contributor</button>
+		</div>
+
+		{#if showAddContributorDialog}
+			<dialog open>
+				<h3>Add New Contributor</h3>
+				<form method="POST" action="?/adduser" onsubmit={() => (showAddContributorDialog = false)}>
+					<div>
+						<label>
+							Email:
+							<input type="text" name="username" required />
+						</label>
+					</div>
+					<div>
+						<label>
+							Permission:
+							<select name="permission" required>
+								<option value="Read" selected>Read</option>
+								<option value="Write">Write</option>
+							</select>
+						</label>
+					</div>
+					<button type="submit">Add</button>
+					<button type="button" onclick={() => (showAddContributorDialog = false)}>Cancel</button>
+				</form>
+			</dialog>
+		{/if}
+	</section>
+
+	<!-- Board Settings Section -->
+	<section>
+		<h2>Board Settings</h2>
+		<form method="POST" action="?/save">
+			<div>
+				<label>
+					Board Name:
+					<input type="text" name="boardName" bind:value={settings.boardName} />
+				</label>
+			</div>
+
+			<div>
+				<label>
+					Board type:
+					<select name="boardType" bind:value={settings.boardType}>
+						<option value="Public">Public</option>
+						<option value="Private">Private</option>
+						<option value="Unlisted">Unlisted</option>
+					</select>
+				</label>
+			</div>
+
+			<div>
+				<label>
+					Width:
+					<input type="number" name="canvasWidth" bind:value={settings.canvasWidth} />
+				</label>
+			</div>
+
+			<div>
+				<label>
+					Height:
+					<input type="number" name="canvasHeight" bind:value={settings.canvasHeight} />
+				</label>
+			</div>
+
+			<div>
+				<label>
+					Background Type:
+					<select name="backgroundType" bind:value={settings.backgroundType}>
+						<option value="Solid">Solid Color</option>
+						<option value="Image">Image</option>
+						<option value="Grid">Grid</option>
+						<option value="Custom">Custom CSS</option>
+					</select>
+				</label>
+			</div>
+
+			{#if settings.backgroundType === 'Solid'}
+				<div>
+					<label>
+						Color (Hex, todo make this a color picker):
+						<input
+							type="text"
+							name="backgroundValue"
+							placeholder="#000000"
+							bind:value={settings.backgroundValue}
+						/>
+					</label>
+				</div>
+			{:else if settings.backgroundType === 'Image'}
+				<div>
+					<label>
+						Image URL:
+						<input type="url" name="backgroundValue" bind:value={settings.backgroundValue} />
+					</label>
+				</div>
+			{:else if settings.backgroundType === 'Grid'}
+				<div>
+					<label>
+						Grid Configuration:
+						<select name="gridType" bind:value={settings.gridType}>
+							<option value="Dot">Dots</option>
+							<option value="Line">Lines</option>
+						</select>
+					</label>
+					<label>
+						Grid Color (Hex):
+						<input
+							type="text"
+							name="gridColor"
+							placeholder="#cccccc"
+							bind:value={settings.gridColor}
+						/>
+					</label>
+					<label>
+						Grid background color (Hex):
+						<input type="text" name="gridBg" placeholder="#cccccc" bind:value={settings.gridBg} />
+					</label>
+					<label>
+						Grid Size (px):
+						<input
+							type="number"
+							name="gridSize"
+							min="10"
+							max="200"
+							bind:value={settings.gridSize}
+						/>
+					</label>
+				</div>
+			{:else if settings.backgroundType === 'Custom'}
+				<div>
+					<label>
+						Custom CSS:
+						<textarea name="backgroundValue" bind:value={settings.backgroundValue}></textarea>
+					</label>
+				</div>
+			{/if}
+
+			<button type="submit">Save Settings</button>
+		</form>
+	</section>
+
+	<!-- Delete Board Section -->
+	{#if isOwner}
+		<section>
+			<h2>Danger Zone</h2>
+			<button
+				onclick={() => (showDeleteDialog = true)}
+				style="background-color: red; color: white;"
+			>
+				Delete Board
+			</button>
+
+			{#if showDeleteDialog}
+				<dialog open>
+					<h3>Delete Board</h3>
+					<p>This action cannot be undone. Please enter your credentials to confirm.</p>
+					<form method="POST" action="?/delete" onsubmit={() => (showDeleteDialog = false)}>
+						<div>
+							<label>
+								Email:
+								<input type="email" name="email" bind:value={deleteEmail} required />
+							</label>
+						</div>
+						<div>
+							<label>
+								Password:
+								<input type="password" name="password" bind:value={deletePassword} required />
+							</label>
+						</div>
+						<button type="submit">Delete Board</button>
+						<button type="button" onclick={() => (showDeleteDialog = false)}>Cancel</button>
+					</form>
+				</dialog>
+			{/if}
+		</section>
+	{/if}
+{/if}
