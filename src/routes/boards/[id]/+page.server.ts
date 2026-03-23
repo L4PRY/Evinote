@@ -47,14 +47,9 @@ export async function load({ params }) {
 				.then(res => res[0])
 		: null;
 
-	checkAccessPerms(board, user, perms);
-
-	return {
-		id,
-		user,
-		board, //returning board data to page to use for displaying name etc
-		perms
-	};
+	return checkAccessPerms(board, user, perms)
+		? { id, user, board, perms }
+		: error(403, 'forbidden');
 }
 
 export const actions: Actions = {
