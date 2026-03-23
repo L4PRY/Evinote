@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import Navbar from '$lib/components/navigation/Navbar.svelte';
+	import ToastModal from '$lib/components/frontend/ToastModal.svelte';
 	import { onNavigate, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
@@ -67,6 +68,7 @@
 	afterNavigate(() => {
 		applyTheme();
 	});
+
 </script>
 
 <svelte:head></svelte:head>
@@ -75,5 +77,7 @@
 	<Navbar />
 	<!-- <Footer /> -->
 {/if}
+
+<ToastModal />
 
 {@render children()}

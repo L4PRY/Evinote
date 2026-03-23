@@ -1,16 +1,49 @@
 <script lang="ts">
 	const {
-		href,
+		href = '',
 		name = '',
 		src = '',
-		type = 'board'
-	}: { href: any; name?: string; src?: string; type?: 'createNew' | 'board' } = $props();
+		type = 'board',
+		onclick
+	}: { href?: any; name?: string; src?: string; type?: 'createNew' | 'board'; onclick?: (e: MouseEvent) => void } = $props();
 
-	import LucideSymbol from '../frontend/LucideSymbol.svelte';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
+	import { notifications } from '$lib/stores/notifications';
+
+	let menuOpen = $state(false);
+
+	function toggleMenu(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		menuOpen = !menuOpen;
+	}
+
+	function handleAction(action: string, e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		menuOpen = false;
+		if (action === 'share') {
+			navigator.clipboard.writeText(`${window.location.origin}${href}`);
+			notifications.add({
+				title: 'Link Copied',
+				message: 'Board link successfully copied to your clipboard.',
+				type: 'success',
+				duration: 3000
+			});
+		} else if (action === 'configure') {
+			// settings
+		}
+	}
+	
+	function handleMouseLeave() {
+		menuOpen = false;
+	}
 </script>
 
+<svelte:window onclick={() => { menuOpen = false; }} />
+
 {#if type === 'board'}
-	<a {href} class="dashboard-box">
+	<a {href} class="dashboard-box" onmouseleave={handleMouseLeave}>
 		<div class="preview-container">
 			<div class="placeholder">
 				<img {src} alt="" />
@@ -25,15 +58,36 @@
 				</p>
 			</div>
 		</div>
+
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="actions-menu" class:is-open={menuOpen} onclick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+			<div class="icon-btn" onclick={toggleMenu} aria-label="Options" aria-expanded={menuOpen}>
+				{#if menuOpen}
+					<LucideSymbol symbol="X" size={18} strokeWidth={2} />
+				{:else}
+					<LucideSymbol symbol="MoreVertical" size={20} strokeWidth={2} />
+				{/if}
+			</div>
+			
+			<div class="expanded-menu">
+				<div class="dropdown-item" onclick={(e) => handleAction('configure', e)}>
+					<LucideSymbol symbol="SlidersHorizontal" size={18} strokeWidth={2} />
+				</div>
+				<div class="dropdown-item share" onclick={(e) => handleAction('share', e)}>
+					<LucideSymbol symbol="Share" size={18} strokeWidth={2} />
+				</div>	
+			</div>
+		</div>
 	</a>
 {:else if type === 'createNew'}
-	<a {href} class="dashboard-box create-new">
+	<button class="dashboard-box create-new" {onclick}>
 		<div class="preview-container">
 			<div class="placeholder">
 				<LucideSymbol symbol="Plus" size={42} strokeWidth={1.5} />
 			</div>
 		</div>
-	</a>
+	</button>
 {/if}
 
 <style>
@@ -63,6 +117,7 @@
 
 	.create-new {
 		border: none;
+		cursor: pointer;
 	}
 
 	.create-new:hover {
@@ -131,5 +186,92 @@
 	.dashboard-box:hover .arrow > * {
 		opacity: 1;
 		transform: translateX(0);
+	}
+
+	.actions-menu {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		z-index: 20;
+		display: flex;
+		flex-direction: row-reverse;
+		align-items: center;
+		background: var(--default-bg-color-transparent);
+		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
+		border-radius: 8px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		opacity: 0;
+		transition: all 0.2s ease;
+		overflow: hidden;
+	}
+
+	.dashboard-box:hover .actions-menu {
+		opacity: 1;
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.actions-menu.is-open {
+		background: var(--default-bg-color);
+		border: 1px solid transparent;
+	}
+
+	.icon-btn {
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		color: var(--default-text-color, white);
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+	}
+
+	.icon-btn:hover {
+		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
+	}
+
+	.expanded-menu {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		max-width: 0;
+		opacity: 0;
+		overflow: hidden;
+		transition: max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease;
+		white-space: nowrap;
+	}
+
+	.actions-menu.is-open .expanded-menu {
+		max-width: 110px;
+		opacity: 1;
+	}
+
+	.dropdown-item {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 0 8px;
+		height: 32px;
+		background: transparent;
+		border: none;
+		color: var(--default-text-color);
+		font-size: 0.85rem;
+		text-align: left;
+		cursor: pointer;
+		transition: background 0.15s ease;
+		box-sizing: border-box;
+	}
+
+	.dropdown-item:hover {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+
+	@media (max-width: 600px) {
+		.dashboard-box {
+			height: 275px;
+		}
 	}
 </style>

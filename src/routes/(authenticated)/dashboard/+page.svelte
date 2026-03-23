@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DashboardTab from '$lib/components/dash/DashboardTab.svelte';
 	import DashboardBox from '$lib/components/dash/DashboardBox.svelte';
+	import CreateBoardPopup from '$lib/components/dash/CreateBoardPopup.svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
@@ -10,17 +11,21 @@
 	const user = data!.user;
 	const boards = data!.boards;
 
+	let createPopup: CreateBoardPopup;
+
 	onMount(() => {
 		document.title = 'Evinote • Dashboard';
 	});
 </script>
+
+<CreateBoardPopup bind:this={createPopup} />
 
 <div class="site-content">
 	<DashboardTab>Your boards</DashboardTab>
 	{#await boards then resolvedBoards}
 		{#if resolvedBoards.length === 0}
 			<p>You have no boards yet.</p>
-			<a href={resolve('/boards/new')} aria-label="create a new board">create one?</a>
+			<button class="create-link" onclick={() => createPopup.show()} aria-label="create a new board">create one?</button>
 		{/if}
 		<ul class="boards-grid">
 			{#each resolvedBoards as board (board.id)}
@@ -33,8 +38,8 @@
 				</li>
 			{/each}
 			<DashboardBox
-				href={resolve(`/boards/new`)}
 				type="createNew"
+				onclick={() => createPopup.show()}
 			></DashboardBox>
 		</ul>
 	{/await}
@@ -57,5 +62,20 @@
 
 	.boards-grid li {
 		display: block;
+	}
+
+	.create-link {
+		background: none;
+		border: none;
+		color: #3182ce;
+		text-decoration: underline;
+		cursor: pointer;
+		padding: 0;
+		font-family: inherit;
+		font-size: 1rem;
+	}
+	
+	.create-link:hover {
+		color: #2b6cb0;
 	}
 </style>
