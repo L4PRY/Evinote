@@ -56,6 +56,7 @@ const createCanvasSizeStore = () => {
 export const bounds = createViewportBoundsStore();
 export const position = createViewportPositionStore();
 export const canvasSize = createCanvasSizeStore();
+export const isMiniViewportDragging = writable(false);
 
 // Derived store that combines viewport info for the mini viewport
 export const viewportInfo = derived(

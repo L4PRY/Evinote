@@ -2,7 +2,7 @@
 	import type { CanvasData } from '$lib/types/canvas/CanvasData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
-	import { bounds, canvasSize, position } from '$lib/stores/viewport';
+	import { bounds, canvasSize, position, isMiniViewportDragging } from '$lib/stores/viewport';
 	import { onMount, type Snippet } from 'svelte';
 
 	const {
@@ -225,7 +225,9 @@
 		if (!canvasElement) return;
 
 		bounds.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
-		position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+		if (!$isMiniViewportDragging) {
+			position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+		}
 		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
 	}
 
@@ -313,7 +315,6 @@
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
-		border: var(--default-border);
 		/* Enable scrolling with subtle scrollbars */
 		overflow: scroll;
 		scrollbar-width: thin;
