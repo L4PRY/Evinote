@@ -27,7 +27,7 @@ export const load = async ({ params }) => {
 		.select({ username: User.username, id: User.id, permission: Perms.perm })
 		.from(User)
 		.leftJoin(Perms, eq(User.id, Perms.uid))
-		.where(and(eq(Perms.bid, parseInt(id)), eq(Perms.uid, user.id)));
+		.where(eq(Perms.bid, parseInt(id)));
 
 	return { id, user, board, contributors, canModify: checkUserCanModify(board, user, perms) };
 };
