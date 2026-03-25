@@ -19,6 +19,6 @@ jobs:
           # Keep this only if package-lock.json exists in repo root:
           # cache: npm
 
-      - run: npm ci
+      - run: npm install
       - run: npm run build --if-present
       - run: npm test
