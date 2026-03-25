@@ -8,7 +8,7 @@ import { env } from '$env/dynamic/private';
 
 import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
 import type { File } from 'node:buffer';
-import { authLogger, routeLogger } from '$lib/server/logger.js';
+import { routeLogger } from '$lib/server/logger.js';
 import { verify } from '@node-rs/argon2';
 import { scryptSync } from 'node:crypto';
 
@@ -133,22 +133,24 @@ export const actions: Actions = {
 
 		await db.delete(Perms).where(and(eq(Perms.bid, parseInt(id!)), eq(Perms.uid, parseInt(uid))));
 	},
-	save: async ({ request, params }) => {
+	save: async ({ request, params, url }) => {
 		const user = requireLogin();
 		const form = await request.formData();
 		const { id } = params;
 
-		const boardName = form.get('boardName') as string;
-		const canvasWidth = Number(form.get('canvasWidth'));
-		const canvasHeight = Number(form.get('canvasHeight'));
-		const thumbnailUrl = form.get('thumbnail') as string;
+		const name = form.get('name') as string;
+		const size = form.get('size') as unknown as CanvasData['size'];
+		const type = form.get('type') as unknown as (typeof Board.type.enumValues)[number];
+		const thumbnail = form.get('thumbnail') as string;
 		const background = JSON.parse(form.get('background') as string) as CanvasData['background'];
 
-		if (!boardName || !canvasWidth || !canvasHeight || !background || !thumbnailUrl) {
-			return { error: 'Missing required fields' };
+		routeLogger.info('save form entries are', { name, size, type, thumbnail, background });
+
+		if (!name || !size || !type || !background) {
+			return error(400, 'Missing required fields');
 		}
 
-		let thumbnailMime = await fetch(`/proxy?url=${thumbnailUrl}`, {
+		let thumbnailMime = await fetch(`${url.origin}/proxy?url=${thumbnail}`, {
 			method: 'HEAD'
 		});
 
@@ -161,7 +163,7 @@ export const actions: Actions = {
 			: undefined;
 
 		if (!board) {
-			return { error: 'Board not found' };
+			return error(404, 'board not found');
 		}
 
 		const perms = await db
@@ -171,28 +173,31 @@ export const actions: Actions = {
 			.then(res => res[0]);
 
 		if (!checkUserCanModify(board, user, perms)) {
-			return { error: 'You do not have permission to modify this board' };
+			return error(403, 'You do not have permission to modify this board');
 		}
 
-		await db
-			.update(Board)
-			.set({
-				name: boardName,
-				canvas: {
-					size: {
-						width: canvasWidth,
-						height: canvasHeight
-					},
-					thumbnail: {
-						location: thumbnailUrl,
-						mime: thumbnailMime.headers.get('Content-Type') || 'application/octet-stream'
-					},
-					background
-				}
-			})
-			.where(eq(Board.id, parseInt(id!)));
+		try {
+			await db
+				.update(Board)
+				.set({
+					name,
+					type,
+					canvas: {
+						size,
+						thumbnail: {
+							location: thumbnail,
+							mime: thumbnailMime.headers.get('Content-Type') || 'application/octet-stream'
+						},
+						background
+					}
+				})
+				.where(eq(Board.id, parseInt(id!)));
 
-		return { success: 'Board settings saved successfully' };
+			return { success: 'Board settings saved successfully' };
+		} catch (err) {
+			routeLogger.error('Error updating board settings:', err);
+			return error(400, 'An error occurred while saving board settings');
+		}
 	},
 	delete: async ({ request, params }) => {
 		const user = requireLogin();

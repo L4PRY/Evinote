@@ -27,7 +27,7 @@
 		canvasHeight: board.canvas?.size.height,
 		backgroundType: board.canvas?.background.type,
 		backgroundValue: board.canvas?.background.value,
-		thumbnail: board.canvas?.thumbnail,
+		thumbnail: board.canvas?.thumbnail?.location,
 		gridType:
 			board.canvas?.background.type === 'Grid'
 				? (board.canvas.background.value as Grid).type
@@ -75,16 +75,36 @@
 		}
 	}
 
-	function handleSaveSubmit(e: SubmitEvent) {
-		const form = e.target as HTMLFormElement;
-		const background = buildBackgroundObject();
+	async function handleSaveSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const form = new FormData();
+		form.append('name', settings.boardName);
+		form.append('type', settings.boardType);
+		form.append(
+			'size',
+			JSON.stringify({ width: settings.canvasWidth, height: settings.canvasHeight })
+		);
+		form.append('thumbnail', settings.thumbnail?.toString() ?? '');
+		form.append('background', JSON.stringify(buildBackgroundObject()));
 
-		// Add hidden input with formatted background
-		const backgroundInput = document.createElement('input');
-		backgroundInput.type = 'hidden';
-		backgroundInput.name = 'background';
-		backgroundInput.value = JSON.stringify(background);
-		form.appendChild(backgroundInput);
+		for (const [key, value] of form.entries()) {
+			console.log(`${key}: ${value}`);
+		}
+		try {
+			const response = await fetch(`?/save`, {
+				method: 'POST',
+				body: form
+			});
+
+			if (response.ok) {
+				// Reload the page to reflect changes
+				window.location.reload();
+			} else {
+				console.error('Failed to save settings');
+			}
+		} catch (error) {
+			console.error('Error saving settings:', error);
+		}
 	}
 
 	async function removeContributor(userId: number) {
