@@ -18,12 +18,16 @@ jobs:
           node-version: lts/*
           # Keep this only if package-lock.json exists in repo root:
           # cache: npm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
 
       - name: create .env file
         run: cp .env.example .env
-      - run: npm install
+      - run: pnpm install
       - name: run svelte-kit check
-        run: npm run check
+        run: pnpm run check
         continue-on-error: true
       - name: run tests
-        run: npm run test
+        run: pnpm run test
