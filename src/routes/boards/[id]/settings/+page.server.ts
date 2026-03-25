@@ -3,11 +3,14 @@ import { User, Board, Permissions as Perms } from '$lib/server/db/schema';
 import { db } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { checkUserCanModify } from '$lib/server/perms';
-import type { Actions } from '@sveltejs/kit';
+import { error, redirect, type Actions } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
 import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
 import type { File } from 'node:buffer';
-import { routeLogger } from '$lib/server/logger.js';
+import { authLogger, routeLogger } from '$lib/server/logger.js';
+import { verify } from '@node-rs/argon2';
+import { scryptSync } from 'node:crypto';
 
 export const load = async ({ params }) => {
 	const { id } = params;
@@ -191,5 +194,52 @@ export const actions: Actions = {
 
 		return { success: 'Board settings saved successfully' };
 	},
-	delete: async ({ request, params }) => {}
+	delete: async ({ request, params }) => {
+		const user = requireLogin();
+		const { id } = params;
+		const form = await request.formData();
+		const email = form.get('email') as string;
+		const password = form.get('password') as string;
+
+		const board = id
+			? await db
+					.select()
+					.from(Board)
+					.where(eq(Board.id, parseInt(id)))
+					.then(r => r[0])
+			: undefined;
+
+		if (!board) error(404, 'board not found');
+		routeLogger.info('board is:', board.name);
+
+		const owner = await db
+			.select()
+			.from(User)
+			.where(eq(User.id, board.owner))
+			.then(r => r[0]);
+
+		if (board.owner !== user.id) error(403, 'forbidden');
+
+		const validPassword =
+			env.USE_LEGACY_HASH == '1'
+				? scryptSync(password, 'dev-use-do-not-use-in-prod', 32).toString('hex') === owner.passhash
+				: await verify(owner.passhash, password, {
+						memoryCost: 19456,
+						timeCost: 2,
+						outputLen: 32,
+						parallelism: 1
+					});
+
+		if (owner.email !== email || !validPassword) error(403, 'bad email or password');
+
+		await db
+			.delete(Board)
+			.where(eq(Board.id, parseInt(id!)))
+			.catch(err => {
+				routeLogger.error('Error deleting board:', err);
+				throw error(500, 'An error occurred while deleting the board');
+			});
+
+		return redirect(303, '/boards');
+	}
 };

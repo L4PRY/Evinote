@@ -132,6 +132,28 @@
 			console.error('Error adding contributor:', error);
 		}
 	}
+
+	async function handleBoardDelete(e: SubmitEvent) {
+		e.preventDefault();
+		const form = e.target as HTMLFormElement;
+		const formData = new FormData(form);
+
+		try {
+			const response = await fetch(`?/delete`, {
+				method: 'POST',
+				body: formData
+			});
+
+			if (response.ok) {
+				// Redirect to home page after deletion
+				window.location.href = '/';
+			} else {
+				console.error('Failed to delete board');
+			}
+		} catch (error) {
+			console.error('Error deleting board:', error);
+		}
+	}
 </script>
 
 <h1>{board.name}</h1>
@@ -316,7 +338,7 @@
 				<dialog open>
 					<h3>Delete Board</h3>
 					<p>This action cannot be undone. Please enter your credentials to confirm.</p>
-					<form method="POST" action="?/delete" onsubmit={() => (showDeleteDialog = false)}>
+					<form method="POST" action="?/delete" onsubmit={handleBoardDelete}>
 						<div>
 							<label>
 								Email:
