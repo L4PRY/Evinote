@@ -189,7 +189,7 @@
 		<table>
 			<thead>
 				<tr>
-					<th>Email</th>
+					<th>Username</th>
 					<th>Permission</th>
 					<th>Action</th>
 				</tr>
