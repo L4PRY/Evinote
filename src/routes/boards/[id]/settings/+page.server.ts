@@ -4,7 +4,10 @@ import { db } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { checkUserCanModify } from '$lib/server/perms';
 import type { Actions } from '@sveltejs/kit';
-import type { Grid } from '$lib/types/canvas/Grid.js';
+
+import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
+import type { File } from 'node:buffer';
+import { routeLogger } from '$lib/server/logger.js';
 
 export const load = async ({ params }) => {
 	const { id } = params;
@@ -34,6 +37,7 @@ export const load = async ({ params }) => {
 
 export const actions: Actions = {
 	adduser: async ({ request, params }) => {
+		routeLogger.info('heyy');
 		const user = requireLogin();
 
 		const form = await request.formData();
@@ -42,6 +46,9 @@ export const actions: Actions = {
 		const { id } = params;
 
 		if (!username || !perm) {
+			routeLogger.warn(
+				`User ${user.username} attempted to add a contributor without providing a username or permission on board ID: ${id}`
+			);
 			return { error: 'Missing username or permission' };
 		}
 
@@ -54,6 +61,9 @@ export const actions: Actions = {
 			: undefined;
 
 		if (!board) {
+			routeLogger.warn(
+				`User ${user.username} attempted to add a contributor to non-existent board with ID: ${id}`
+			);
 			return { error: 'Board not found' };
 		}
 
@@ -70,6 +80,9 @@ export const actions: Actions = {
 			.then(res => res[0]);
 
 		if (!checkUserCanModify(board, user, perms)) {
+			routeLogger.warn(
+				`User ${user.username} attempted to add a contributor to board ${board.name} (ID: ${id}) without sufficient permissions`
+			);
 			return { error: 'You do not have permission to modify this board' };
 		}
 
@@ -77,6 +90,9 @@ export const actions: Actions = {
 			.insert(Perms)
 			.values({ bid: parseInt(id!), uid: contributor.id, perm });
 
+		routeLogger.info(
+			`Added user ${username} with permission ${perm} to board ${board.name} (ID: ${id}) by user ${user.username}`
+		);
 		return { success: 'User added successfully' };
 	},
 	removeuser: async ({ request, params }) => {
@@ -120,17 +136,18 @@ export const actions: Actions = {
 		const { id } = params;
 
 		const boardName = form.get('boardName') as string;
-		const canvasWidth = form.get('canvasWidth') as string;
-		const canvasHeight = form.get('canvasHeight') as string;
-		const backgroundType = form.get('backgroundType') as string;
-		const backgroundValue = form.get('backgroundValue') as string;
-		const gridType = form.get('gridType') as string | null;
-		const gridSize = form.get('gridSize') as string | null;
-		const gridColor = form.get('gridColor') as string | null;
+		const canvasWidth = Number(form.get('canvasWidth'));
+		const canvasHeight = Number(form.get('canvasHeight'));
+		const thumbnailUrl = form.get('thumbnail') as string;
+		const background = JSON.parse(form.get('background') as string) as CanvasData['background'];
 
-		if (!boardName || !canvasWidth || !canvasHeight || !backgroundType || !backgroundValue) {
+		if (!boardName || !canvasWidth || !canvasHeight || !background || !thumbnailUrl) {
 			return { error: 'Missing required fields' };
 		}
+
+		let thumbnailMime = await fetch(`/proxy?url=${thumbnailUrl}`, {
+			method: 'HEAD'
+		});
 
 		const board = id
 			? await db
@@ -154,18 +171,25 @@ export const actions: Actions = {
 			return { error: 'You do not have permission to modify this board' };
 		}
 
-		db.insert(Board).values({
-			name: boardName,
-			canvas: {
-				size: {
-					width: parseInt(canvasWidth),
-					height: parseInt(canvasHeight)
-				},
-				background: {
-					type: backgroundType
+		await db
+			.update(Board)
+			.set({
+				name: boardName,
+				canvas: {
+					size: {
+						width: canvasWidth,
+						height: canvasHeight
+					},
+					thumbnail: {
+						location: thumbnailUrl,
+						mime: thumbnailMime.headers.get('Content-Type') || 'application/octet-stream'
+					},
+					background
 				}
-			}
-		});
+			})
+			.where(eq(Board.id, parseInt(id!)));
+
+		return { success: 'Board settings saved successfully' };
 	},
 	delete: async ({ request, params }) => {}
 };

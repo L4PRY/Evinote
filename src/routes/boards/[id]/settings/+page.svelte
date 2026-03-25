@@ -1,6 +1,9 @@
 <script lang="ts">
-	import { type Grid } from '$lib/types/canvas/Grid';
 	import type { PageProps } from './$types';
+	import type { CanvasData } from '$lib/types/canvas/CanvasData';
+	import type { Grid } from '$lib/types/canvas/Grid';
+	import type { Color } from '$lib/types/canvas/Color';
+
 	const { params, data }: PageProps = $props();
 
 	let { board, contributors } = data;
@@ -24,13 +27,14 @@
 		canvasHeight: board.canvas?.size.height,
 		backgroundType: board.canvas?.background.type,
 		backgroundValue: board.canvas?.background.value,
+		thumbnail: board.canvas?.thumbnail,
 		gridType:
 			board.canvas?.background.type === 'Grid'
 				? (board.canvas.background.value as Grid).type
 				: null,
 		gridColor:
 			board.canvas?.background.type === 'Grid'
-				? (board.canvas.background.value as Grid).color
+				? (board.canvas.background.value as Grid).color.value
 				: null,
 		gridSize:
 			board.canvas?.background.type === 'Grid'
@@ -38,9 +42,96 @@
 				: null,
 		gridBg:
 			board.canvas?.background.type === 'Grid'
-				? (board.canvas.background.value as Grid).color
+				? (board.canvas.background.value as Grid).background.value
 				: null
 	});
+
+	function buildBackgroundObject(): CanvasData['background'] {
+		if (settings.backgroundType === 'Grid') {
+			return {
+				type: 'Grid',
+				value: {
+					type: settings.gridType as 'Line' | 'Dot',
+					background: { type: 'hex', value: settings.gridBg } as Color,
+					size: Number(settings.gridSize),
+					color: { type: 'hex', value: settings.gridColor } as Color
+				}
+			};
+		} else if (settings.backgroundType === 'Solid') {
+			return {
+				type: 'Solid',
+				value: { type: 'hex', value: settings.backgroundValue } as Color
+			};
+		} else if (settings.backgroundType === 'Image') {
+			return {
+				type: 'Image',
+				value: settings.backgroundValue as unknown as URL
+			};
+		} else {
+			return {
+				type: 'Custom',
+				value: settings.backgroundValue as string
+			};
+		}
+	}
+
+	function handleSaveSubmit(e: SubmitEvent) {
+		const form = e.target as HTMLFormElement;
+		const background = buildBackgroundObject();
+
+		// Add hidden input with formatted background
+		const backgroundInput = document.createElement('input');
+		backgroundInput.type = 'hidden';
+		backgroundInput.name = 'background';
+		backgroundInput.value = JSON.stringify(background);
+		form.appendChild(backgroundInput);
+	}
+
+	async function removeContributor(userId: number) {
+		const formData = new FormData();
+		formData.append('userId', userId.toString());
+
+		try {
+			const response = await fetch(`?/removeuser`, {
+				method: 'POST',
+				body: formData
+			});
+
+			if (response.ok) {
+				// Reload the page to reflect changes
+				window.location.reload();
+			} else {
+				console.error('Failed to remove contributor');
+			}
+		} catch (error) {
+			console.error('Error removing contributor:', error);
+		}
+	}
+
+	async function handleAddUserSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const form = e.target as HTMLFormElement;
+		const formData = new FormData(form);
+
+		try {
+			const response = await fetch(`?/adduser`, {
+				method: 'POST',
+				body: formData
+			});
+
+			if (response.ok) {
+				showAddContributorDialog = false;
+				// Reset form
+				form.reset();
+				// Reload the page to reflect changes
+				window.location.reload();
+			} else {
+				console.error('Failed to add contributor');
+			}
+		} catch (error) {
+			console.error('Error adding contributor:', error);
+		}
+	}
 </script>
 
 <h1>{board.name}</h1>
@@ -64,10 +155,7 @@
 						<td>{contributor.username || 'Unknown'}</td>
 						<td>{contributor.permission}</td>
 						<td>
-							<form method="POST" action="?/removeuser" style="display: inline;">
-								<input type="hidden" name="userId" value={contributor.id} />
-								<button type="submit">Remove</button>
-							</form>
+							<button onclick={() => removeContributor(contributor.id)}>Remove</button>
 						</td>
 					</tr>
 				{/each}
@@ -81,10 +169,10 @@
 		{#if showAddContributorDialog}
 			<dialog open>
 				<h3>Add New Contributor</h3>
-				<form method="POST" action="?/adduser" onsubmit={() => (showAddContributorDialog = false)}>
+				<form method="POST" action="?/adduser" onsubmit={handleAddUserSubmit}>
 					<div>
 						<label>
-							Email:
+							Username:
 							<input type="text" name="username" required />
 						</label>
 					</div>
@@ -107,7 +195,7 @@
 	<!-- Board Settings Section -->
 	<section>
 		<h2>Board Settings</h2>
-		<form method="POST" action="?/save">
+		<form method="POST" action="?/save" onsubmit={handleSaveSubmit}>
 			<div>
 				<label>
 					Board Name:
@@ -118,11 +206,23 @@
 			<div>
 				<label>
 					Board type:
-					<select name="boardType" bind:value={settings.boardType}>
+					<select bind:value={settings.boardType}>
 						<option value="Public">Public</option>
 						<option value="Private">Private</option>
 						<option value="Unlisted">Unlisted</option>
 					</select>
+				</label>
+			</div>
+
+			<div>
+				<label>
+					Thumbnail image:
+					<input
+						type="text"
+						name="thumbnail"
+						placeholder="link to an image file"
+						bind:value={settings.thumbnail}
+					/>
 				</label>
 			</div>
 
@@ -143,7 +243,7 @@
 			<div>
 				<label>
 					Background Type:
-					<select name="backgroundType" bind:value={settings.backgroundType}>
+					<select bind:value={settings.backgroundType}>
 						<option value="Solid">Solid Color</option>
 						<option value="Image">Image</option>
 						<option value="Grid">Grid</option>
@@ -156,59 +256,43 @@
 				<div>
 					<label>
 						Color (Hex, todo make this a color picker):
-						<input
-							type="text"
-							name="backgroundValue"
-							placeholder="#000000"
-							bind:value={settings.backgroundValue}
-						/>
+						<input type="text" placeholder="#000000" bind:value={settings.backgroundValue} />
 					</label>
 				</div>
 			{:else if settings.backgroundType === 'Image'}
 				<div>
 					<label>
 						Image URL:
-						<input type="url" name="backgroundValue" bind:value={settings.backgroundValue} />
+						<input type="url" bind:value={settings.backgroundValue} />
 					</label>
 				</div>
 			{:else if settings.backgroundType === 'Grid'}
 				<div>
 					<label>
 						Grid Configuration:
-						<select name="gridType" bind:value={settings.gridType}>
+						<select bind:value={settings.gridType}>
 							<option value="Dot">Dots</option>
 							<option value="Line">Lines</option>
 						</select>
 					</label>
 					<label>
 						Grid Color (Hex):
-						<input
-							type="text"
-							name="gridColor"
-							placeholder="#cccccc"
-							bind:value={settings.gridColor}
-						/>
+						<input type="text" placeholder="#cccccc" bind:value={settings.gridColor} />
 					</label>
 					<label>
 						Grid background color (Hex):
-						<input type="text" name="gridBg" placeholder="#cccccc" bind:value={settings.gridBg} />
+						<input type="text" placeholder="#cccccc" bind:value={settings.gridBg} />
 					</label>
 					<label>
 						Grid Size (px):
-						<input
-							type="number"
-							name="gridSize"
-							min="10"
-							max="200"
-							bind:value={settings.gridSize}
-						/>
+						<input type="number" min="10" max="200" bind:value={settings.gridSize} />
 					</label>
 				</div>
 			{:else if settings.backgroundType === 'Custom'}
 				<div>
 					<label>
 						Custom CSS:
-						<textarea name="backgroundValue" bind:value={settings.backgroundValue}></textarea>
+						<textarea bind:value={settings.backgroundValue}></textarea>
 					</label>
 				</div>
 			{/if}
