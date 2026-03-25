@@ -139,7 +139,7 @@ export const actions: Actions = {
 		const { id } = params;
 
 		const name = form.get('name') as string;
-		const size = form.get('size') as unknown as CanvasData['size'];
+		const size = JSON.parse(form.get('size') as string) as CanvasData['size'];
 		const type = form.get('type') as unknown as (typeof Board.type.enumValues)[number];
 		const thumbnail = form.get('thumbnail') as string;
 		const background = JSON.parse(form.get('background') as string) as CanvasData['background'];

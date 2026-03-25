@@ -6,7 +6,10 @@
 
 	const { params, data }: PageProps = $props();
 
+	// svelte-ignore state_referenced_locally
 	let { board, contributors } = data;
+
+	// svelte-ignore state_referenced_locally
 	const { id, user, canModify } = data;
 
 	// State for add contributor dialog
