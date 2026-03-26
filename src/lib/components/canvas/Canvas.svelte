@@ -61,7 +61,7 @@
 					};
 				} else {
 					// Line grid pattern using linear gradients
-					const width = grid.size;
+					const width = grid.width;
 					const spacing = width * 20; // spacing between lines
 					return {
 						backgroundImage: `
