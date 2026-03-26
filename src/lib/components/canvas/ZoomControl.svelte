@@ -1,9 +1,5 @@
 <script lang="ts">
-	import { zoomLevel } from '$lib/stores/zoomLevel';
-
-	const MIN_ZOOM = 0.5;
-	const MAX_ZOOM = 2;
-	const DEFAULT_ZOOM = 1;
+	import { zoomLevel, minZoom, MAX_ZOOM, DEFAULT_ZOOM } from '$lib/stores/zoomLevel';
 	const DEFAULT_PERCENTAGE = DEFAULT_ZOOM * 100; // 100%
 	const SNAP_THRESHOLD = 3; // Snap when within 8% of default
 	const SLOW_DRAG_THRESHOLD = 15; // Velocity threshold for "slow" dragging
@@ -97,7 +93,7 @@
 		<button
 			class="zoom-btn"
 			onclick={zoomOut}
-			disabled={$zoomLevel <= MIN_ZOOM}
+			disabled={$zoomLevel <= $minZoom}
 			aria-label="Zoom out"
 			title="Zoom out"
 		>
@@ -118,8 +114,8 @@
 	<div class="slider-container">
 		<input
 			type="range"
-			min="50"
-			max="200"
+			min={Math.round($minZoom * 100)}
+			max={MAX_ZOOM * 100}
 			step="1"
 			value={sliderValue}
 			oninput={handleSliderInput}

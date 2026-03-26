@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { CanvasData } from '$lib/types/canvas/CanvasData';
 	import { parseColor } from '$lib/parseColor';
-	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
+	import { zoomLevel, minZoom, MAX_ZOOM } from '$lib/stores/zoomLevel';
 	import { bounds, canvasSize, position, isMiniViewportDragging } from '$lib/stores/viewport';
 	import { onMount, type Snippet } from 'svelte';
 
@@ -149,7 +149,7 @@
 
 		const oldZoom = $zoomLevel;
 		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
-		const newZoom = Math.min(Math.max(oldZoom + zoomChange, MIN_ZOOM), MAX_ZOOM);
+		const newZoom = Math.min(Math.max(oldZoom + zoomChange, $minZoom), MAX_ZOOM);
 
 		// Get cursor position relative to the canvas viewport
 		const rect = canvasElement.getBoundingClientRect();
