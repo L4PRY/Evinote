@@ -18,13 +18,13 @@ export const POST = async ({ request }) => {
 	const form = await request.formData();
 	const file = form.get('file') as File;
 
-	if (!file) error(400, 'no file uploaded');
+	if (!(file instanceof File)) throw error(400, 'no file uploaded');
 	const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
 	if (!fileExtension || !AllowedFiles.includes(fileExtension)) error(400, 'file type not allowed');
 
 	// 50MB limit
-	if (file.size > 50 * 1024 * 1024) error(400, 'file size is greater than 50mb');
+	if (file.size > 50 * 1024 * 1024) throw error(400, 'file size is greater than 50mb');
 
 	const contents = file.arrayBuffer();
 	const hash = crypto.subtle.digest('SHA-256', await contents);
@@ -55,8 +55,8 @@ export const POST = async ({ request }) => {
 		})
 		.returning({ id: Files.id, hash: Files.hash, filename: Files.filename, mime: Files.mimetype });
 
-	const folderPath = pathJoin(UPLOAD_FOLDER, hashHex.charAt(0), '/', hashHex.charAt(1));
-	const filePath = pathJoin(folderPath, '/', hashHex.slice(2));
+	const folderPath = pathJoin(UPLOAD_FOLDER, hashHex.charAt(0), hashHex.charAt(1));
+	const filePath = pathJoin(folderPath, hashHex.slice(2));
 
 	routeLogger.info(`Saving file ${file.name} with hash ${hashHex} to ${filePath}`);
 
@@ -64,9 +64,9 @@ export const POST = async ({ request }) => {
 	if (!existsSync(folderPath)) {
 		mkdirSync(folderPath, { recursive: true });
 	}
-	writeFile(filePath, Buffer.from(await contents), { encoding: 'utf-8' });
+	await writeFile(filePath, Buffer.from(await contents));
 
-	return new Response(JSON.stringify({ result }), {
+	return new Response(JSON.stringify({ url: `/api/files/${hashHex}`, mime: file.type }), {
 		status: 200,
 		headers: { 'Content-Type': 'application/json' }
 	});

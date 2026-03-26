@@ -12,7 +12,6 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { CanvasData } from '$lib/types/canvas/CanvasData';
 import type { NoteData } from '$lib/types/canvas/NoteData';
-import { datetime } from 'drizzle-orm/mysql-core';
 
 export const role = pgEnum('role', ['User', 'Admin']);
 export const permission = pgEnum('permission', ['Read', 'Write']);

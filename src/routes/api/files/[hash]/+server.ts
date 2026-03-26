@@ -3,8 +3,9 @@ import { db } from '$lib/server/db/index.js';
 import { Files } from '$lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { join as pathJoin } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { routeLogger } from '$lib/server/logger.js';
+import { rmSync } from 'node:fs';
 
 export const GET = async ({ params }) => {
 	const user = requireLogin();
@@ -20,18 +21,28 @@ export const GET = async ({ params }) => {
 
 	const path = pathJoin('./uploads/', hash.charAt(0), '/', hash.charAt(1), '/', hash.slice(2));
 
-	// read file contents with correct encoding
-	const file = readFileSync(path);
+	try {
+		// read file contents with correct encoding
+		const file = await readFile(path);
 
-	routeLogger.info(`User ${user.username} accessed file ${col.filename} with hash ${hash}`);
+		routeLogger.info(`User ${user.username} accessed file ${col.filename} with hash ${hash}`);
 
-	return new Response(file, {
-		status: 200,
-		headers: {
-			'Content-Type': col.mimetype,
-			'Content-Disposition': `inline; filename="${col.filename}"`
+		return new Response(file, {
+			status: 200,
+			headers: {
+				'Content-Type': col.mimetype,
+				'Content-Disposition': `inline; filename="${col.filename}"`
+			}
+		});
+	} catch (e: unknown) {
+		routeLogger.error(`Error reading file ${col.filename} with hash ${hash}: ${e}`);
+
+		if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+			await db.delete(Files).where(eq(Files.hash, hash));
+			return new Response('file not found', { status: 404 });
 		}
-	});
+		return new Response('internal server error', { status: 500 });
+	}
 };
 
 export const DELETE = async ({ params }) => {
@@ -48,7 +59,15 @@ export const DELETE = async ({ params }) => {
 	if (col.uploader !== user.id && user.role !== 'Admin')
 		return new Response('forbidden', { status: 403 });
 
-	await db.delete(Files).where(eq(Files.hash, hash));
+	const path = pathJoin('./uploads/', hash.charAt(0), '/', hash.charAt(1), '/', hash.slice(2));
 
-	routeLogger.info(`User ${user.username} deleted file ${col.filename} with hash ${hash}`);
+	try {
+		await db.delete(Files).where(eq(Files.hash, hash));
+		rmSync(path);
+
+		return new Response('file deleted', { status: 200 });
+	} catch (e) {
+		routeLogger.error(`Error deleting file ${col.filename} with hash ${hash}: ${e}`);
+		return new Response('internal server error', { status: 500 });
+	}
 };

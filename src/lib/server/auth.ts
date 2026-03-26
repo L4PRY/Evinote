@@ -19,7 +19,7 @@ export function requireLogin(): AuthenticatedUser {
 	const { locals, route } = getRequestEvent();
 
 	if (!locals.user) {
-		return redirect(302, route.id?.startsWith('/api/') ? '/api/auth/login' : '/login');
+		return redirect(302, '/auth');
 	}
 
 	return locals.user!;
