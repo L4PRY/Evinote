@@ -16,10 +16,10 @@ const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 export const sessionCookieName = '.EVISECURITY';
 
 export function requireLogin(): AuthenticatedUser {
-	const { locals } = getRequestEvent();
+	const { locals, route } = getRequestEvent();
 
 	if (!locals.user) {
-		return redirect(302, '/auth');
+		return redirect(302, route.id?.startsWith('/api/') ? '/api/auth/login' : '/login');
 	}
 
 	return locals.user!;
