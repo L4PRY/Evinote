@@ -45,7 +45,8 @@ export const DELETE = async ({ params }) => {
 		.then(r => r.at(0));
 
 	if (!col) return new Response('file not found', { status: 404 });
-	if (col.uploader !== user.id) return new Response('forbidden', { status: 403 });
+	if (col.uploader !== user.id && user.role !== 'Admin')
+		return new Response('forbidden', { status: 403 });
 
 	await db.delete(Files).where(eq(Files.hash, hash));
 
