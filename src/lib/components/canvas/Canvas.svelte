@@ -140,6 +140,21 @@
 		canvasElement.releasePointerCapture(e.pointerId);
 	}
 
+	// Smooth zoom state
+	let targetZoom = $state($zoomLevel);
+	let zoomAnimationId: number | null = null;
+	let lastCursorX = $state(0);
+	let lastCursorY = $state(0);
+	const ZOOM_LERP_SPEED = 0.15; // How fast zoom interpolates (0-1, higher = faster)
+	const ZOOM_EPSILON = 0.001; // Stop animating when close enough
+
+	// Sync targetZoom when zoom is changed externally (slider, buttons)
+	$effect(() => {
+		if (zoomAnimationId === null) {
+			targetZoom = $zoomLevel;
+		}
+	});
+
 	// Zoom with scroll wheel, zooming toward cursor position
 	function handleWheel(e: WheelEvent) {
 		if (shiftHeld) return; // Only zoom when Shift is held
@@ -147,30 +162,53 @@
 
 		if (document.querySelector('.note')?.getAttribute('data-neodrag-state') === 'dragging') return;
 
-		const oldZoom = $zoomLevel;
 		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
-		const newZoom = Math.min(Math.max(oldZoom + zoomChange, $minZoom), MAX_ZOOM);
+		targetZoom = Math.min(Math.max(targetZoom + zoomChange, $minZoom), MAX_ZOOM);
 
-		// Get cursor position relative to the canvas viewport
+		// Track cursor position for zoom origin
 		const rect = canvasElement.getBoundingClientRect();
-		const cursorX = e.clientX - rect.left;
-		const cursorY = e.clientY - rect.top;
+		lastCursorX = e.clientX - rect.left;
+		lastCursorY = e.clientY - rect.top;
+
+		// Start smooth zoom animation if not already running
+		if (zoomAnimationId === null) {
+			zoomAnimationId = requestAnimationFrame(animateZoom);
+		}
+	}
+
+	function animateZoom() {
+		const currentZoom = $zoomLevel;
+		const diff = targetZoom - currentZoom;
+
+		if (Math.abs(diff) < ZOOM_EPSILON) {
+			// Close enough — snap to target and stop
+			applyZoomAtCursor(targetZoom);
+			zoomAnimationId = null;
+			return;
+		}
+
+		// Lerp toward target
+		const nextZoom = currentZoom + diff * ZOOM_LERP_SPEED;
+		applyZoomAtCursor(nextZoom);
+
+		// Continue animation
+		zoomAnimationId = requestAnimationFrame(animateZoom);
+	}
+
+	function applyZoomAtCursor(newZoom: number) {
+		const oldZoom = $zoomLevel;
+		if (oldZoom === newZoom) return;
 
 		// Calculate the content position under the cursor before zoom
-		// (scroll position + cursor position in viewport) / old zoom = content position
-		const contentX = (canvasElement.scrollLeft + cursorX) / oldZoom;
-		const contentY = (canvasElement.scrollTop + cursorY) / oldZoom;
+		const contentX = (canvasElement.scrollLeft + lastCursorX) / oldZoom;
+		const contentY = (canvasElement.scrollTop + lastCursorY) / oldZoom;
 
-		// Apply the new zoom via the store
+		// Apply the new zoom
 		zoomLevel.set(newZoom);
 
-		// After zoom, adjust scroll so the same content point stays under cursor
-		// content position * new zoom - cursor position in viewport = new scroll position
-		// Use requestAnimationFrame to ensure zoom is applied before adjusting scroll
-		requestAnimationFrame(() => {
-			canvasElement.scrollLeft = contentX * newZoom - cursorX;
-			canvasElement.scrollTop = contentY * newZoom - cursorY;
-		});
+		// Adjust scroll so the same content point stays under cursor
+		canvasElement.scrollLeft = contentX * newZoom - lastCursorX;
+		canvasElement.scrollTop = contentY * newZoom - lastCursorY;
 	}
 
 	function handleScroll(e: Event) {
