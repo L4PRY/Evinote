@@ -41,8 +41,6 @@
 	let viewportIndicatorLeft = $derived($position.left * zoomedScale);
 	let viewportIndicatorTop = $derived($position.top * zoomedScale);
 
-	// By isolating updating this state only when NOT dragging, we prevent Svelte 5 
-	// from destructively rebuilding the `{@attach}` arguments during a drag!
 	let dragCoords = $state({ x: 0, y: 0 });
 	
 	$effect(() => {
@@ -127,8 +125,8 @@
 				})
 			])}
 			class={'viewport-indicator'}
-			style:width="{Math.max(viewportIndicatorWidth, 10)}px"
-			style:height="{Math.max(viewportIndicatorHeight, 10)}px"
+			style:width="{Math.max(viewportIndicatorWidth, 10)-2}px"
+			style:height="{Math.max(viewportIndicatorHeight, 10)-2}px"
 			style:opacity={viewportIndicatorWidth > 100 && viewportIndicatorHeight > 100 ? 0.8 : 0.5}
 			role="button"
 			aria-label="Drag to move viewport position"
@@ -175,8 +173,6 @@
 		border: 2px solid rgba(100, 150, 255, 0.8);
 		background-color: rgba(100, 150, 255, 0.25);
 		cursor: grab;
-		margin-top: 0px;
-		/*margin-bottom: 1px;*/
 		transition:
 			border-color 0.15s ease,
 			background-color 0.15s ease;
