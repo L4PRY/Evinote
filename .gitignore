@@ -33,3 +33,5 @@ package-lock.json
 
 # copilot
 .github/copilot-instructions.md
+
+uploads/

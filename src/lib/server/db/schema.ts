@@ -13,9 +13,6 @@ import {
 import type { CanvasData } from '$lib/types/canvas/CanvasData';
 import type { NoteData } from '$lib/types/canvas/NoteData';
 
-export const auth = pgSchema('auth');
-export const app = pgSchema('app');
-
 export const role = pgEnum('role', ['User', 'Admin']);
 export const permission = pgEnum('permission', ['Read', 'Write']);
 export const boardType = pgEnum('board_type', ['Public', 'Unlisted', 'Private']);
@@ -77,4 +74,24 @@ export const Board = pgTable(
 		notes: jsonb('notes').$type<NoteData[]>()
 	},
 	table => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
+);
+
+export const Files = pgTable(
+	'files',
+	{
+		id: serial('id').primaryKey().notNull(),
+		hash: varchar('hash').notNull().unique(),
+		filename: varchar('filename').notNull(),
+		mimetype: varchar('mimetype').notNull(),
+		uploaded: timestamp('uploaded_at').notNull().defaultNow(),
+		uploader: serial('uploader_id').references(() => User.id, {
+			onDelete: 'no action',
+			onUpdate: 'cascade'
+		})
+	},
+	table => [
+		index('file_hash').on(table.hash),
+		index('file_name').on(table.filename),
+		index('hash_id').on(table.id, table.hash)
+	]
 );
