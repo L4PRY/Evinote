@@ -39,13 +39,11 @@ export function checkAccessPerms(
 			}
 			return true;
 	}
-
-	return false;
 }
 
 export const checkUserCanModify = (
 	board: typeof Board.$inferSelect,
-	user?: typeof User.$inferSelect,
+	user?: typeof User.$inferSelect | AuthenticatedUser,
 	perms?: typeof Permissions.$inferSelect
 ): boolean => user?.role === 'Admin' || board.owner === user?.id || perms?.perm === 'Write';
 

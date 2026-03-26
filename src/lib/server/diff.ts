@@ -3,12 +3,9 @@ import diff from 'microdiff';
 import { saveLogger } from './logger';
 
 export function diffNotes(oldNotes: NoteData[], newNotes: NoteData[]) {
-	saveLogger.info('Calculating differences between old and new notes', {
-		oldNotes,
-		newNotes
-	});
-
 	const differences = diff(oldNotes, newNotes);
+
+	saveLogger.info('Calculating differences between old and new notes', differences);
 
 	// Find indices that microdiff explicitly considers "removed"
 	// This happens when the new array is shorter and an item is missing.

@@ -3,54 +3,10 @@ import { db } from '$lib/server/db/index';
 import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { requireLogin } from '$lib/server/auth';
-import { error } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import type { NoteData } from '$lib/types/canvas/NoteData';
-import { checkLogin } from '$lib/server/auth';
-import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
-import { checkAccessPerms, checkUserCanModify } from '$lib/server/perms';
+import { checkUserCanModify } from '$lib/server/perms';
 import { diffNotes } from '$lib/server/diff';
-
-export async function load({ params }) {
-	const { id } = params;
-	const sessionUser = checkLogin();
-
-	routeLogger.info(`Loading board with id ${id}`);
-
-	const board = await db
-		.select()
-		.from(table.Board)
-		.where(eq(table.Board.id, parseInt(id)))
-		.then(res => res[0]);
-
-	if (!board) {
-		routeLogger.warn(`Board with id ${id} not found`);
-		error(404, 'board not found');
-	}
-
-	// get the full user record if logged in
-	const user = sessionUser
-		? await db
-				.select()
-				.from(table.User)
-				.where(eq(table.User.id, sessionUser.id))
-				.then(res => res[0])
-		: null;
-
-	// get perms for current user and board if any
-
-	const perms = user
-		? await db
-				.select()
-				.from(table.Permissions)
-				.where(and(eq(table.Permissions.bid, parseInt(id)), eq(table.Permissions.uid, user.id)))
-				.then(res => res[0])
-		: null;
-
-	return checkAccessPerms(board, user, perms)
-		? { id, user, board, perms }
-		: error(403, 'forbidden');
-}
 
 export const actions: Actions = {
 	default: async ({ request, params }) => {

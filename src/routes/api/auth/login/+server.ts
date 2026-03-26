@@ -41,7 +41,8 @@ export async function POST(event: RequestEvent) {
 
 	const sessions = await auth.createSession(
 		existingUser.id,
-		request.headers.get('user-agent') ?? 'api'
+		request.headers.get('user-agent') ?? 'api',
+		''
 	);
 
 	if (!sessions || sessions.length === 0) {
