@@ -142,9 +142,7 @@
 		position: fixed;
 		bottom: 20px;
 		right: 20px;
-		border: 1px solid rgba(255, 255, 255, 0.2);
 		overflow: hidden;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 		z-index: 1000;
 		display: flex;
 		align-items: center;
@@ -156,10 +154,12 @@
 
 	.mini-canvas {
 		position: relative;
-		border-radius: 4px;
+		border-radius: 10px;
 		overflow: hidden;
 		backdrop-filter: blur(10px);
-		background-color: var(--default-blur-color);
+		border: 1px solid var(--editor-interface-border);
+		background: var(--editor-interface-background);
+		box-sizing: border-box;
 	}
 
 	.note-indicator {
@@ -173,21 +173,22 @@
 	.viewport-indicator {
 		position: absolute;
 		border: 2px solid rgba(100, 150, 255, 0.8);
-		background-color: rgba(100, 150, 255, 0.15);
+		background-color: rgba(100, 150, 255, 0.25);
 		cursor: grab;
-		margin-top: 1px;
+		margin-top: 0px;
 		/*margin-bottom: 1px;*/
 		transition:
 			border-color 0.15s ease,
 			background-color 0.15s ease;
 		border-radius: 10px;
 		max-width: 100%;
-		
+		box-sizing: border-box;
 	}
 
 	.viewport-indicator:hover {
 		border-color: rgba(130, 180, 255, 1);
-		background-color: rgba(100, 150, 255, 0.25);
+		background-color: rgba(100, 150, 255, 0.5);
+		filter: opacity(1);
 	}
 
 	.viewport-indicator:active {

@@ -167,9 +167,9 @@
 		height: 110px;
 		padding: 16px 20px;
 		box-sizing: border-box;
-		background-color: var(--default-blur-color);
+		background: var(--editor-interface-background);
 		backdrop-filter: blur(10px);
-		border: var(--default-border);
+		border: 1px solid var(--editor-interface-border);
 		border-radius: var(--border-radius);
 	}
 
