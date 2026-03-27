@@ -91,6 +91,13 @@ export const actions: Actions = {
 			.where(eq(User.username, username))
 			.then(res => res[0]);
 
+		if (!contributor) {
+			routeLogger.warn(
+				`User ${user.username} entry for add-contributor username: ${username} was not found`
+			);
+			return { error: 'User not found' };
+		}
+
 		if (!checkUserCanModify(board, user, perms)) {
 			routeLogger.warn(
 				`User ${user.username} attempted to add a contributor to board ${board.name} (ID: ${id}) without sufficient permissions`

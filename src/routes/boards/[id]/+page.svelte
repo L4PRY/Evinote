@@ -5,6 +5,7 @@
 	import Canvas from '$lib/components/canvas/Canvas.svelte';
 	import ZoomControl from '$lib/components/canvas/ZoomControl.svelte';
 	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';
+	import SettingsSidebar from '$lib/components/settings/SettingsSidebar.svelte';
 
 	// types and utils
 	import type { NoteData } from '$lib/types/canvas/NoteData';
@@ -12,6 +13,7 @@
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
 	import { validateUrl } from '$lib/parseInput';
 	import { generateSecureRandomString } from '$lib/randomString';
+	import { validateCanvasData } from '$lib/canvas/validation';
 
 	import type { PageProps } from './$types';
 	import { onMount } from 'svelte';
@@ -20,7 +22,7 @@
 	const { params, data, form }: PageProps = $props();
 	let dialog = null! as HTMLDialogElement;
 	let showDialog = $state(false);
-	let viewport = $state();
+	let settingsOpen = $state(false);
 
 	// svelte-ignore state_referenced_locally
 	const { id, user, board, perms } = data;
@@ -120,20 +122,9 @@
 		dialog = document.getElementById('add-dialog') as HTMLDialogElement;
 		console.log(dialog);
 
-		if (localStorage.getItem(`board-${id}-viewport`)) {
-			viewport = JSON.parse(localStorage.getItem(`board-${id}-viewport`)!);
-		}
-
 		// Expose notes to window for debugging in dev mode
 		(window as any).notes = notes;
-
-		window.addEventListener('beforeunload', () => {
-			localStorage.setItem(`board-${id}-viewport`, JSON.stringify(viewport));
-			console.log('saved viewport to localStorage', viewport);
-		});
 	});
-
-	// set localstorage variable on unload
 
 	// function saveNotes() {
 	// 	// ok how do i
@@ -149,12 +140,14 @@
 	$effect(() => {
 		if (notes.length > 0) initializeZIndex(notes);
 		$inspect(notes);
-		$inspect(viewport);
-		// localStorage.setItem(`board-${id}-viewport`, JSON.stringify(viewport));
 	});
 </script>
 
+<!-- Canvas viewport wrapper — shrinks when sidebar is open -->
+<div class="canvas-viewport" class:sidebar-open={settingsOpen}>
+
 <!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
+
 {#if board.owner === user?.id || perms?.perm === 'Write'}
 	<div class="note-creator">
 		<FancyButton1 onclick={() => (showDialog = true)} style="width: 100px">Add Note</FancyButton1>
@@ -221,25 +214,50 @@
 	/>
 </Canvas> -->
 <Canvas
-	data={data.board.canvas ?? {
-		thumbnail: undefined,
-		size: {
-			width: 3200,
-			height: 3200
-		},
-		background: {
-			type: 'Custom',
-			value:
-				'conic-gradient(#dc57af 90deg,#a80f75 90deg 180deg,#dc57af 180deg 270deg,#a80f75 270deg);'
-		}
-	}}
+	data={validateCanvasData(data.board.canvas)}
 >
 	{#each notes as _, i}
 		{console.log('added note')}
 		<Note bind:data={notes[i]} remove={() => notes.splice(i, 1)} />
 	{/each}
 </Canvas>
-<MiniViewport {notes} bind:viewport />
+<MiniViewport {notes} />
+</div>
+
+<!-- Settings toggle button (top-right) -->
+<button
+	class="settings-toggle"
+	style:right={settingsOpen ? '380px' : '20px'}
+	onclick={() => (settingsOpen = !settingsOpen)}
+	aria-label="Toggle board settings"
+	aria-expanded={settingsOpen}
+	class:active={settingsOpen}
+>
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+	>
+		<circle cx="12" cy="12" r="3" />
+		<path
+			d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"
+		/>
+	</svg>
+</button>
+
+<!-- Settings Sidebar -->
+<SettingsSidebar
+	bind:open={settingsOpen}
+	board={data.board}
+	contributors={(data.contributors ?? []).map(c => ({ ...c, permission: c.permission ?? '' }))}
+	canModify={data.canModify ?? false}
+	isOwner={data.user?.id === data.board.owner}
+	boardId={data.id}
+/>
 
 <style>
 	.dialog-container {
@@ -304,5 +322,64 @@
 		top: 20px;
 		left: 20px;
 		z-index: 1000;
+	}
+
+	/* Canvas viewport wrapper — transitions its right padding when sidebar is open */
+	.canvas-viewport {
+		position: fixed;
+		inset: 0;
+		transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		right: 0;
+	}
+
+	.canvas-viewport.sidebar-open {
+		right: 360px;
+	}
+
+	/* Settings toggle button — fixed top-right */
+	.settings-toggle {
+		position: fixed;
+		top: 20px;
+		right: 20px;
+		z-index: 1001;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 12px;
+		border: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.12));
+		background: var(--editor-interface-background, rgba(20, 20, 30, 0.85));
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		color: var(--default-text-color);
+		cursor: pointer;
+		transition:
+			background 0.15s,
+			border-color 0.15s,
+			transform 0.1s,
+			right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	:global(.canvas-viewport.sidebar-open) ~ .settings-toggle {
+		right: 380px;
+	}
+
+	.settings-toggle:hover {
+		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
+	}
+
+	.settings-toggle:active {
+		transform: scale(0.93);
+	}
+
+	.settings-toggle.active {
+		background: var(--fancygradient, linear-gradient(135deg, rgba(108, 99, 255, 0.3), rgba(168, 85, 247, 0.3)));
+		border-color: rgba(108, 99, 255, 0.5);
+	}
+
+	.settings-toggle svg {
+		width: 20px;
+		height: 20px;
 	}
 </style>

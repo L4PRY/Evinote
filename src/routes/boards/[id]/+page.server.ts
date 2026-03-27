@@ -3,10 +3,28 @@ import { db } from '$lib/server/db/index';
 import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { requireLogin } from '$lib/server/auth';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import type { NoteData } from '$lib/types/canvas/NoteData';
 import { checkUserCanModify } from '$lib/server/perms';
 import { diffNotes } from '$lib/server/diff';
+
+export const load: PageServerLoad = async ({ params, parent }) => {
+	const parentData = await parent();
+	const { user, perms, board } = parentData;
+	const { id } = params;
+
+	const contributors = user
+		? await db
+				.select({ username: table.User.username, id: table.User.id, permission: table.Permissions.perm })
+				.from(table.User)
+				.leftJoin(table.Permissions, eq(table.User.id, table.Permissions.uid))
+				.where(eq(table.Permissions.bid, parseInt(id)))
+		: [];
+
+	const canModify = checkUserCanModify(board, user ?? undefined, perms ?? undefined);
+
+	return { contributors, canModify };
+};
 
 export const actions: Actions = {
 	default: async ({ request, params }) => {

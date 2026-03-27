@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CanvasData } from '$lib/types/canvas/CanvasData';
+	import { validateCanvasData } from '$lib/canvas/validation';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, minZoom, MAX_ZOOM } from '$lib/stores/zoomLevel';
 	import { bounds, canvasSize, position, isMiniViewportDragging } from '$lib/stores/viewport';
@@ -18,7 +19,7 @@
 	// needs a bindable for the current viewport size, scroll position and zoom level
 
 	// svelte-ignore state_referenced_locally
-	let canvasData = $state<CanvasData>(data);
+	let canvasData = $state<CanvasData>(validateCanvasData(data));
 
 	// Track if canvas is being dragged (to prevent feedback loops with MiniViewport)
 	let isCanvasDragging = $state(false);
@@ -165,7 +166,7 @@
 	}
 
 	export function setData(newData: CanvasData) {
-		canvasData = newData;
+		canvasData = validateCanvasData(newData);
 	}
 
 	export function scrollTo(x: number, y: number) {
