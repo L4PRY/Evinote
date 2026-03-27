@@ -1,14 +1,4 @@
 <script lang="ts">
-	import {
-		draggable,
-		grid,
-		controls,
-		ControlFrom,
-		bounds,
-		BoundsFrom,
-		position,
-		events
-	} from '@neodrag/svelte';
 	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import type { File } from '$lib/types/canvas/File';
 	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
@@ -16,6 +6,8 @@
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import DOMPurify from 'isomorphic-dompurify';
 	import { onMount } from 'svelte';
+	import { zoomLevel } from '$lib/stores/zoomLevel';
+	import { canvasSize } from '$lib/stores/viewport';
 
 	let { data = $bindable(), remove }: { data: NoteData; remove: () => void } = $props();
 
@@ -43,34 +35,86 @@
 		// set colors
 		if (typeof data.color !== 'string') color = parseColor(data.color);
 	});
+
+	function dragNote(node: HTMLElement) {
+		let isDragging = false;
+		let startClientX = 0;
+		let startClientY = 0;
+		let startNoteX = 0;
+		let startNoteY = 0;
+
+		function onPointerDown(e: PointerEvent) {
+			const handle = node.querySelector('.handle');
+			if (!handle || !handle.contains(e.target as Node)) return;
+			if (e.button !== 0) return;
+
+			isDragging = true;
+			startClientX = e.clientX;
+			startClientY = e.clientY;
+			startNoteX = notePosition.x;
+			startNoteY = notePosition.y;
+
+			node.setPointerCapture(e.pointerId);
+
+			const z = bringToFront(notePosition.z);
+			notePosition = { ...notePosition, z };
+			data = { ...data, position: notePosition };
+			e.preventDefault();
+		}
+
+		function onPointerMove(e: PointerEvent) {
+			if (!isDragging) return;
+
+			const physicalDx = e.clientX - startClientX;
+			const physicalDy = e.clientY - startClientY;
+
+			let newX = startNoteX + physicalDx / $zoomLevel;
+			let newY = startNoteY + physicalDy / $zoomLevel;
+
+			newX = Math.round(newX / 5) * 5;
+			newY = Math.round(newY / 5) * 5;
+
+			const w = Math.max(0, $canvasSize.width - node.offsetWidth);
+			const h = Math.max(0, $canvasSize.height - node.offsetHeight);
+
+			newX = Math.max(0, Math.min(newX, w));
+			newY = Math.max(0, Math.min(newY, h));
+
+			notePosition = { x: newX, y: newY, z: notePosition.z };
+			data = { ...data, position: notePosition };
+		}
+
+		function onPointerUp(e: PointerEvent) {
+			if (!isDragging) return;
+			isDragging = false;
+			node.releasePointerCapture(e.pointerId);
+		}
+
+		node.addEventListener('pointerdown', onPointerDown);
+		node.addEventListener('pointermove', onPointerMove);
+		node.addEventListener('pointerup', onPointerUp);
+		node.addEventListener('pointercancel', onPointerUp);
+
+		return {
+			destroy() {
+				node.removeEventListener('pointerdown', onPointerDown);
+				node.removeEventListener('pointermove', onPointerMove);
+				node.removeEventListener('pointerup', onPointerUp);
+				node.removeEventListener('pointercancel', onPointerUp);
+			}
+		};
+	}
 </script>
 
 <div
-	{@attach draggable([
-		grid([5, 5]),
-		bounds(BoundsFrom.parent()),
-		controls({ allow: ControlFrom.selector('.handle') }),
-		position({ default: initialPosition }),
-		events({
-			onDragStart: () => {
-				// Bring this note to front using the shared z-index store
-				const z = bringToFront(notePosition.z);
-				notePosition = { ...notePosition, z };
-				// Sync back to parent
-				data = { ...data, position: notePosition };
-			},
-			onDrag: dragData => {
-				// Update position while keeping the current z-index
-				notePosition = { ...dragData.offset, z: notePosition.z };
-				data = { ...data, position: notePosition };
-			}
-		})
-	])}
+	use:dragNote
 	class="note"
 	title={data.title}
 	id={data.id ?? data.title}
 	style:background-color={color}
 	style:z-index={notePosition.z}
+	style:left={notePosition.x + 'px'}
+	style:top={notePosition.y + 'px'}
 	bind:this={note}
 	bind:clientWidth={noteSize.width}
 	bind:clientHeight={noteSize.height}

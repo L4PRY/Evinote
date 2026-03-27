@@ -10,12 +10,19 @@
 	--default-bg-color-transparent: light-dark(rgba(239, 239, 236, 0.4), rgba(9, 7, 21,0.4));
 	--default-text-color: light-dark(#333b3c, #efefec);
 	--default-blur-color: light-dark(#efefec5d, #0907155d);
+
 	--default-stroke-color: light-dark(rgba(59, 50, 100, 0.2), rgba(100, 100, 160, 0.2));
 	--button-stroke-color: light-dark(#cccccc7e, #17141f);
 	--border-colors: light-dark(#cccccc7e, transparent);
 	--default-bar-color: light-dark(#efefec, #06040e);
 	--default-bar-active: light-dark(#301541, #8464b7 );
 
+	--editor-interface-background: linear-gradient(
+		135deg,
+		light-dark(#ffffff8e, #11111644),
+		light-dark(#efefec44, #06040e44)
+	);
+	--editor-interface-border: light-dark(#cccccc7e, #ffffff20);
 
 	--fancycolor-1: #9c20aa;
 	--fancycolor-2: #fb3570;
