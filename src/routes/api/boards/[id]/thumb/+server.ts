@@ -121,51 +121,52 @@ export const GET = async ({ params, url, request }) => {
 							justifyContent: 'center',
 							padding: '2px 4px',
 							overflow: 'hidden'
-						},
-						children: contentText
-							? [
-									{
-										type: 'div',
-										props: {
-											style: {
-												display: 'flex',
-												flexDirection: 'column',
-												// align to top-left corner
-												alignItems: 'flex-start',
-												justifyContent: 'flex-start',
+						}
+						// MAYBE idk
+						// children: contentText
+						// 	? [
+						// 			{
+						// 				type: 'div',
+						// 				props: {
+						// 					style: {
+						// 						display: 'flex',
+						// 						flexDirection: 'column',
+						// 						// align to top-left corner
+						// 						alignItems: 'flex-start',
+						// 						justifyContent: 'flex-start',
 
-												// fontSize: '22px',
-												color: 'rgba(255, 255, 255, 0.9)',
-												overflow: 'hidden',
-												textOverflow: 'ellipsis',
-												whiteSpace: 'nowrap',
-												maxWidth: '100%',
-												wordWrap: 'break-word',
-												textAlign: 'center'
-											},
-											children: textParts.map((part, index) => ({
-												type: 'p',
-												props: {
-													children: part,
-													style: {
-														display: 'block',
-														fontWeight: index === 0 ? 'bold' : 'normal',
-														fontSize: index === 0 ? '22px' : '18px',
-														color:
-															index === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.8)',
-														// overflow: 'hidden',
-														// textOverflow: 'ellipsis',
-														// whiteSpace: 'nowrap',
-														// maxWidth: '100%',
-														// wordWrap: 'break-word',
-														textAlign: 'left'
-													}
-												}
-											}))
-										}
-									}
-								]
-							: []
+						// 						// fontSize: '22px',
+						// 						color: 'rgba(255, 255, 255, 0.9)',
+						// 						overflow: 'hidden',
+						// 						textOverflow: 'ellipsis',
+						// 						whiteSpace: 'nowrap',
+						// 						maxWidth: '100%',
+						// 						wordWrap: 'break-word',
+						// 						textAlign: 'center'
+						// 					},
+						// 					children: textParts.map((part, index) => ({
+						// 						type: 'p',
+						// 						props: {
+						// 							children: part,
+						// 							style: {
+						// 								display: 'block',
+						// 								fontWeight: index === 0 ? 'bold' : 'normal',
+						// 								fontSize: index === 0 ? '22px' : '18px',
+						// 								color:
+						// 									index === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.8)',
+						// 								// overflow: 'hidden',
+						// 								// textOverflow: 'ellipsis',
+						// 								// whiteSpace: 'nowrap',
+						// 								// maxWidth: '100%',
+						// 								// wordWrap: 'break-word',
+						// 								textAlign: 'left'
+						// 							}
+						// 						}
+						// 					}))
+						// 				}
+						// 			}
+						// 		]
+						// 	: []
 					}
 				};
 			}
