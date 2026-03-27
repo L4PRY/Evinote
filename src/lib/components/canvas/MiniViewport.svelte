@@ -60,9 +60,13 @@
 			zoom: $zoomLevel
 		};
 		noteBounds = notes.map(note => {
+			const x = note?.position?.x ?? 0;
+			const y = note?.position?.y ?? 0;
+			const width = note?.size?.width ?? 100;
+			const height = note?.size?.height ?? 100;
 			return {
 				noteId: note.id ?? note.title,
-				rect: new DOMRect(note.position.x, note.position.y, note.size.width, note.size.height)
+				rect: new DOMRect(x, y, width, height)
 			};
 		});
 	});
@@ -84,7 +88,9 @@
 		style:height="{effectiveCanvasHeight * zoomedScale}px"
 	>
 		{#each notes as note, i (note.id ?? note.title)}
-			{@const pos = { left: note.position.x * scale, top: note.position.y * scale }}
+			{@const x = note?.position?.x ?? 0}
+			{@const y = note?.position?.y ?? 0}
+			{@const pos = { left: x * scale, top: y * scale }}
 			{@const color = parseColor(note.color)}
 			{@const noteBound = noteBounds[i]}
 			{@const noteIndicatorWidth =
@@ -142,9 +148,8 @@
 
 <style>
 	.mini-viewport-container {
-		position: fixed;
-		bottom: 20px;
-		right: 20px;
+		position: relative;
+		float: right;
 		overflow: hidden;
 		z-index: 1000;
 		display: flex;
@@ -153,6 +158,8 @@
 		transition: opacity 0.15s ease;
 		border-radius: 10px;
 		background-color: transparent;
+		top: 100%;
+		transform: translateY(-100%) translateY(-20px) translateX(-20px);
 	}
 
 	.mini-canvas {

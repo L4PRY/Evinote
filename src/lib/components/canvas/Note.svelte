@@ -14,10 +14,10 @@
 	let note: HTMLDivElement;
 
 	// Capture initial position as static value for position plugin (non-reactive)
-	const initialPosition = { x: data.position.x, y: data.position.y };
+	const initialPosition = { x: data.position?.x ?? 0, y: data.position?.y ?? 0 };
 
-	let notePosition = $state(data.position);
-	let noteSize = $state(data.size);
+	let notePosition = $state(data.position ?? { x: 0, y: 0, z: 1 });
+	let noteSize = $state(data.size ?? { width: 200, height: 200 });
 	let color = $state('var(--default-bg-color)');
 
 	let sanitizedContent = $derived(

@@ -6,6 +6,8 @@
 	import ZoomControl from '$lib/components/canvas/ZoomControl.svelte';
 	import MiniViewport from '$lib/components/canvas/MiniViewport.svelte';
 	import SettingsSidebar from '$lib/components/settings/SettingsSidebar.svelte';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
+
 
 	// types and utils
 	import type { NoteData } from '$lib/types/canvas/NoteData';
@@ -13,7 +15,7 @@
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
 	import { validateUrl } from '$lib/parseInput';
 	import { generateSecureRandomString } from '$lib/randomString';
-	import { validateCanvasData } from '$lib/canvas/validation';
+	import { validateCanvasData, validateNoteData } from '$lib/canvas/validation';
 
 	import type { PageProps } from './$types';
 	import { onMount } from 'svelte';
@@ -28,7 +30,7 @@
 	const { id, user, board, perms } = data;
 
 	// svelte-ignore state_referenced_locally
-	let notes: NoteData[] = $state(board.notes || []);
+	let notes = $state((data.board.notes ?? []).map(validateNoteData));
 
 	function addNote() {
 		const titleInput = document.getElementById('note-title-input') as HTMLInputElement;
@@ -233,20 +235,8 @@
 	aria-expanded={settingsOpen}
 	class:active={settingsOpen}
 >
-	<svg
-		xmlns="http://www.w3.org/2000/svg"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		stroke-linecap="round"
-		stroke-linejoin="round"
-	>
-		<circle cx="12" cy="12" r="3" />
-		<path
-			d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"
-		/>
-	</svg>
+	<LucideSymbol symbol="Settings" size={20} />
+
 </button>
 
 <!-- Settings Sidebar -->
@@ -378,8 +368,5 @@
 		border-color: rgba(108, 99, 255, 0.5);
 	}
 
-	.settings-toggle svg {
-		width: 20px;
-		height: 20px;
-	}
+
 </style>

@@ -1,4 +1,5 @@
 import type { CanvasData } from '../types/canvas/CanvasData';
+import type { NoteData } from '../types/canvas/NoteData';
 import type { Color } from '../types/canvas/Color';
 import type { Grid } from '../types/canvas/Grid';
 
@@ -78,4 +79,62 @@ export function validateCanvasData(data: any): CanvasData {
 	validated.thumbnail = data.thumbnail;
 
 	return validated as CanvasData;
+}
+
+/**
+ * Validates note data and returns a safe fallback if malformed.
+ */
+export function validateNoteData(note: any): NoteData {
+	if (!note || typeof note !== 'object') {
+		return {
+			id: Math.random().toString(36).substr(2, 9),
+			title: 'Note',
+			position: { x: 0, y: 0, z: 1 },
+			size: { width: 200, height: 200 },
+			color: 'var(--default-bg-color)',
+			content: []
+		};
+	}
+
+	const validated: Partial<NoteData> = {
+		id: note.id || Math.random().toString(36).substr(2, 9),
+		title: note.title ?? 'Note',
+		content: Array.isArray(note.content) ? note.content : [],
+		color: note.color || 'var(--default-bg-color)'
+	};
+
+	// Validate Position
+	if (
+		note.position &&
+		typeof note.position.x === 'number' &&
+		typeof note.position.y === 'number' &&
+		!isNaN(note.position.x) &&
+		!isNaN(note.position.y)
+	) {
+		validated.position = {
+			x: note.position.x,
+			y: note.position.y,
+			z: typeof note.position.z === 'number' ? note.position.z : 1
+		};
+	} else {
+		validated.position = { x: 0, y: 0, z: 1 };
+	}
+
+	// Validate Size
+	if (
+		note.size &&
+		typeof note.size.width === 'number' &&
+		typeof note.size.height === 'number' &&
+		!isNaN(note.size.width) &&
+		!isNaN(note.size.height)
+	) {
+		validated.size = {
+			width: Math.max(50, note.size.width),
+			height: Math.max(50, note.size.height)
+		};
+	} else {
+		validated.size = { width: 200, height: 200 };
+	}
+
+	return validated as NoteData;
 }

@@ -3,7 +3,8 @@
 	import { validateCanvasData, getBackgroundDefaults } from '$lib/canvas/validation';
 	import type { Grid } from '$lib/types/canvas/Grid';
 	import type { Color } from '$lib/types/canvas/Color';
-	import { invalidateAll } from '$app/navigation';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
+
 
 	interface Contributor {
 		id: number;
@@ -45,6 +46,7 @@
 	let showDeleteDialog = $state(false);
 	let deleteEmail = $state('');
 	let deletePassword = $state('');
+	let deleteError = $state('');
 
 	// Active tab
 	let activeTab = $state<'general' | 'canvas' | 'contributors' | 'danger'>('general');
@@ -183,7 +185,6 @@
 
 			if (response.ok) {
 				contributors = contributors.filter((c) => c.id !== userId);
-				await invalidateAll();
 			} else {
 				console.error('Failed to remove contributor');
 			}
@@ -206,7 +207,6 @@
 			if (response.ok) {
 				showAddContributorDialog = false;
 				form.reset();
-				await invalidateAll();
 			} else {
 				console.error('Failed to add contributor');
 			}
@@ -217,6 +217,7 @@
 
 	async function handleBoardDelete(e: SubmitEvent) {
 		e.preventDefault();
+		deleteError = '';
 		const form = e.target as HTMLFormElement;
 		const formData = new FormData(form);
 
@@ -229,10 +230,18 @@
 			if (response.ok) {
 				window.location.href = '/boards';
 			} else {
+				// Handle 403 or other errors from SvelteKit error()
+				try {
+					const data = await response.json();
+					deleteError = data.message || 'Incorrect credentials or permission denied';
+				} catch (e) {
+					deleteError = 'Incorrect credentials or permission denied';
+				}
 				console.error('Failed to delete board');
 			}
 		} catch (error) {
 			console.error('Error deleting board:', error);
+			deleteError = 'A connection error occurred. Please try again.';
 		}
 	}
 
@@ -240,26 +249,12 @@
 </script>
 
 <!-- Settings toggle button is rendered externally; sidebar below -->
-<div class="sidebar-wrapper" class:open>
-	<aside class="settings-sidebar">
+<aside class="settings-sidebar" class:open>
 		<!-- Header -->
 		<div class="sidebar-header">
 			<div class="header-title">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="header-icon"
-				>
-					<circle cx="12" cy="12" r="3" />
-					<path
-						d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"
-					/>
-				</svg>
+				<LucideSymbol symbol="Settings" size={18} />
+
 				<span>Board Settings</span>
 			</div>
 
@@ -312,19 +307,8 @@
 			{#if activeTab === 'general' || activeTab === 'canvas'}
 				{#if !canModify}
 					<div class="read-only-banner">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<circle cx="12" cy="12" r="10" />
-							<line x1="12" y1="8" x2="12" y2="12" />
-							<line x1="12" y1="16" x2="12.01" y2="16" />
-						</svg>
+						<LucideSymbol symbol="CircleAlert" size={14} />
+
 						Read-only — you cannot modify settings.
 					</div>
 				{/if}
@@ -543,10 +527,11 @@
 					{#if canModify}
 						<div class="form-actions">
 							{#if saveStatus === 'success'}
-								<span class="save-msg success">✓ {saveMessage}</span>
+								<span class="save-msg success"><LucideSymbol symbol="Check" size={14} /> {saveMessage}</span>
 							{:else if saveStatus === 'error'}
-								<span class="save-msg error">✗ {saveMessage}</span>
+								<span class="save-msg error"><LucideSymbol symbol="X" size={14} /> {saveMessage}</span>
 							{/if}
+
 							<button type="submit" class="btn-primary" disabled={saveStatus === 'saving'}>
 								{saveStatus === 'saving' ? 'Saving…' : 'Save Settings'}
 							</button>
@@ -560,8 +545,9 @@
 						<h3 class="section-title">Members</h3>
 						{#if canModify}
 							<button class="btn-secondary small" onclick={() => (showAddContributorDialog = true)}>
-								+ Add
+								<LucideSymbol symbol="Plus" size={14} /> Add
 							</button>
+
 						{/if}
 					</div>
 
@@ -584,21 +570,8 @@
 											onclick={() => removeContributor(contributor.id)}
 											aria-label="Remove contributor"
 										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												stroke-width="2"
-												stroke-linecap="round"
-												stroke-linejoin="round"
-											>
-												<polyline points="3 6 5 6 21 6" /><path
-													d="M19 6l-1 14H6L5 6"
-												/><path d="M10 11v6" /><path d="M14 11v6" /><path
-													d="M9 6V4h6v2"
-												/>
-											</svg>
+											<LucideSymbol symbol="Trash2" size={14} />
+
 										</button>
 									{/if}
 								</li>
@@ -647,22 +620,8 @@
 			{:else if activeTab === 'danger'}
 				<div class="danger-zone">
 					<div class="danger-header">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="danger-icon"
-						>
-							<path
-								d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-							/>
-							<line x1="12" y1="9" x2="12" y2="13" />
-							<line x1="12" y1="17" x2="12.01" y2="17" />
-						</svg>
+						<LucideSymbol symbol="TriangleAlert" size={18} />
+
 						<h3>Danger Zone</h3>
 					</div>
 					<p class="danger-desc">
@@ -681,6 +640,13 @@
 								<p class="modal-desc">
 									This action is permanent. Enter your credentials to confirm.
 								</p>
+								
+								{#if deleteError}
+									<div class="delete-error-banner">
+										{deleteError}
+									</div>
+								{/if}
+
 								<form onsubmit={handleBoardDelete}>
 									<div class="form-group">
 										<label class="form-label" for="deleteEmail">Email</label>
@@ -720,28 +686,10 @@
 			{/if}
 		</div>
 	</aside>
-</div>
 
 <style>
-	.sidebar-wrapper {
-		position: fixed;
-		top: 0;
-		right: 0;
-		height: 100vh;
-		width: 0;
-		overflow: hidden;
-		z-index: 900;
-		transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		pointer-events: none;
-	}
-
-	.sidebar-wrapper.open {
-		width: 360px;
-		pointer-events: auto;
-	}
-
 	.settings-sidebar {
-		position: absolute;
+		position: fixed;
 		top: 0;
 		right: 0;
 		width: 360px;
@@ -753,6 +701,15 @@
 		-webkit-backdrop-filter: blur(16px);
 		border-left: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.1));
 		overflow: hidden;
+		z-index: 900;
+		transform: translateX(100%);
+		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		pointer-events: none;
+	}
+
+	.settings-sidebar.open {
+		transform: translateX(0);
+		pointer-events: auto;
 	}
 
 	/* Header */
@@ -775,12 +732,7 @@
 		letter-spacing: 0.01em;
 	}
 
-	.header-icon {
-		width: 18px;
-		height: 18px;
-		opacity: 0.7;
-		flex-shrink: 0;
-	}
+
 
 
 
@@ -1052,10 +1004,7 @@
 		font-size: 0.78rem;
 	}
 
-	.btn-danger svg {
-		width: 14px;
-		height: 14px;
-	}
+
 
 	/* Form actions */
 	.form-actions {
@@ -1081,6 +1030,16 @@
 		color: #f87171;
 	}
 
+	.delete-error-banner {
+		padding: 10px 14px;
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.2);
+		border-radius: 8px;
+		font-size: 0.78rem;
+		color: #f87171;
+		font-weight: 500;
+	}
+
 	/* Read-only banner */
 	.read-only-banner {
 		display: flex;
@@ -1095,11 +1054,7 @@
 		margin-bottom: 16px;
 	}
 
-	.read-only-banner svg {
-		width: 14px;
-		height: 14px;
-		flex-shrink: 0;
-	}
+
 
 	/* Contributors */
 	.contributors-section {
@@ -1203,12 +1158,7 @@
 		color: #f87171;
 	}
 
-	.danger-icon {
-		width: 18px;
-		height: 18px;
-		color: #f87171;
-		flex-shrink: 0;
-	}
+
 
 	.danger-desc {
 		font-size: 0.8rem;
