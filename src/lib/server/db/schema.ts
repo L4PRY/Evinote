@@ -52,7 +52,7 @@ export const User = pgTable(
 export const Permissions = pgTable(
 	'permissions',
 	{
-		bid: serial('board_id').references(() => Board.id),
+		bid: serial('board_id').references(() => Board.id, { onDelete: 'cascade' }),
 		uid: serial('user_id').references(() => User.id),
 		perm: permission('permission')
 	},
