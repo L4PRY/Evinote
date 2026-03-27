@@ -61,3 +61,27 @@ export async function PUT({ params, request }) {
 
 	return new Response(null, { status: 204 });
 }
+
+export async function PATCH({ params, request }) {
+	const { id } = params;
+	const { name } = await request.json();
+
+	const board = await db
+		.select()
+		.from(table.Board)
+		.where(eq(table.Board.id, parseInt(id)))
+		.then(res => res[0]);
+    
+	checkBoardPerms(board);
+
+	await db 
+	.update(table.Board)
+	.set({ name })
+	.where(eq(table.Board.id, parseInt(id)));
+
+	return new Response(JSON.stringify({ board }), { 
+		status: 200,
+		headers: { 'Content-Type': 'application/json' }
+	});
+
+}

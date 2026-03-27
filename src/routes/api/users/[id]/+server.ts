@@ -39,7 +39,8 @@ export async function GET(event: RequestEvent) {
 		.from(table.Board)
 		.where(and(...conditions));
 
-	return json({ user, boards });
+	return json({ user, boards }, 
+		{ status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 /* =====================================================
@@ -85,7 +86,7 @@ export async function PUT(event: RequestEvent) {
 		})
 		.where(eq(table.User.id, userId));
 
-	return new Response(null, { status: 204 });
+	return new Response(null, { status: 204, headers: { 'Content-Type': 'application/json' } });
 }
 
 export async function DELETE(event: RequestEvent) {
