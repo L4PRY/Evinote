@@ -7,14 +7,23 @@
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
 
-	export let data: PageData;
+	let { data } = $props();
+
+	// svelte-ignore state_referenced_locally
 	const user = data!.user;
+	// svelte-ignore state_referenced_locally
 	const boards = data!.boards;
 
 	let createPopup: CreateBoardPopup;
+	let theme: 'light' | 'dark' = $state('dark');
 
 	onMount(() => {
 		document.title = 'Evinote • Dashboard';
+		let darkmode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+
+		darkmode.addEventListener('change', e => {
+			theme = e.matches ? 'dark' : 'light';
+		});
 	});
 </script>
 
@@ -25,22 +34,21 @@
 	{#await boards then resolvedBoards}
 		{#if resolvedBoards.length === 0}
 			<p>You have no boards yet.</p>
-			<button class="create-link" onclick={() => createPopup.show()} aria-label="create a new board">create one?</button>
+			<button class="create-link" onclick={() => createPopup.show()} aria-label="create a new board"
+				>create one?</button
+			>
 		{/if}
 		<ul class="boards-grid">
 			{#each resolvedBoards as board (board.id)}
 				<li>
 					<DashboardBox
 						href={resolve(`/boards/${board.id}`)}
-						src="https://placehold.co/600x400"
+						src={`/api/boards/${board.id}/thumb?theme=${theme}`}
 						name={board.name}
 					></DashboardBox>
 				</li>
 			{/each}
-			<DashboardBox
-				type="createNew"
-				onclick={() => createPopup.show()}
-			></DashboardBox>
+			<DashboardBox type="createNew" onclick={() => createPopup.show()}></DashboardBox>
 		</ul>
 	{/await}
 </div>
@@ -74,7 +82,7 @@
 		font-family: inherit;
 		font-size: 1rem;
 	}
-	
+
 	.create-link:hover {
 		color: #2b6cb0;
 	}
