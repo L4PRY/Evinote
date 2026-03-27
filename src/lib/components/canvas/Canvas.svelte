@@ -4,6 +4,7 @@
 	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
 	import { bounds, canvasSize, position } from '$lib/stores/viewport';
 	import { onMount, type Snippet } from 'svelte';
+	import { parseBackground, parseBackgroundCss } from '$lib/parseBackground';
 
 	const {
 		children,
@@ -31,18 +32,8 @@
 	let scrollStartY = $state(0);
 
 	// Compute background CSS based on background type
-	let backgroundStyle = $derived(parseBackground(canvasData));
-
 	// Convert style object to CSS string
-	let backgroundCss = $derived(
-		Object.entries(backgroundStyle)
-			.map(([key, value]) => {
-				// Convert camelCase to kebab-case
-				const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-				return `${cssKey}: ${value}`;
-			})
-			.join('; ')
-	);
+	let backgroundCss = $derived(parseBackgroundCss(parseBackground(canvasData)));
 
 	// Reference to the canvas and content elements
 	let canvasElement: HTMLDivElement;
