@@ -27,5 +27,9 @@ export const GET = async ({ params }) => {
 				: and(eq(Board.owner, parseInt(id)), inArray(Board.type, ['Public', 'Unlisted']))
 		);
 
-	return new Response(JSON.stringify(boards));
+	return new Response(	JSON.stringify(boards), {
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	});
 };
