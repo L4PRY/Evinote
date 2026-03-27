@@ -31,58 +31,7 @@
 	let scrollStartY = $state(0);
 
 	// Compute background CSS based on background type
-	let backgroundStyle = $derived.by(() => {
-		const bg = canvasData.background;
-		switch (bg.type) {
-			case 'Image':
-				return {
-					backgroundImage: `url(${bg.value.toString()})`,
-					backgroundSize: 'cover',
-					backgroundPosition: 'center',
-					backgroundRepeat: 'no-repeat'
-				};
-			case 'Solid':
-				return {
-					backgroundColor: parseColor(bg.value)
-				};
-			case 'Grid': {
-				const grid = bg.value;
-				const gridColor = parseColor(grid.color);
-				const backgroundColor = parseColor(grid.background);
-				if (grid.type === 'Dot') {
-					// Create a dotted grid pattern using radial gradients
-					const size = grid.size;
-					const spacing = size * 10; // spacing between dots
-					return {
-						backgroundImage: `radial-gradient(circle, ${gridColor} ${size}px, transparent ${size}px)`,
-						backgroundSize: `${spacing}px ${spacing}px`,
-						backgroundPosition: '0 0',
-						backgroundColor
-					};
-				} else {
-					// Line grid pattern using linear gradients
-					const width = grid.size;
-					const spacing = width * 20; // spacing between lines
-					return {
-						backgroundImage: `
-							linear-gradient(to right, ${gridColor} ${width}px, transparent ${width}px),
-							linear-gradient(to bottom, ${gridColor} ${width}px, transparent ${width}px)
-						`,
-						backgroundSize: `${spacing}px ${spacing}px`,
-						backgroundPosition: '0 0',
-						backgroundColor
-					};
-				}
-			}
-			case 'Custom':
-				// Custom CSS background - parse as raw CSS value
-				return {
-					background: bg.value
-				};
-			default:
-				return {};
-		}
-	});
+	let backgroundStyle = $derived(parseBackground(canvasData));
 
 	// Convert style object to CSS string
 	let backgroundCss = $derived(
