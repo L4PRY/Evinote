@@ -16,14 +16,30 @@
 
 	let createPopup: CreateBoardPopup;
 	let theme: 'light' | 'dark' = $state('dark');
+	let viewports = $state<Record<string, { left: number; top: number; zoom: number }>>({});
 
-	onMount(() => {
+	onMount(async () => {
 		document.title = 'Evinote • Dashboard';
-		let darkmode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
 
-		darkmode.addEventListener('change', e => {
-			theme = e.matches ? 'dark' : 'light';
-		});
+		for (const board of await boards) {
+			const vwp = localStorage.getItem(`board-${board.id}-viewport`);
+			viewports[board.id] = vwp
+				? JSON.parse(vwp)
+				: {
+						width: 800,
+						height: 600,
+						zoom: 1
+					};
+		}
+	});
+
+	$effect(() => {
+		if (theme !== 'light' && theme !== 'dark') {
+			theme =
+				(localStorage.getItem('theme') ?? window.matchMedia('(prefers-color-scheme: dark)').matches)
+					? 'dark'
+					: 'light';
+		}
 	});
 </script>
 
@@ -43,7 +59,7 @@
 				<li>
 					<DashboardBox
 						href={resolve(`/boards/${board.id}`)}
-						src={`/api/boards/${board.id}/thumb?theme=${theme}`}
+						src={`/api/boards/${board.id}/thumb?theme=${theme}&zoom=0.2`}
 						name={board.name}
 					></DashboardBox>
 				</li>
