@@ -5,15 +5,14 @@
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { count, eq } from 'drizzle-orm';
-import { checkBoardPerms } from '$lib/server/perms';
+import { checkBoardPerms, getBoard } from '$lib/server/perms';
 
 export async function GET({ params }) {
 	const { id } = params;
-	const event;
 
 	// get board, likes from layout.server.ts load
 
-	const { board, likes } = event.locals;
+	const { board, likes } = await getBoard(id);
 
 	// const notes = await db
 	// 	.select()
