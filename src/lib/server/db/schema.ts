@@ -64,6 +64,7 @@ export const Board = pgTable(
 	{
 		id: serial('id').primaryKey().notNull(),
 		type: boardType('board_type').default('Private').notNull(),
+		views: serial('views'),
 		owner: serial('owner_id')
 			.notNull()
 			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
@@ -74,6 +75,22 @@ export const Board = pgTable(
 		notes: jsonb('notes').$type<NoteData[]>()
 	},
 	table => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
+);
+
+export const BoardLikes = pgTable(
+	'board_likes',
+	{
+		boardId: serial('board_id').references(() => Board.id, {
+			onDelete: 'cascade',
+			onUpdate: 'cascade'
+		}),
+		userId: serial('user_id').references(() => User.id, {
+			onDelete: 'cascade',
+			onUpdate: 'cascade'
+		}),
+		at: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [index('board_likes_user').on(table.boardId, table.userId)]
 );
 
 export const Files = pgTable(
