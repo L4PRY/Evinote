@@ -5,7 +5,13 @@
 		src = '',
 		type = 'board',
 		onclick
-	}: { href?: any; name?: string; src?: string; type?: 'createNew' | 'board'; onclick?: (e: MouseEvent) => void } = $props();
+	}: {
+		href?: any;
+		name?: string;
+		src?: string;
+		type?: 'createNew' | 'board';
+		onclick?: (e: MouseEvent) => void;
+	} = $props();
 
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { notifications } from '$lib/stores/notifications';
@@ -34,13 +40,17 @@
 			// settings
 		}
 	}
-	
+
 	function handleMouseLeave() {
 		menuOpen = false;
 	}
 </script>
 
-<svelte:window onclick={() => { menuOpen = false; }} />
+<svelte:window
+	onclick={() => {
+		menuOpen = false;
+	}}
+/>
 
 {#if type === 'board'}
 	<a {href} class="dashboard-box" onmouseleave={handleMouseLeave}>
@@ -61,7 +71,14 @@
 
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="actions-menu" class:is-open={menuOpen} onclick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+		<div
+			class="actions-menu"
+			class:is-open={menuOpen}
+			onclick={e => {
+				e.preventDefault();
+				e.stopPropagation();
+			}}
+		>
 			<div class="icon-btn" onclick={toggleMenu} aria-label="Options" aria-expanded={menuOpen}>
 				{#if menuOpen}
 					<LucideSymbol symbol="X" size={18} strokeWidth={2} />
@@ -69,14 +86,14 @@
 					<LucideSymbol symbol="MoreVertical" size={20} strokeWidth={2} />
 				{/if}
 			</div>
-			
+
 			<div class="expanded-menu">
-				<div class="dropdown-item" onclick={(e) => handleAction('configure', e)}>
+				<div class="dropdown-item" onclick={e => handleAction('configure', e)}>
 					<LucideSymbol symbol="SlidersHorizontal" size={18} strokeWidth={2} />
 				</div>
-				<div class="dropdown-item share" onclick={(e) => handleAction('share', e)}>
+				<div class="dropdown-item share" onclick={e => handleAction('share', e)}>
 					<LucideSymbol symbol="Share" size={18} strokeWidth={2} />
-				</div>	
+				</div>
 			</div>
 		</div>
 	</a>
@@ -91,6 +108,16 @@
 {/if}
 
 <style>
+	img {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.3s ease;
+		top: 0;
+		left: 0;
+	}
+
 	.dashboard-box {
 		display: flex;
 		flex-direction: column;
@@ -134,6 +161,7 @@
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
+		position: relative;
 	}
 
 	.dashboard-box:hover .preview-container {
@@ -141,6 +169,7 @@
 	}
 
 	.placeholder {
+		position: absolute;
 		width: 100%;
 		height: 100%;
 		display: flex;
@@ -149,6 +178,8 @@
 		color: white;
 		/* opacity: 0.5; */
 		transition: transform 0.5s ease-out;
+		top: 0;
+		left: 0;
 	}
 
 	.dashboard-box:hover .placeholder {
@@ -239,7 +270,9 @@
 		max-width: 0;
 		opacity: 0;
 		overflow: hidden;
-		transition: max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease;
+		transition:
+			max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+			opacity 0.2s ease;
 		white-space: nowrap;
 	}
 
@@ -267,7 +300,6 @@
 	.dropdown-item:hover {
 		background: rgba(255, 255, 255, 0.1);
 	}
-
 
 	@media (max-width: 600px) {
 		.dashboard-box {

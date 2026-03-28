@@ -1,9 +1,12 @@
 import { parseColor } from './parseColor';
 import type { CanvasData } from './types/canvas/CanvasData';
+import { dev } from '$app/environment';
+import type { Color } from './types/canvas/Color';
 
 export function parseBackground(canvas: CanvasData) {
 	switch (canvas.background.type) {
 		case 'Image':
+			// if (!dev)
 			return {
 				backgroundImage: `url(${canvas.background.value.toString()})`,
 				backgroundSize: 'cover',
@@ -30,7 +33,7 @@ export function parseBackground(canvas: CanvasData) {
 				};
 			} else {
 				// Line grid pattern using linear gradients
-				const width = grid.size;
+				const width = grid.width;
 				const spacing = width * 20; // spacing between lines
 				return {
 					backgroundImage: `

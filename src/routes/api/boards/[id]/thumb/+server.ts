@@ -82,6 +82,24 @@ export const GET = async ({ params, url, request }) => {
 				noteTop + noteHeight > 0 &&
 				noteTop < viewportSize.height
 			) {
+				// Extract text content from the note
+				const textParts: string[] = [];
+				if (note.title) {
+					textParts.push(note.title);
+				}
+				if (note.content && Array.isArray(note.content)) {
+					for (const entry of note.content) {
+						if (typeof entry === 'string') {
+							// Strip HTML tags for plain text display
+							const plainText = entry.replace(/<[^>]*>/g, '');
+							if (plainText.trim()) {
+								textParts.push(plainText.trim());
+							}
+						}
+					}
+				}
+				const contentText = textParts.join(' ').substring(0, 200);
+
 				return {
 					type: 'div',
 					props: {
@@ -97,8 +115,58 @@ export const GET = async ({ params, url, request }) => {
 							opacity: 0.8,
 							boxShadow:
 								'inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(0, 0, 0, 0.3), 0 0 2px rgba(0, 0, 0, 0.3)',
-							zIndex: note.position.z ?? 0
+							zIndex: note.position.z ?? 0,
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							padding: '2px 4px',
+							overflow: 'hidden'
 						}
+						// MAYBE idk
+						// children: contentText
+						// 	? [
+						// 			{
+						// 				type: 'div',
+						// 				props: {
+						// 					style: {
+						// 						display: 'flex',
+						// 						flexDirection: 'column',
+						// 						// align to top-left corner
+						// 						alignItems: 'flex-start',
+						// 						justifyContent: 'flex-start',
+
+						// 						// fontSize: '22px',
+						// 						color: 'rgba(255, 255, 255, 0.9)',
+						// 						overflow: 'hidden',
+						// 						textOverflow: 'ellipsis',
+						// 						whiteSpace: 'nowrap',
+						// 						maxWidth: '100%',
+						// 						wordWrap: 'break-word',
+						// 						textAlign: 'center'
+						// 					},
+						// 					children: textParts.map((part, index) => ({
+						// 						type: 'p',
+						// 						props: {
+						// 							children: part,
+						// 							style: {
+						// 								display: 'block',
+						// 								fontWeight: index === 0 ? 'bold' : 'normal',
+						// 								fontSize: index === 0 ? '22px' : '18px',
+						// 								color:
+						// 									index === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.8)',
+						// 								// overflow: 'hidden',
+						// 								// textOverflow: 'ellipsis',
+						// 								// whiteSpace: 'nowrap',
+						// 								// maxWidth: '100%',
+						// 								// wordWrap: 'break-word',
+						// 								textAlign: 'left'
+						// 							}
+						// 						}
+						// 					}))
+						// 				}
+						// 			}
+						// 		]
+						// 	: []
 					}
 				};
 			}
@@ -116,7 +184,7 @@ export const GET = async ({ params, url, request }) => {
 					justifyContent: 'flex-start',
 					width: `${viewportSize.width}px`,
 					height: `${viewportSize.height}px`,
-					border: '1px solid rgba(255, 255, 255, 0.2)',
+					border: '1px solid rgba(255, 50, 255)',
 					borderRadius: '4px',
 					overflow: 'hidden',
 					position: 'relative'
@@ -130,8 +198,8 @@ export const GET = async ({ params, url, request }) => {
 								position: 'absolute',
 								width: `${zoomedCanvasWidth}px`,
 								height: `${zoomedCanvasHeight}px`,
-								left: `${viewportLeft}px`,
-								top: `${viewportTop}px`,
+								left: `${-viewportLeft}px`,
+								top: `${-viewportTop}px`,
 								zoom,
 								// apply background if its something extraordinaire, otherwise use theme based background
 								...parseBackground(canvas!),
