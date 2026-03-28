@@ -4,26 +4,23 @@
 
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import { checkBoardPerms } from '$lib/server/perms';
 
 export async function GET({ params }) {
 	const { id } = params;
+	const event;
 
-	const board = await db
-		.select()
-		.from(table.Board)
-		.where(eq(table.Board.id, parseInt(id)))
-		.then(res => res[0]);
+	// get board, likes from layout.server.ts load
 
-	checkBoardPerms(board);
+	const { board, likes } = event.locals;
 
 	// const notes = await db
 	// 	.select()
 	// 	.from(table.Note)
 	// 	.where(eq(table.Note.bid, parseInt(id)));
 
-	return new Response(JSON.stringify({ board }), { status: 200 });
+	return new Response(JSON.stringify({ board, likes }), { status: 200 });
 }
 
 export async function DELETE({ params }) {
@@ -71,17 +68,16 @@ export async function PATCH({ params, request }) {
 		.from(table.Board)
 		.where(eq(table.Board.id, parseInt(id)))
 		.then(res => res[0]);
-    
+
 	checkBoardPerms(board);
 
-	await db 
-	.update(table.Board)
-	.set({ name })
-	.where(eq(table.Board.id, parseInt(id)));
+	await db
+		.update(table.Board)
+		.set({ name })
+		.where(eq(table.Board.id, parseInt(id)));
 
-	return new Response(JSON.stringify({ board }), { 
+	return new Response(JSON.stringify({ board }), {
 		status: 200,
 		headers: { 'Content-Type': 'application/json' }
 	});
-
 }

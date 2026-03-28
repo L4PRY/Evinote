@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit';
 import { routeLogger } from './logger';
 import { getRequestEvent } from '$app/server';
 import type { AuthenticatedUser } from '$lib/types/auth/AuthenticatedUser';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { db } from './db';
 import * as table from './db/schema';
 import { authLogger } from './logger';
@@ -81,4 +81,30 @@ export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
 	}
 
 	return perms;
+}
+
+export async function getBoard(id: string | number | undefined) {
+	if (typeof id === 'undefined') {
+		error(400, 'board id is required');
+	}
+
+	const board = await db
+		.select()
+		.from(table.Board)
+		.where(eq(table.Board.id, typeof id === 'string' ? parseInt(id) : id))
+		.then(res => res[0]);
+
+	if (!board) {
+		error(404, 'board not found');
+	}
+
+	checkBoardPerms(board);
+
+	const likes = db
+		.select({ count: count() })
+		.from(table.BoardLikes)
+		.where(eq(table.BoardLikes.boardId, typeof id === 'string' ? parseInt(id) : id))
+		.then(res => res[0].count);
+
+	return { board, likes };
 }
