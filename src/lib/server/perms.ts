@@ -100,10 +100,10 @@ export async function getBoard(id: string | number | undefined) {
 
 	checkBoardPerms(board);
 
-	const likes = db
+	const likes = await db
 		.select({ count: count() })
 		.from(table.BoardLikes)
-		.where(eq(table.BoardLikes.boardId, typeof id === 'string' ? parseInt(id) : id))
+		.where(eq(table.BoardLikes.board, typeof id === 'string' ? parseInt(id) : id))
 		.then(res => res[0].count);
 
 	return { board, likes };
