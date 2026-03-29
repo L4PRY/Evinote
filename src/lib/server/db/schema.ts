@@ -8,7 +8,8 @@ import {
 	uuid,
 	varchar,
 	pgEnum,
-	pgTable
+	pgTable,
+	uniqueIndex
 } from 'drizzle-orm/pg-core';
 import type { CanvasData } from '$lib/types/canvas/CanvasData';
 import type { NoteData } from '$lib/types/canvas/NoteData';
@@ -89,7 +90,7 @@ export const BoardLikes = pgTable(
 		}),
 		at: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
-	table => [index('board_likes_user').on(table.board, table.user)]
+	table => [uniqueIndex('board_likes_user').on(table.board, table.user)]
 );
 
 export const Files = pgTable(
