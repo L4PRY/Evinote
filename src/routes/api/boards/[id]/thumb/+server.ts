@@ -4,6 +4,7 @@ import { parseColor } from '$lib/parseColor.js';
 import { db } from '$lib/server/db/index.js';
 import * as table from '$lib/server/db/schema.js';
 import { routeLogger } from '$lib/server/logger.js';
+import { getBoard } from '$lib/server/perms.js';
 import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
@@ -27,13 +28,7 @@ export const GET = async ({ params, url, request }) => {
 	const viewportTop = topParam ? parseFloat(topParam) : 0;
 	const zoom = zoomParam ? parseFloat(zoomParam) : 1;
 
-	const board = await db
-		.select()
-		.from(table.Board)
-		.where(eq(table.Board.id, parseInt(id)))
-		.then(res => res.at(0));
-
-	if (!board) return error(404, 'board not found');
+	const { board, likes } = await getBoard(id);
 
 	// Generate ETag from board data BEFORE rendering
 	const etag = await generateETag(board, theme);

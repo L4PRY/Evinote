@@ -1,13 +1,10 @@
+import { requireLogin } from '$lib/server/auth.js';
 import { db } from '$lib/server/db/index.js';
 import * as table from '$lib/server/db/schema.js';
 // create a board, api returns id
 
 export async function POST({ request, locals }) {
-	// check for either .EVI_API cookie or Authorization header
-	if (!locals.user) {
-		return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-	}
-
+	const user = requireLogin();
 	const { name, type } = await request.json();
 
 	if (!name || !type) {
@@ -19,7 +16,7 @@ export async function POST({ request, locals }) {
 		.values({
 			name,
 			type,
-			owner: locals.user.id
+			owner: user.id
 		})
 		.returning({ id: table.Board.id });
 

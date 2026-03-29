@@ -8,11 +8,8 @@
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
-
 	// svelte-ignore state_referenced_locally
-	const user = data!.user;
-	// svelte-ignore state_referenced_locally
-	const boards = data!.boards;
+	const { boards, user }: PageData = data;
 
 	let createPopup: CreateBoardPopup;
 	let theme: 'light' | 'dark' = $state('dark');
@@ -21,7 +18,7 @@
 	onMount(async () => {
 		document.title = 'Evinote • Dashboard';
 
-		for (const board of await boards) {
+		for (const board of boards) {
 			const vwp = localStorage.getItem(`board-${board.id}-viewport`);
 			viewports[board.id] = vwp
 				? JSON.parse(vwp)
@@ -47,26 +44,25 @@
 
 <div class="site-content">
 	<DashboardTab>Your boards</DashboardTab>
-	{#await boards then resolvedBoards}
-		{#if resolvedBoards.length === 0}
-			<p>You have no boards yet.</p>
-			<button class="create-link" onclick={() => createPopup.show()} aria-label="create a new board"
-				>create one?</button
-			>
-		{/if}
-		<ul class="boards-grid">
-			{#each resolvedBoards as board (board.id)}
-				<li>
-					<DashboardBox
-						href={resolve(`/boards/${board.id}`)}
-						src={`/api/boards/${board.id}/thumb?theme=${theme}&zoom=0.2`}
-						name={board.name}
-					></DashboardBox>
-				</li>
-			{/each}
-			<DashboardBox type="createNew" onclick={() => createPopup.show()}></DashboardBox>
-		</ul>
-	{/await}
+	<!-- {#if boards.length === 0}
+		<p>You have no boards yet.</p>
+		<button class="create-link" onclick={() => createPopup.show()} aria-label="create a new board"
+			>create one?</button
+		>
+	{/if} -->
+	<ul class="boards-grid">
+		{#each boards as board (board.id)}
+			<li>
+				<DashboardBox
+					href={resolve(`/boards/${board.id}`)}
+					src={`/api/boards/${board.id}/thumb?theme=${theme}&zoom=0.2`}
+					name={board.name}
+					likes={board.likes}
+				></DashboardBox>
+			</li>
+		{/each}
+		<DashboardBox type="createNew" onclick={() => createPopup.show()}></DashboardBox>
+	</ul>
 </div>
 
 <style>

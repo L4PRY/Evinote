@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit';
 import { routeLogger } from './logger';
 import { getRequestEvent } from '$app/server';
 import type { AuthenticatedUser } from '$lib/types/auth/AuthenticatedUser';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { db } from './db';
 import * as table from './db/schema';
 import { authLogger } from './logger';
@@ -51,13 +51,13 @@ export const checkUserCanModify = (
  * Route-level permission check that throws errors when access is denied.
  * Uses checkAccessPerms internally and handles error responses.
  */
-export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
+export async function checkBoardPerms(board: typeof table.Board.$inferSelect) {
 	const { locals } = getRequestEvent();
 
 	const user = locals.user as AuthenticatedUser | null;
 
 	const perms = user
-		? db
+		? await db
 				.select()
 				.from(table.Permissions)
 				.where(and(eq(table.Permissions.bid, board.id), eq(table.Permissions.uid, user.id)))
@@ -81,4 +81,32 @@ export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
 	}
 
 	return perms;
+}
+
+export async function getBoard(id: string | number | undefined) {
+	if (typeof id === 'undefined') {
+		error(400, 'board id is required');
+	}
+
+	if (typeof id === 'string' && isNaN(parseInt(id))) error(400, 'board id must be a number');
+
+	const board = await db
+		.select()
+		.from(table.Board)
+		.where(eq(table.Board.id, typeof id === 'string' ? parseInt(id) : id))
+		.then(res => res[0]);
+
+	if (!board) {
+		error(404, 'board not found');
+	}
+
+	await checkBoardPerms(board);
+
+	const likes = await db
+		.select({ count: count() })
+		.from(table.BoardLikes)
+		.where(eq(table.BoardLikes.board, typeof id === 'string' ? parseInt(id) : id))
+		.then(res => res[0].count);
+
+	return { board, likes };
 }

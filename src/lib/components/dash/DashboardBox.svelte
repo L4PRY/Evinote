@@ -4,12 +4,16 @@
 		name = '',
 		src = '',
 		type = 'board',
+		likes = 0,
+		views = 0,
 		onclick
 	}: {
 		href?: any;
 		name?: string;
 		src?: string;
 		type?: 'createNew' | 'board';
+		likes?: number;
+		views?: number;
 		onclick?: (e: MouseEvent) => void;
 	} = $props();
 
@@ -61,6 +65,10 @@
 		</div>
 		<div class="info">
 			<h3>{name}</h3>
+			<p>
+				<LucideSymbol symbol="Heart" size={16} strokeWidth={1.5} />
+				{likes}
+			</p>
 			<div class="arrow">
 				<p>
 					Go to board
