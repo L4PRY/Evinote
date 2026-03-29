@@ -88,6 +88,8 @@ export async function getBoard(id: string | number | undefined) {
 		error(400, 'board id is required');
 	}
 
+	if (typeof id === 'string' && isNaN(parseInt(id))) error(400, 'board id must be a number');
+
 	const board = await db
 		.select()
 		.from(table.Board)

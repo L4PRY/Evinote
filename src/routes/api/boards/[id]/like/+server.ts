@@ -35,9 +35,9 @@ export const POST = async ({ params, locals }) => {
 	return new Response(JSON.stringify({ likes: newLikes }), { status: 200 });
 };
 
-export const DELETE = async ({ params, locals }) => {
+export const DELETE = async ({ params }) => {
 	const { id } = params;
-	const { board, likes } = await getBoard(id);
+	const { board } = await getBoard(id);
 	const user = requireLogin();
 
 	await db
