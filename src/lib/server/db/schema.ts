@@ -64,7 +64,6 @@ export const Board = pgTable(
 	{
 		id: serial('id').primaryKey().notNull(),
 		type: boardType('board_type').default('Private').notNull(),
-		views: serial('views'),
 		owner: serial('owner_id')
 			.notNull()
 			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
