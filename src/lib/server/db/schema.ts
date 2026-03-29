@@ -80,14 +80,18 @@ export const Board = pgTable(
 export const BoardLikes = pgTable(
 	'board_likes',
 	{
-		board: serial('board_id').references(() => Board.id, {
-			onDelete: 'cascade',
-			onUpdate: 'cascade'
-		}),
-		user: serial('user_id').references(() => User.id, {
-			onDelete: 'cascade',
-			onUpdate: 'cascade'
-		}),
+		board: serial('board_id')
+			.references(() => Board.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			})
+			.notNull(),
+		user: serial('user_id')
+			.references(() => User.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			})
+			.notNull(),
 		at: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	table => [uniqueIndex('board_likes_user').on(table.board, table.user)]
