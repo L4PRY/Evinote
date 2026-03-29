@@ -5,26 +5,33 @@
 import { requireLogin } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { routeLogger } from '$lib/server/logger';
 import { getBoard } from '$lib/server/perms';
-import { and, count, DrizzleQueryError, eq } from 'drizzle-orm';
-import type { PostgresError } from 'postgres';
+import { error } from '@sveltejs/kit';
+import { and, count, eq } from 'drizzle-orm';
 
 export const POST = async ({ params, locals }) => {
 	const { id } = params;
 	const { board, likes } = await getBoard(id);
 	const user = requireLogin();
 
-	try {
-		await db.insert(table.BoardLikes).values({ board: board.id, user: user.id });
-	} catch (err) {
-		const pgError = (err as DrizzleQueryError).cause as PostgresError; // lol..,,
-		console.log(pgError);
-		if (pgError.code === '23505') {
-			routeLogger.warn(`User ${user.id} attempted to like board ${board.id} multiple times`);
-			return new Response(JSON.stringify({ error: 'Already liked' }), { status: 400 });
-		}
-	}
+	// try {
+	// 	await db.insert(table.BoardLikes).values({ board: board.id, user: user.id });
+	// } catch (err) {
+	// 	const pgError = (err as DrizzleQueryError).cause as PostgresError; // lol..,,
+	// 	console.log(pgError);
+	// 	if (pgError.code === '23505') {
+	// 		routeLogger.warn(`User ${user.id} attempted to like board ${board.id} multiple times`);
+	// 		return new Response(JSON.stringify({ error: 'Already liked' }), { status: 400 });
+	// 	}
+	// }
+
+	const insert = await db
+		.insert(table.BoardLikes)
+		.values({ board: board.id, user: user.id })
+		.onConflictDoNothing()
+		.returning({ board: table.BoardLikes.board });
+
+	if (insert.length === 0) error(400, 'Already liked');
 
 	const newLikes = await db
 		.select({ count: count() })
