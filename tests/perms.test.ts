@@ -1,4 +1,4 @@
-import { checkAccessPerms, checkUserCanModify, checkBoardPerms } from '$lib/server/perms';
+import { checkAccessPerms, checkUserCanModify } from '$lib/server/perms';
 import { describe, it, expect } from 'vitest';
 import { User, Board, Permissions as Perms } from '$lib/server/db/schema';
 

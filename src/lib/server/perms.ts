@@ -51,7 +51,7 @@ export const checkUserCanModify = (
  * Route-level permission check that throws errors when access is denied.
  * Uses checkAccessPerms internally and handles error responses.
  */
-export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
+export async function checkBoardPerms(board: typeof table.Board.$inferSelect) {
 	const { locals } = getRequestEvent();
 
 	const user = locals.user as AuthenticatedUser | null;
@@ -98,7 +98,7 @@ export async function getBoard(id: string | number | undefined) {
 		error(404, 'board not found');
 	}
 
-	checkBoardPerms(board);
+	await checkBoardPerms(board);
 
 	const likes = await db
 		.select({ count: count() })

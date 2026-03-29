@@ -31,7 +31,7 @@ export async function DELETE({ params }) {
 		.where(eq(table.Board.id, parseInt(id)))
 		.then(res => res[0]);
 
-	checkBoardPerms(board);
+	await checkBoardPerms(board);
 
 	await db.delete(table.Board).where(eq(table.Board.id, parseInt(id)));
 
@@ -48,7 +48,7 @@ export async function PUT({ params, request }) {
 		.where(eq(table.Board.id, parseInt(id)))
 		.then(res => res[0]);
 
-	checkBoardPerms(board);
+	await checkBoardPerms(board);
 
 	await db
 		.update(table.Board)
@@ -68,7 +68,7 @@ export async function PATCH({ params, request }) {
 		.where(eq(table.Board.id, parseInt(id)))
 		.then(res => res[0]);
 
-	checkBoardPerms(board);
+	await checkBoardPerms(board);
 
 	await db
 		.update(table.Board)
