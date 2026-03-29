@@ -57,7 +57,7 @@ export async function checkBoardPerms(board: typeof table.Board.$inferSelect) {
 	const user = locals.user as AuthenticatedUser | null;
 
 	const perms = user
-		? db
+		? await db
 				.select()
 				.from(table.Permissions)
 				.where(and(eq(table.Permissions.bid, board.id), eq(table.Permissions.uid, user.id)))
