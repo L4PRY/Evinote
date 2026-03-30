@@ -29,6 +29,11 @@
 	let color = $state('var(--default-bg-color)');
 	let isCurrentlyDragging = $state(false);
 	let isCurrentlyResizing = $state(false);
+	// True once the user has manually dragged a resize handle
+	let manuallyResized = $state(
+		// Consider it manually resized if the stored size differs from the default
+		!!(data.size && (data.size.width !== 200 || data.size.height !== 200))
+	);
 
 	let displayPos = spring(
 		{ x: data.position?.x ?? 0, y: data.position?.y ?? 0 },
@@ -225,7 +230,12 @@
 			startClientX = e.clientX;
 			startClientY = e.clientY;
 			startWidth = noteSize.width;
-			startHeight = noteSize.height;
+			// Use the DOM-rendered height so auto-height notes start from correct value
+			const noteEl = (node.closest('.note') ?? node) as HTMLElement;
+			startHeight = noteEl.offsetHeight;
+			// Lock height immediately so vertical resize is visible during the drag
+			noteSize = { width: noteSize.width, height: startHeight };
+			manuallyResized = true;
 			startX = notePosition.x;
 			startY = notePosition.y;
 
@@ -250,7 +260,10 @@
 		};
 	}
 
-	let editingIndex = $state<number | null>(null);
+	// Auto-focus the first entry if it's a brand-new note with a single empty text slot
+	let editingIndex = $state<number | null>(
+		data.content?.length === 1 && data.content[0] === '' ? 0 : null
+	);
 
 	function autoResize(node: HTMLTextAreaElement) {
 		const updateHeight = () => {
@@ -285,6 +298,7 @@
 	class="note"
 	class:dragging={isCurrentlyDragging}
 	class:editing-meta={isEditingMetadata}
+	class:manual-size={manuallyResized}
 	title={data.title}
 	id={data.id ?? data.title}
 	style:background-color={color}
@@ -294,9 +308,8 @@
 	style:transform="scale({$displayScale}) rotate({rotation}deg)"
 	bind:this={note}
 	bind:clientWidth={noteSize.width}
-	bind:clientHeight={noteSize.height}
 	style:width={noteSize.width + 'px'}
-	style:height={noteSize.height + 'px'}
+	style:height={manuallyResized ? noteSize.height + 'px' : 'auto'}
 >
 	<div class="top-container">
 		<div class="header-section left">
@@ -364,15 +377,26 @@
 			{#each data.content as entry, i}
 				<div class="entry">
 					{#if typeof entry === 'string'}
-						{#if editingIndex === i}
-							<textarea
+						<textarea
 								use:autoResize
 								bind:value={(data.content[i] as string)}
 								onblur={() => (editingIndex = null)}
 								onkeydown={(e) => {
-									if (e.key === 'Enter' && !e.shiftKey) {
+									if (e.key === 'Tab') {
 										e.preventDefault();
-										editingIndex = null;
+										const target = e.target as HTMLTextAreaElement;
+										const start = target.selectionStart;
+										const end = target.selectionEnd;
+
+										const currentValue = (data.content[i] as string);
+										const newValue = currentValue.substring(0, start) + '    ' + currentValue.substring(end);
+										
+										data.content[i] = newValue;
+										
+										// Need to wait for Svelte to update the DOM value before setting selection
+										setTimeout(() => {
+											target.selectionStart = target.selectionEnd = start + 4;
+										}, 0);
 									}
 									if (e.key === 'Escape') {
 										editingIndex = null;
@@ -380,19 +404,6 @@
 								}}
 								class="entry-edit"
 							></textarea>
-						{:else}
-							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-							<p
-								onclick={() => (editingIndex = i)}
-								tabindex="0"
-								role="button"
-								aria-label="Edit text content"
-								onkeydown={(e) => e.key === 'Enter' && (editingIndex = i)}
-								class="entry-text"
-							>
-								{@html sanitizedContent[i]}
-							</p>
-						{/if}
 					{:else}
 						{@const file = entry as File}
 						{@const mimeType = file.mime.toString()}
@@ -446,9 +457,7 @@
 	<div class="resize-handle nw" use:resizeNote={'nw'}></div>
 	<div class="resize-handle ne" use:resizeNote={'ne'}></div>
 	<div class="resize-handle sw" use:resizeNote={'sw'}></div>
-	<div class="resize-handle se" use:resizeNote={'se'}>
-		<LucideSymbol symbol={'maximize-2'} size={14} strokeWidth={2} />
-	</div>
+	<div class="resize-handle se" use:resizeNote={'se'}></div>
 </div>
 
 <style>
@@ -538,7 +547,7 @@
 	}
 
 	.note-title {
-		font-size: 0.85rem;
+		font-size: 1rem;
 		font-weight: 600;
 		white-space: nowrap;
 		overflow: hidden;
@@ -685,6 +694,7 @@
 		flex-direction: column;
 		gap: 15px;
 		margin-top: 4px;
+		height: 100%;
 	}
 
 	.entry {
@@ -693,19 +703,15 @@
 		transition: border 0.2s ease;
 		box-sizing: border-box;
 		border: 2px dashed transparent;
+		border-radius: 10px;
+		height: 100%;
+		margin-bottom: 10px;
+		padding: 5px;
+		cursor: text;
+
 		&:hover {
 			border: 2px dashed rgba(255, 255, 255, 0.1);
-			cursor: default;
 		}
-
-		& > * {
-			cursor: text;
-		}
-	}
-
-	.entry-text {
-		width: 100%;
-		min-height: 1.2em;
 	}
 
 	.entry-edit {
@@ -720,8 +726,9 @@
 		margin: 0;
 		outline: none;
 		resize: none;
-		overflow: hidden;
+		overflow: scroll;
 		display: block;
+		cursor: text;
 	}
 
 	.note {
@@ -753,9 +760,13 @@
 
 	.note-content-wrapper {
 		flex: 1;
+		overflow: visible;
+		overscroll-behavior: none;
+	}
+
+	.note.manual-size .note-content-wrapper {
 		overflow: scroll;
 		scrollbar-width: none;
-		overscroll-behavior: none;
 	}
 
 	.resize-handle {
