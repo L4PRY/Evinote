@@ -13,15 +13,39 @@
 	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import type { Color } from '$lib/types/canvas/Color';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
+	import { position, getViewportPosition } from '$lib/stores/viewport';
+	import { zoomLevel } from '$lib/stores/zoomLevel';
+	import { get } from 'svelte/store';
 	import { validateUrl } from '$lib/parseInput';
 	import { generateSecureRandomString } from '$lib/randomString';
 	import { validateCanvasData, validateNoteData } from '$lib/canvas/validation';
+	import { notifications } from '$lib/stores/notifications';
 
 	import type { PageProps } from './$types';
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 
 	const { params, data, form }: PageProps = $props();
+	
+	// Show toast if form action returns success or error
+	$effect(() => {
+		if (form) {
+			if (form.success) {
+				notifications.add({
+					title: 'Saved',
+					message: 'Board notes updated successfully',
+					type: 'success'
+				});
+			} else if (form.error) {
+				notifications.add({
+					title: 'Error Saving',
+					message: form.error,
+					type: 'error'
+				});
+			}
+		}
+	});
+
 	let dialog = null! as HTMLDialogElement;
 	let showDialog = $state(false);
 	let settingsOpen = $state(false);
@@ -30,7 +54,7 @@
 	const { id, user, board, perms } = data;
 
 	// svelte-ignore state_referenced_locally
-	let notes = $state((data.board.notes ?? []).map(validateNoteData));
+	let notes = $state((data.board?.notes ?? []).map(validateNoteData));
 
 	function addNote() {
 		const titleInput = document.getElementById('note-title-input') as HTMLInputElement;
@@ -105,7 +129,7 @@
 				position: { x: 0, y: 0, z: 0 },
 				size: { width: 200, height: 200 },
 				color,
-				content
+				content	
 			});
 		})();
 
@@ -119,13 +143,61 @@
 	}
 
 	onMount(() => {
-		document.title = `Evinote • ${board.name}`;
+		document.title = `Evinote • ${board?.name ?? 'Loading...'}`;
 
 		dialog = document.getElementById('add-dialog') as HTMLDialogElement;
 		console.log(dialog);
 
+
+		try {
+			const saved = localStorage.getItem(`board-${id}-viewport`);
+			if (saved) {
+				const { left, top, zoom } = JSON.parse(saved);
+				if (zoom) zoomLevel.set(zoom);
+				position.setPosition(left, top);
+			}
+		} catch (err) {
+			console.error('Failed to parse viewport from localStorage:', err);
+			notifications.add({
+				title: 'Viewport Error',
+				message: 'Could not restore previous viewport position',
+				type: 'error'
+			});
+		}
+
+		// Check if data loaded correctly or has an error
+		if (data.error) {
+			notifications.add({
+				title: 'Board Error',
+				message: data.error,
+				type: 'error'
+			});
+		} else if (!data.board) {
+			notifications.add({
+				title: 'Loading Issue',
+				message: 'Some board data might be missing.',
+				type: 'error'
+			});
+		}
+
 		// Expose notes to window for debugging in dev mode
 		(window as any).notes = notes;
+		
+		const saveOnUnload = () => {
+			const currentPosition = getViewportPosition();
+			const currentZoom = get(zoomLevel);
+			localStorage.setItem(`board-${id}-viewport`, JSON.stringify({
+				left: currentPosition.left,
+				top: currentPosition.top,
+				zoom: currentZoom
+			}));
+			console.log('saved viewport/zoom to localStorage', currentPosition, currentZoom);
+		};
+
+		window.addEventListener('beforeunload', saveOnUnload);
+		return () => {
+			window.removeEventListener('beforeunload', saveOnUnload);
+		};
 	});
 
 	// function saveNotes() {
@@ -150,7 +222,7 @@
 
 <!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
 
-{#if board.owner === user?.id || perms?.perm === 'Write'}
+{#if board && (board.owner === user?.id || perms?.perm === 'Write')}
 	<div class="note-creator">
 		<FancyButton1 onclick={() => (showDialog = true)} style="width: 100px">Add Note</FancyButton1>
 		<form method="post" use:enhance>
@@ -216,7 +288,7 @@
 	/>
 </Canvas> -->
 <Canvas
-	data={validateCanvasData(data.board.canvas)}
+	data={validateCanvasData(data.board?.canvas)}
 >
 	{#each notes as _, i}
 		{console.log('added note')}
@@ -242,10 +314,10 @@
 <!-- Settings Sidebar -->
 <SettingsSidebar
 	bind:open={settingsOpen}
-	board={data.board}
+	board={data.board!}
 	contributors={(data.contributors ?? []).map(c => ({ ...c, permission: c.permission ?? '' }))}
 	canModify={data.canModify ?? false}
-	isOwner={data.user?.id === data.board.owner}
+	isOwner={data.user?.id === data.board?.owner}
 	boardId={data.id}
 />
 
