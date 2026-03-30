@@ -65,18 +65,24 @@
 		</div>
 		<div class="info">
 			<h3>{name}</h3>
-			<p>
-				<LucideSymbol symbol="Heart" size={16} strokeWidth={1.5} />
-				{likes}
-			</p>
 			<div class="arrow">
 				<p>
 					Go to board
-					<LucideSymbol symbol="ArrowRight" size={20} strokeWidth={1.5} />
+					<LucideSymbol symbol="ArrowRight" size={20} strokeWidth={2} />
 				</p>
 			</div>
 		</div>
 
+		<div class="stats">
+			<p>
+				<LucideSymbol symbol="Heart" size={20} strokeWidth={2} />
+				{likes}
+			</p>
+			<p>
+				<LucideSymbol symbol="Eye" size={20} strokeWidth={2} />
+				{views}
+			</p>
+		</div>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
@@ -253,6 +259,33 @@
 	.actions-menu.is-open {
 		background: var(--default-bg-color);
 		border: 1px solid transparent;
+	}
+
+	.stats{
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		width: fit-content;
+		padding: 0.2rem;
+		padding-left: 0.5rem;
+		padding-right: 0.5rem;
+		align-items: center;
+		background: var(--default-bg-color-transparent);
+		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
+		border-radius: 8px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		opacity: 0;
+		transition: all 0.2s ease;
+		overflow: hidden;
+	}
+
+	.dashboard-box:hover .stats {
+		opacity: 1;
+		border-color: rgba(255, 255, 255, 0.2);
 	}
 
 	.icon-btn {
