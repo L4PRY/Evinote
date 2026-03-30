@@ -693,21 +693,22 @@
 		display: flex;
 		flex-direction: column;
 		gap: 15px;
-		margin-top: 4px;
 		height: 100%;
+		overflow: hidden;
 	}
 
 	.entry {
 		word-wrap: break-word;
-		margin: 4px 8px;
+		margin: 10px 10px;
 		transition: border 0.2s ease;
 		box-sizing: border-box;
 		border: 2px dashed transparent;
 		border-radius: 10px;
 		height: 100%;
-		margin-bottom: 10px;
+		margin-bottom: 8px;
 		padding: 5px;
 		cursor: text;
+
 
 		&:hover {
 			border: 2px dashed rgba(255, 255, 255, 0.1);
@@ -715,6 +716,8 @@
 	}
 
 	.entry-edit {
+		box-sizing: border-box;
+		position: relative;
 		width: 100%;
 		background: transparent;
 		border: none;
@@ -723,7 +726,6 @@
 		font-size: 1rem;
 		line-height: inherit;
 		padding: 0;
-		margin: 0;
 		outline: none;
 		resize: none;
 		overflow: scroll;
