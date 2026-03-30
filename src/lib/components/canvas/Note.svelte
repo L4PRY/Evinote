@@ -104,6 +104,86 @@
 			}
 		};
 	}
+	function resizeNote(node: HTMLElement, direction: string) {
+		let isResizing = false;
+		let startClientX = 0;
+		let startClientY = 0;
+		let startWidth = 0;
+		let startHeight = 0;
+		let startX = 0;
+		let startY = 0;
+
+		function onPointerDown(e: PointerEvent) {
+			if (e.button !== 0) return;
+			isResizing = true;
+			startClientX = e.clientX;
+			startClientY = e.clientY;
+			startWidth = noteSize.width;
+			startHeight = noteSize.height;
+			startX = notePosition.x;
+			startY = notePosition.y;
+
+			node.setPointerCapture(e.pointerId);
+			e.stopPropagation();
+			e.preventDefault();
+		}
+
+		function onPointerMove(e: PointerEvent) {
+			if (!isResizing) return;
+
+			const dx = (e.clientX - startClientX) / $zoomLevel;
+			const dy = (e.clientY - startClientY) / $zoomLevel;
+
+			let newWidth = startWidth;
+			let newHeight = startHeight;
+			let newX = startX;
+			let newY = startY;
+
+			// Horizontal resizing logic
+			if (direction.includes('e')) {
+				newWidth = Math.max(150, Math.min(startWidth + dx, 500));
+			} else if (direction.includes('w')) {
+				const maxDx = startWidth - 150;
+				const clampedDx = Math.min(dx, maxDx);
+				newWidth = startWidth - clampedDx;
+				newX = startX + clampedDx;
+			}
+
+			// Vertical resizing logic
+			if (direction.includes('s')) {
+				newHeight = Math.max(100, startHeight + dy);
+			} else if (direction.includes('n')) {
+				const maxDy = startHeight - 100;
+				const clampedDy = Math.min(dy, maxDy);
+				newHeight = startHeight - clampedDy;
+				newY = startY + clampedDy;
+			}
+
+			noteSize = { width: newWidth, height: newHeight };
+			notePosition = { x: newX, y: newY, z: notePosition.z };
+			data = { ...data, size: noteSize, position: notePosition };
+		}
+
+		function onPointerUp(e: PointerEvent) {
+			if (!isResizing) return;
+			isResizing = false;
+			node.releasePointerCapture(e.pointerId);
+		}
+
+		node.addEventListener('pointerdown', onPointerDown);
+		window.addEventListener('pointermove', onPointerMove);
+		window.addEventListener('pointerup', onPointerUp);
+		window.addEventListener('pointercancel', onPointerUp);
+
+		return {
+			destroy() {
+				node.removeEventListener('pointerdown', onPointerDown);
+				window.removeEventListener('pointermove', onPointerMove);
+				window.removeEventListener('pointerup', onPointerUp);
+				window.removeEventListener('pointercancel', onPointerUp);
+			}
+		};
+	}
 </script>
 
 <div
@@ -131,51 +211,67 @@
 	<h1>{data.title}</h1>
 	<code>[{Math.floor(notePosition.x)}x {Math.floor(notePosition.y)}y {notePosition.z}z]</code>
 	<code>[{Math.floor(noteSize.width)}w x {Math.floor(noteSize.height)}h]</code>
-	<div class="note-content">
-		{#each sanitizedContent as entry, i}
-			<div class="entry">
-				{#if typeof entry === 'string'}
-					<p>{@html entry}</p>
-				{:else}
-					{@const file = entry as File}
-					{@const mimeType = file.mime.toString()}
-					{@const url = file.location.toString()}
-
-					<!-- todo later, get and check types via the server, then validate if its on the allowlist, if not then do something to stop it from loading idk -->
-					{#if mimeType.startsWith('image/')}
-						<img src={url} alt="" loading="lazy" />
-					{:else if mimeType.startsWith('video/')}
-						<video crossorigin="anonymous" controls preload="metadata">
-							<source src={url} type={mimeType} />
-							<track kind="captions" />
-							Your browser does not support the video tag.
-						</video>
-					{:else if mimeType.startsWith('audio/')}
-						<audio controls preload="metadata" src={url}>
-							Your browser does not support the audio element.
-						</audio>
-					{:else if mimeType === 'application/pdf'}
-						<object
-							data={url}
-							aria-labelledby="note"
-							type="application/pdf"
-							width="100%"
-							height="500px"
-						>
-							<p>
-								Unable to display PDF. <button onclick={() => window.open(url, '_blank')}
-									>Download</button
-								> instead.
-							</p>
-						</object>
-					{:else if mimeType.startsWith('text/')}
-						<iframe src={url} title="Text content" sandbox="allow-same-origin"></iframe>
+	<div class="note-content-wrapper">
+		<div class="note-content">
+			{#each sanitizedContent as entry, i}
+				<div class="entry">
+					{#if typeof entry === 'string'}
+						<p>{@html entry}</p>
 					{:else}
-						<button onclick={() => window.open(url, '_blank')}>Download file ({mimeType})</button>
+						{@const file = entry as File}
+						{@const mimeType = file.mime.toString()}
+						{@const url = file.location.toString()}
+
+						<!-- todo later, get and check types via the server, then validate if its on the allowlist, if not then do something to stop it from loading idk -->
+						{#if mimeType.startsWith('image/')}
+							<img src={url} alt="" loading="lazy" />
+						{:else if mimeType.startsWith('video/')}
+							<video crossorigin="anonymous" controls preload="metadata">
+								<source src={url} type={mimeType} />
+								<track kind="captions" />
+								Your browser does not support the video tag.
+							</video>
+						{:else if mimeType.startsWith('audio/')}
+							<audio controls preload="metadata" src={url}>
+								Your browser does not support the audio element.
+							</audio>
+						{:else if mimeType === 'application/pdf'}
+							<object
+								data={url}
+								aria-labelledby="note"
+								type="application/pdf"
+								width="100%"
+								height="500px"
+							>
+								<p>
+									Unable to display PDF. <button onclick={() => window.open(url, '_blank')}
+										>Download</button
+									> instead.
+								</p>
+							</object>
+						{:else if mimeType.startsWith('text/')}
+							<iframe src={url} title="Text content" sandbox="allow-same-origin"></iframe>
+						{:else}
+							<button onclick={() => window.open(url, '_blank')}>Download file ({mimeType})</button>
+						{/if}
 					{/if}
-				{/if}
-			</div>
-		{/each}
+				</div>
+			{/each}
+		</div>
+	</div>
+
+	<!-- Edge resize handles -->
+	<div class="resize-handle n" use:resizeNote={'n'}></div>
+	<div class="resize-handle s" use:resizeNote={'s'}></div>
+	<div class="resize-handle e" use:resizeNote={'e'}></div>
+	<div class="resize-handle w" use:resizeNote={'w'}></div>
+
+	<!-- Corner resize handles -->
+	<div class="resize-handle nw" use:resizeNote={'nw'}></div>
+	<div class="resize-handle ne" use:resizeNote={'ne'}></div>
+	<div class="resize-handle sw" use:resizeNote={'sw'}></div>
+	<div class="resize-handle se" use:resizeNote={'se'}>
+		<LucideSymbol symbol={'maximize-2'} size={14} strokeWidth={2} />
 	</div>
 </div>
 
@@ -211,20 +307,56 @@
 		border-radius: 0 0 5px 5px;
 		min-width: 150px;
 		max-width: 500px;
-		min-height: min(100px, max-content);
+		min-height: 100px;
 		max-height: max-content;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.note-content-wrapper {
+		flex: 1;
 		overflow: scroll;
-		resize: both;
 		scrollbar-width: none;
 		overscroll-behavior: none;
-		&::-webkit-resizer {
-			background: transparent;
-			border-right: 2px solid white;
-			border-bottom: 2px solid white;
-			border-radius: 0 0 5px 0;
-			&:focus {
-				border-color: var(--default-bg-color);
-			}
+	}
+
+	.resize-handle {
+		position: absolute;
+		z-index: 100;
+		background: transparent;
+		transition: background 0.2s;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.05);
+		}
+	}
+
+	/* Edge handles */
+	.resize-handle.n { top: 0; left: 8px; right: 8px; height: 6px; cursor: ns-resize; }
+	.resize-handle.s { bottom: 0; left: 8px; right: 8px; height: 6px; cursor: ns-resize; }
+	.resize-handle.e { top: 8px; bottom: 8px; right: 0; width: 6px; cursor: ew-resize; }
+	.resize-handle.w { top: 8px; bottom: 8px; left: 0; width: 6px; cursor: ew-resize; }
+
+	/* Corner handles */
+	.resize-handle.nw { top: 0; left: 0; width: 12px; height: 12px; cursor: nwse-resize; }
+	.resize-handle.ne { top: 0; right: 0; width: 12px; height: 12px; cursor: nesw-resize; }
+	.resize-handle.sw { bottom: 0; left: 0; width: 12px; height: 12px; cursor: nesw-resize; }
+	.resize-handle.se {
+		bottom: 0;
+		right: 0;
+		width: 20px;
+		height: 20px;
+		cursor: nwse-resize;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: rgba(255, 255, 255, 0.5);
+		transition: color 0.2s;
+
+		&:hover {
+			color: white;
+			background: rgba(255, 255, 255, 0.1);
 		}
 	}
 
