@@ -13,6 +13,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	const { user, perms, board } = parentData;
 	const { id } = params;
 
+	if (!board) {
+		return { contributors: [], canModify: false };
+	}
+
 	const contributors = user
 		? await db
 				.select({ username: table.User.username, id: table.User.id, permission: table.Permissions.perm })
@@ -56,11 +60,19 @@ export const actions: Actions = {
 
 		// diff notes on server and sent by client here
 
-		if (checkUserCanModify(board, user, perms))
-			await db
-				.update(table.Board)
-				.set({ notes: diffNotes(board.notes as NoteData[], notes) })
-				// .set({ notes })
-				.where(eq(table.Board.id, parseInt(params.id)));
+		if (checkUserCanModify(board, user, perms)) {
+			try {
+				await db
+					.update(table.Board)
+					.set({ notes: diffNotes(board.notes as NoteData[], notes) })
+					.where(eq(table.Board.id, parseInt(params.id)));
+				return { success: true };
+			} catch (err) {
+				routeLogger.error(`Failed to update board ${params.id}: ${err}`);
+				return { error: 'Failed to save changes to the database' };
+			}
+		}
+
+		return { error: 'You do not have permission to modify this board' };
 	}
 };
