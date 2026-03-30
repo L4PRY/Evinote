@@ -309,7 +309,7 @@
 	aria-expanded={settingsOpen}
 	class:active={settingsOpen}
 >
-	<LucideSymbol symbol="Settings" size={20} />
+	<LucideSymbol symbol="Settings" size={20} strokeWidth={2} />
 
 </button>
 
