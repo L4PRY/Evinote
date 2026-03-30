@@ -253,8 +253,6 @@
 		<!-- Header -->
 		<div class="sidebar-header">
 			<div class="header-title">
-				<LucideSymbol symbol="Settings" size={18} />
-
 				<span>Board Settings</span>
 			</div>
 
@@ -551,7 +549,8 @@
 						<h3 class="section-title">Members</h3>
 						{#if canModify}
 							<button class="btn-secondary small" onclick={() => (showAddContributorDialog = true)}>
-								<LucideSymbol symbol="Plus" size={14} /> Add
+								<LucideSymbol symbol="Plus" size={16} strokeWidth={2}/> 
+								<span style="font-size: 0.8rem; font-weight: 700;">Add</span>
 							</button>
 
 						{/if}
@@ -746,6 +745,7 @@
 	.board-name-badge {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 8px;
 		padding: 10px 20px;
 		border-bottom: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.06));
@@ -773,6 +773,7 @@
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		flex-shrink: 0;
+		float: right;
 	}
 
 	/* Tabs */
@@ -987,8 +988,13 @@
 	}
 
 	.btn-secondary.small {
+		display: flex;
 		padding: 5px 12px;
 		font-size: 0.76rem;
+		gap: 4px;
+		align-items: center;
+		justify-content: center;
+
 	}
 
 	.btn-danger {
@@ -1086,6 +1092,10 @@
 		font-weight: 600;
 		color: var(--default-text-color);
 		margin: 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
 	}
 
 	.contributor-list {
