@@ -290,9 +290,10 @@
 <Canvas
 	data={validateCanvasData(data.board?.canvas)}
 >
+	{@const gridSnap = 5}
 	{#each notes as _, i}
 		{console.log('added note')}
-		<Note bind:data={notes[i]} remove={() => notes.splice(i, 1)} />
+		<Note bind:data={notes[i]} {gridSnap} remove={() => notes.splice(i, 1)} />
 	{/each}
 </Canvas>
 <MiniViewport {notes} />

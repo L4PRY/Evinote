@@ -9,7 +9,12 @@
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { canvasSize } from '$lib/stores/viewport';
 
-	let { data = $bindable(), remove }: { data: NoteData; remove: () => void } = $props();
+	let { data = $bindable(), remove, gridSnap = 5 }: { data: NoteData; remove: () => void; gridSnap?: number } = $props();
+	
+	const MIN_WIDTH = 150;
+	const MAX_WIDTH = 800;
+	const MIN_HEIGHT = 100;
+	const MAX_HEIGHT = 800;
 
 	let note: HTMLDivElement;
 
@@ -19,6 +24,7 @@
 	let notePosition = $state(data.position ?? { x: 0, y: 0, z: 1 });
 	let noteSize = $state(data.size ?? { width: 200, height: 200 });
 	let color = $state('var(--default-bg-color)');
+	let isCurrentlyDragging = $state(false);
 
 	let sanitizedContent = $derived(
 		data.content?.map(entry =>
@@ -49,6 +55,7 @@
 			if (e.button !== 0) return;
 
 			isDragging = true;
+			isCurrentlyDragging = true;
 			startClientX = e.clientX;
 			startClientY = e.clientY;
 			startNoteX = notePosition.x;
@@ -71,8 +78,8 @@
 			let newX = startNoteX + physicalDx / $zoomLevel;
 			let newY = startNoteY + physicalDy / $zoomLevel;
 
-			newX = Math.round(newX / 5) * 5;
-			newY = Math.round(newY / 5) * 5;
+			newX = Math.round(newX / gridSnap) * gridSnap;
+			newY = Math.round(newY / gridSnap) * gridSnap;
 
 			const w = Math.max(0, $canvasSize.width - node.offsetWidth);
 			const h = Math.max(0, $canvasSize.height - node.offsetHeight);
@@ -87,6 +94,7 @@
 		function onPointerUp(e: PointerEvent) {
 			if (!isDragging) return;
 			isDragging = false;
+			isCurrentlyDragging = false;
 			node.releasePointerCapture(e.pointerId);
 		}
 
@@ -141,23 +149,45 @@
 
 			// Horizontal resizing logic
 			if (direction.includes('e')) {
-				newWidth = Math.max(150, Math.min(startWidth + dx, 500));
+				newWidth = Math.max(MIN_WIDTH, Math.min(startWidth + dx, MAX_WIDTH));
 			} else if (direction.includes('w')) {
-				const maxDx = startWidth - 150;
+				const maxDx = startWidth - MIN_WIDTH;
 				const clampedDx = Math.min(dx, maxDx);
-				newWidth = startWidth - clampedDx;
-				newX = startX + clampedDx;
+				const potentialWidth = startWidth - clampedDx;
+				
+				if (potentialWidth > MAX_WIDTH) {
+					const excess = potentialWidth - MAX_WIDTH;
+					newWidth = MAX_WIDTH;
+					newX = startX + clampedDx + excess;
+				} else {
+					newWidth = potentialWidth;
+					newX = startX + clampedDx;
+				}
 			}
 
 			// Vertical resizing logic
 			if (direction.includes('s')) {
-				newHeight = Math.max(100, startHeight + dy);
+				newHeight = Math.max(MIN_HEIGHT, Math.min(startHeight + dy, MAX_HEIGHT));
 			} else if (direction.includes('n')) {
-				const maxDy = startHeight - 100;
+				const maxDy = startHeight - MIN_HEIGHT;
 				const clampedDy = Math.min(dy, maxDy);
-				newHeight = startHeight - clampedDy;
-				newY = startY + clampedDy;
+				const potentialHeight = startHeight - clampedDy;
+				
+				if (potentialHeight > MAX_HEIGHT) {
+					const excess = potentialHeight - MAX_HEIGHT;
+					newHeight = MAX_HEIGHT;
+					newY = startY + clampedDy + excess;
+				} else {
+					newHeight = potentialHeight;
+					newY = startY + clampedDy;
+				}
 			}
+
+			// Apply snapping to resizing results
+			newWidth = Math.round(newWidth / gridSnap) * gridSnap;
+			newHeight = Math.round(newHeight / gridSnap) * gridSnap;
+			newX = Math.round(newX / gridSnap) * gridSnap;
+			newY = Math.round(newY / gridSnap) * gridSnap;
 
 			noteSize = { width: newWidth, height: newHeight };
 			notePosition = { x: newX, y: newY, z: notePosition.z };
@@ -189,6 +219,7 @@
 <div
 	use:dragNote
 	class="note"
+	class:dragging={isCurrentlyDragging}
 	title={data.title}
 	id={data.id ?? data.title}
 	style:background-color={color}
@@ -202,15 +233,19 @@
 	style:height={noteSize.height + 'px'}
 >
 	<div class="top-container">
-		<div class="handle" unselectable="on">Drag me</div>
-		<button onclick={remove} aria-label="Delete note" title="Delete note"
-			>Delete me <LucideSymbol symbol={'x'} size={42} strokeWidth={1.5} /></button
+		<h1 class="note-title">{data.title}</h1>
+		<div class="handle" unselectable="on"></div>
+		<button class="delete-btn" onclick={remove} aria-label="Delete note" title="Delete note"
+			><LucideSymbol symbol={'X'} size={16} strokeWidth={2} /></button
 		>
 	</div>
 
-	<h1>{data.title}</h1>
-	<code>[{Math.floor(notePosition.x)}x {Math.floor(notePosition.y)}y {notePosition.z}z]</code>
-	<code>[{Math.floor(noteSize.width)}w x {Math.floor(noteSize.height)}h]</code>
+	<div class="note-meta">
+		<div class="note-coordinates">
+			<code>[{Math.floor(notePosition.x)}x {Math.floor(notePosition.y)}y {notePosition.z}z]</code>
+			<code>[{Math.floor(noteSize.width)}w x {Math.floor(noteSize.height)}h]</code>
+		</div>
+	</div>
 	<div class="note-content-wrapper">
 		<div class="note-content">
 			{#each sanitizedContent as entry, i}
@@ -276,14 +311,90 @@
 </div>
 
 <style>
+	* {
+		cursor: default;
+	}
+
+	.top-container {
+		position: absolute;
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
+		height: 30px;
+		overflow: visible;
+	}
+
 	.handle {
-		background-color: oklch(28% 19% 287deg);
-		text-align: center;
+		position: absolute;
+		left: 50%;
+		top: 10px;
+		transform: translateX(-50%);
+		width: 40px;
+		height: 10px;
+		background-color: rgba(255, 255, 255, 0.2);
+		border-radius: 999px;
 		cursor: grab;
-		color: white;
+		transition: background-color 0.2s;
+		z-index: 50;
+		margin-left: 12.5px;
+		margin-right: 12.5px;
+
 		&:hover {
-			background-color: oklch(55% 45% 285deg);
+			background-color: rgba(255, 255, 255, 0.4);
 		}
+	}
+
+	.delete-btn {
+		position: absolute;
+		right: 5px;
+		top: 5px;
+		border: none;
+		color: rgba(255, 255, 255, 0.5);
+		cursor: pointer;
+		border-radius: 50%;
+		display: flex;
+		width: 20px;
+		height: 20px;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s;
+		z-index: 10;
+
+		&:hover {
+			color: white;
+			background-color: rgba(255, 255, 255, 0.1);
+		}
+	}
+
+	.note-title {
+		position: absolute;
+		top: 5px;
+		left: 12.5px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		max-width: 35%;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		opacity: 0.8;
+		z-index: 10;
+		pointer-events: none;
+	}
+
+	.note-meta {
+		margin-top: 30px;
+		padding: 0 16px 8px 16px;
+	}
+
+	.note-coordinates {
+		display: flex;
+		gap: 8px;
+		opacity: 0.5;
+		margin-top: 4px;
+	}
+
+	.note-coordinates code {
+		font-size: 0.7rem;
 	}
 
 	.note-content {
@@ -293,25 +404,38 @@
 	}
 
 	.entry {
-		border-top: var(--default-border);
+		border-top: 1px solid rgba(255, 255, 255, 0.05);
 		word-wrap: break-word;
+		padding: 8px 16px;
+	}
+
+	.entry:first-child {
+		border-top: none;
 	}
 
 	.note {
 		background-color: var(--default-bg-color);
-		box-shadow: 0 0 10px var(--default-text-color);
 		margin-bottom: 16px;
 		width: fit-content;
 		height: fit-content;
 		position: absolute;
-		border-radius: 0 0 5px 5px;
+		border-radius: 16px;
 		min-width: 150px;
-		max-width: 500px;
+		max-width: 800px;
 		min-height: 100px;
-		max-height: max-content;
+		max-height: 800px;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+
+		&.dragging {
+			z-index: 1000 !important;
+			transform: scale(1.02);
+			box-shadow: 0 10px 20px 5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+			opacity: 0.95;
+			cursor: grabbing !important;
+		}
 	}
 
 	.note-content-wrapper {
@@ -324,12 +448,6 @@
 	.resize-handle {
 		position: absolute;
 		z-index: 100;
-		background: transparent;
-		transition: background 0.2s;
-
-		&:hover {
-			background: rgba(255, 255, 255, 0.05);
-		}
 	}
 
 	/* Edge handles */
@@ -339,26 +457,10 @@
 	.resize-handle.w { top: 8px; bottom: 8px; left: 0; width: 6px; cursor: ew-resize; }
 
 	/* Corner handles */
-	.resize-handle.nw { top: 0; left: 0; width: 12px; height: 12px; cursor: nwse-resize; }
-	.resize-handle.ne { top: 0; right: 0; width: 12px; height: 12px; cursor: nesw-resize; }
-	.resize-handle.sw { bottom: 0; left: 0; width: 12px; height: 12px; cursor: nesw-resize; }
-	.resize-handle.se {
-		bottom: 0;
-		right: 0;
-		width: 20px;
-		height: 20px;
-		cursor: nwse-resize;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: rgba(255, 255, 255, 0.5);
-		transition: color 0.2s;
-
-		&:hover {
-			color: white;
-			background: rgba(255, 255, 255, 0.1);
-		}
-	}
+	.resize-handle.nw { top: 0; left: 0; width: 10px; height: 10px; cursor: nwse-resize; }
+	.resize-handle.ne { top: 0; right: 0; width: 10px; height: 10px; cursor: nesw-resize; }
+	.resize-handle.sw { bottom: 0; left: 0; width: 10px; height: 10px; cursor: nesw-resize; }
+	.resize-handle.se { bottom: 0; right: 0; width: 10px; height: 10px; cursor: nwse-resize; }		
 
 	.note > * {
 		/*color: var(--default-text-color);*/
