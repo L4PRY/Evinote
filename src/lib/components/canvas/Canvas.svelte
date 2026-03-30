@@ -110,9 +110,30 @@
 		}
 	});
 
+	// Check if an element or its ancestors are scrollable
+	function isScrollableAction(target: HTMLElement | null, deltaY: number): boolean {
+		let current = target;
+		while (current && current !== canvasElement) {
+			const style = window.getComputedStyle(current);
+			const isScrollable = style.overflowY === 'auto' || style.overflowY === 'scroll';
+			const canScroll =
+				deltaY > 0
+					? current.scrollHeight > current.scrollTop + current.clientHeight
+					: current.scrollTop > 0;
+
+			if (isScrollable && canScroll) return true;
+			current = current.parentElement;
+		}
+		return false;
+	}
+
 	// Zoom with scroll wheel, zooming toward cursor position
 	function handleWheel(e: WheelEvent) {
-		if (shiftHeld) return; // Only zoom when Shift is held
+		if (shiftHeld) return; // Stop zooming when shift is held (allow horizontal scroll)
+
+		// If cursor is over a scrollable box, don't zoom
+		if (isScrollableAction(e.target as HTMLElement, e.deltaY)) return;
+
 		e.preventDefault();
 
 		if (document.querySelector('.note')?.getAttribute('data-neodrag-state') === 'dragging') return;
@@ -311,7 +332,7 @@
 		box-sizing: border-box;
 		/* Enable scrolling with subtle scrollbars */
 		overflow: scroll;
-		scrollbar-width: thin;
+		scrollbar-width: none;
 		scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
 		/* Prevent text selection while dragging */
 		user-select: none;
@@ -320,7 +341,7 @@
 		touch-action: none;
 		/* Cursor feedback */
 		cursor: grab;
-		overscroll-behavior: none;
+		overscroll-behavior: auto;
 	}
 
 	#canvas::-webkit-scrollbar {
@@ -356,5 +377,8 @@
 		position: relative;
 		min-width: 100%;
 		min-height: 100%;
+		box-sizing: border-box;
+		box-shadow:inset 0px 0px 0px 10px var(--default-bg-color);
+		border-radius: 20px;
 	}
 </style>

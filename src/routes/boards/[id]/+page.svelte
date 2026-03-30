@@ -89,7 +89,7 @@
 			position: { x: contextMenuData.canvasX, y: contextMenuData.canvasY, z: 0 },
 			size: { width: 200, height: 200 },
 			color,
-			content: []
+			content: ['']
 		});
 		
 		contextMenuData.show = false;
@@ -168,13 +168,15 @@
 		(async () => {
 			const content = await parseContent(contentStr);
 
+			// Prepend an empty text entry if the parsed content has no text entries
+			const contentWithDefault = content.length === 0 ? [''] : content;
 			notes.push({
 				id: generateSecureRandomString(),
 				title,
 				position: { x: 0, y: 0, z: 0 },
 				size: { width: 200, height: 200 },
 				color,
-				content	
+				content: contentWithDefault
 			});
 		})();
 
