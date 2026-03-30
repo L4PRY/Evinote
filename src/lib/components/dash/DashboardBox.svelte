@@ -5,7 +5,6 @@
 		src = '',
 		type = 'board',
 		likes = 0,
-		views = 0,
 		onclick
 	}: {
 		href?: any;
@@ -13,7 +12,6 @@
 		src?: string;
 		type?: 'createNew' | 'board';
 		likes?: number;
-		views?: number;
 		onclick?: (e: MouseEvent) => void;
 	} = $props();
 
@@ -77,10 +75,6 @@
 			<p>
 				<LucideSymbol symbol="Heart" size={20} strokeWidth={2} />
 				{likes}
-			</p>
-			<p>
-				<LucideSymbol symbol="Eye" size={20} strokeWidth={2} />
-				{views}
 			</p>
 		</div>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -268,10 +262,6 @@
 		z-index: 20;
 		display: flex;
 		flex-direction: column;
-		width: fit-content;
-		padding: 0.2rem;
-		padding-left: 0.5rem;
-		padding-right: 0.5rem;
 		align-items: center;
 		background: var(--default-bg-color-transparent);
 		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
@@ -281,6 +271,9 @@
 		opacity: 0;
 		transition: all 0.2s ease;
 		overflow: hidden;
+		width: 50px;
+		height: 32px;
+		padding: 0.2rem;
 	}
 
 	.dashboard-box:hover .stats {
