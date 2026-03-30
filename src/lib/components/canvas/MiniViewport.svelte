@@ -11,7 +11,7 @@
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { bounds, position, canvasSize, clampScrollPosition, isMiniViewportDragging } from '$lib/stores/viewport';
 
-	let { notes = [] as NoteData[], size = 200 } = $props();
+	let { notes = [] as NoteData[], size = 200, viewport = $bindable() } = $props();
 
 	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
 	let isMiniDragging = $state(false);
@@ -54,6 +54,11 @@
 
 	$effect(() => {
 		$inspect('notebounds update ran');
+		viewport = {
+			left: $position.left,
+			top: $position.top,
+			zoom: $zoomLevel
+		};
 		noteBounds = notes.map(note => {
 			const x = note?.position?.x ?? 0;
 			const y = note?.position?.y ?? 0;

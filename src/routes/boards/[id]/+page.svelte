@@ -25,6 +25,7 @@
 	let dialog = null! as HTMLDialogElement;
 	let showDialog = $state(false);
 	let settingsOpen = $state(false);
+	let viewport = $state();
 
 	// svelte-ignore state_referenced_locally
 	const { id, user, board, perms } = data;
@@ -124,9 +125,20 @@
 		dialog = document.getElementById('add-dialog') as HTMLDialogElement;
 		console.log(dialog);
 
+		if (localStorage.getItem(`board-${id}-viewport`)) {
+			viewport = JSON.parse(localStorage.getItem(`board-${id}-viewport`)!);
+		}
+
 		// Expose notes to window for debugging in dev mode
 		(window as any).notes = notes;
+
+		window.addEventListener('beforeunload', () => {
+			localStorage.setItem(`board-${id}-viewport`, JSON.stringify(viewport));
+			console.log('saved viewport to localStorage', viewport);
+		});
 	});
+
+	// set localstorage variable on unload
 
 	// function saveNotes() {
 	// 	// ok how do i
@@ -142,6 +154,8 @@
 	$effect(() => {
 		if (notes.length > 0) initializeZIndex(notes);
 		$inspect(notes);
+		$inspect(viewport);
+		// localStorage.setItem(`board-${id}-viewport`, JSON.stringify(viewport));
 	});
 </script>
 

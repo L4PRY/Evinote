@@ -3,14 +3,23 @@ import * as table from '$lib/server/db/schema';
 import { db } from '$lib/server/db/index';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { desc, eq } from 'drizzle-orm';
+import { count, desc, eq } from 'drizzle-orm';
 
 export const load = async () => {
 	const user = auth.requireLogin();
-	const boards = db
-		.select()
+	const boards = await db
+		.select({
+			id: table.Board.id,
+			name: table.Board.name,
+			updated: table.Board.updated,
+			type: table.Board.type,
+			owner: table.Board.owner,
+			likes: count(table.BoardLikes.board)
+		})
 		.from(table.Board)
 		.where(eq(table.Board.owner, user.id))
+		.leftJoin(table.BoardLikes, eq(table.BoardLikes.board, table.Board.id))
+		.groupBy(table.Board.id)
 		.orderBy(desc(table.Board.updated));
 
 	return {
@@ -20,7 +29,7 @@ export const load = async () => {
 };
 
 export const actions: Actions = {
-  logout: async event => {
+	logout: async event => {
 		if (!event.locals.session) {
 			return fail(401);
 		}

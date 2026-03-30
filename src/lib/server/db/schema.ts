@@ -8,7 +8,8 @@ import {
 	uuid,
 	varchar,
 	pgEnum,
-	pgTable
+	pgTable,
+	uniqueIndex
 } from 'drizzle-orm/pg-core';
 import type { CanvasData } from '$lib/types/canvas/CanvasData';
 import type { NoteData } from '$lib/types/canvas/NoteData';
@@ -74,6 +75,26 @@ export const Board = pgTable(
 		notes: jsonb('notes').$type<NoteData[]>()
 	},
 	table => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
+);
+
+export const BoardLikes = pgTable(
+	'board_likes',
+	{
+		board: serial('board_id')
+			.references(() => Board.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			})
+			.notNull(),
+		user: serial('user_id')
+			.references(() => User.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			})
+			.notNull(),
+		at: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [uniqueIndex('board_likes_user').on(table.board, table.user)]
 );
 
 export const Files = pgTable(
