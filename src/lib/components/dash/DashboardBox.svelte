@@ -262,6 +262,7 @@
 		z-index: 20;
 		display: flex;
 		flex-direction: column;
+		justify-content: center;
 		align-items: center;
 		background: var(--default-bg-color-transparent);
 		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
