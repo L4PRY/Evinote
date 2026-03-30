@@ -9,10 +9,12 @@
 
 	const {
 		children,
-		data
+		data,
+		contextmenu
 	}: {
 		children: Snippet;
 		data: CanvasData;
+		contextmenu?: (e: MouseEvent, canvasX: number, canvasY: number) => void;
 	} = $props();
 
 	// add a way for the current visible viewport and canvas to be movable indirectly
@@ -79,6 +81,18 @@
 		isDragging = false;
 		isCanvasDragging = false;
 		canvasElement.releasePointerCapture(e.pointerId);
+	}
+
+	function handleContextMenu(e: MouseEvent) {
+		if (contextmenu) {
+			e.preventDefault();
+			const rect = canvasElement.getBoundingClientRect();
+			const cursorX = e.clientX - rect.left;
+			const cursorY = e.clientY - rect.top;
+			const canvasX = (canvasElement.scrollLeft + cursorX) / $zoomLevel;
+			const canvasY = (canvasElement.scrollTop + cursorY) / $zoomLevel;
+			contextmenu(e, canvasX, canvasY);
+		}
 	}
 
 	// Smooth zoom state
@@ -264,6 +278,7 @@
 	onpointermove={handlePointerMove}
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
+	oncontextmenu={handleContextMenu}
 	onwheel={handleWheel}
 	onscroll={handleScroll}
 	class:dragging={isDragging}

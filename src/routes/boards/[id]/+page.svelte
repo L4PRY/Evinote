@@ -50,6 +50,51 @@
 	let showDialog = $state(false);
 	let settingsOpen = $state(false);
 
+	let contextMenuData = $state<{ show: boolean; x: number; y: number; canvasX: number; canvasY: number }>({
+		show: false,
+		x: 0,
+		y: 0,
+		canvasX: 0,
+		canvasY: 0
+	});
+
+	let newNoteTitle = $state('');
+	let newNoteColor = $state('#1e1e1e');
+
+	function handleCanvasContextMenu(e: MouseEvent, canvasX: number, canvasY: number) {
+		contextMenuData = {
+			show: true,
+			x: e.clientX,
+			y: e.clientY,
+			canvasX,
+			canvasY
+		};
+		newNoteTitle = '';
+		newNoteColor = '#1e1e1e';
+	}
+
+	function closeContextMenu() {
+		contextMenuData.show = false;
+	}
+
+	function addNoteFromCtx(e?: Event) {
+		if (e) e.stopPropagation();
+		
+		const title = newNoteTitle.trim() || null;
+		const color: Color = { type: 'hex', value: newNoteColor };
+		
+		notes.push({
+			id: generateSecureRandomString(),
+			title,
+			position: { x: contextMenuData.canvasX, y: contextMenuData.canvasY, z: 0 },
+			size: { width: 200, height: 200 },
+			color,
+			content: []
+		});
+		
+		contextMenuData.show = false;
+	}
+
 	// svelte-ignore state_referenced_locally
 	const { id, user, board, perms } = data;
 
@@ -194,9 +239,13 @@
 			console.log('saved viewport/zoom to localStorage', currentPosition, currentZoom);
 		};
 
+		const handleWindowClick = () => closeContextMenu();
+
 		window.addEventListener('beforeunload', saveOnUnload);
+		window.addEventListener('click', handleWindowClick);
 		return () => {
 			window.removeEventListener('beforeunload', saveOnUnload);
+			window.removeEventListener('click', handleWindowClick);
 		};
 	});
 
@@ -217,7 +266,18 @@
 		if (notes.length > 0) initializeZIndex(notes);
 		$inspect(notes);
 	});
+	function handleKeydown(e: KeyboardEvent) {
+		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+			e.preventDefault();
+			const saveForm = document.getElementById('save-notes-form') as HTMLFormElement;
+			if (saveForm) {
+				saveForm.requestSubmit();
+			}
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <!-- Canvas viewport wrapper — shrinks when sidebar is open -->
 <div class="canvas-viewport" class:sidebar-open={settingsOpen}>
@@ -226,30 +286,13 @@
 
 {#if board && (board.owner === user?.id || perms?.perm === 'Write')}
 	<div class="note-creator">
-		<FancyButton1 onclick={() => (showDialog = true)} style="width: 100px">Add Note</FancyButton1>
-		<form method="post" use:enhance>
+		<form method="post" use:enhance id="save-notes-form">
 			<input type="hidden" name="notes" value={JSON.stringify(notes)} />
-			<button type="submit">Save notes</button>
+			<button type="submit" class="save-button" title="Save notes (Ctrl+S)">
+				<LucideSymbol symbol="Save" size={14} />
+				<span>Save</span>
+			</button>
 		</form>
-	</div>
-{/if}
-{#if showDialog}
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="dialog-container" id="add-dialog" onclick={() => (showDialog = false)}>
-		<dialog open class="dialog" onclick={e => e.stopPropagation()}>
-			<input type="text" id="note-title-input" placeholder="note title" />
-			<div>
-				<select name="values" id="color-type-select">
-					<option value="oklch">oklch</option>
-					<option value="rgb" selected>rgb</option>
-					<option value="hsl">hsl</option>
-					<option value="hex">hex</option>
-				</select> <input type="text" id="color-value-input" placeholder="color value" />
-			</div>
-			<textarea id="note-data-input" placeholder="enter comma separated contents"></textarea>
-			<FancyButton1 onclick={addNote}>Add note</FancyButton1>
-		</dialog>
 	</div>
 {/if}
 
@@ -291,13 +334,49 @@
 </Canvas> -->
 <Canvas
 	data={validateCanvasData(data.board?.canvas)}
+	contextmenu={handleCanvasContextMenu}
 >
 	{@const gridSnap = 5}
 	{#each notes as _, i}
 		{console.log('added note')}
 		<Note bind:data={notes[i]} {gridSnap} remove={() => notes.splice(i, 1)} />
 	{/each}
+
+	{#if contextMenuData.show}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div 
+			class="canvas-context-menu" 
+			style:left="{contextMenuData.canvasX}px" 
+			style:top="{contextMenuData.canvasY}px"
+			style="--menu-transform-base: translate(-50%, calc(-100% - 12px))"
+			style:transform="var(--menu-transform-base)"
+			onclick={(e) => e.stopPropagation()}
+			oncontextmenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+		>
+			<div class="ctx-header">New Note</div>
+			<input
+				type="text"
+				bind:value={newNoteTitle}
+				placeholder="Enter title..."
+				class="ctx-input"
+				autofocus
+				onkeydown={(e) => {
+					if (e.key === 'Enter') addNoteFromCtx();
+					if (e.key === 'Escape') closeContextMenu();
+				}}
+			/>
+			<label class="ctx-color-label" title="Background Color">
+				<input type="color" bind:value={newNoteColor} class="ctx-color-picker" />
+				<div class="ctx-color-swatch" style:background-color={newNoteColor}></div>
+				<span>Choose Color</span>
+			</label>
+			<FancyButton1 onclick={addNoteFromCtx} style="width: 100%; margin-top: 4px;">Create Note</FancyButton1>
+			<div class="ctx-arrow"></div>
+		</div>
+	{/if}
 </Canvas>
+
 <MiniViewport {notes} />
 </div>
 
@@ -325,69 +404,47 @@
 />
 
 <style>
-	.dialog-container {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100vh;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1001;
-		background-color: rgb(0 0 0 / 0.5);
-		backdrop-filter: blur(4px);
-	}
-
-	.dialog {
-		position: static;
-		margin: 0;
-		background-color: var(--default-bg-color);
-		color: var(--default-text-color);
-		border: 1px solid var(--default-text-color);
-		border-radius: 8px;
-		padding: 24px;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		min-width: 300px;
-		max-width: 90vw;
-	}
-
-	.dialog input[type='text'],
-	.dialog textarea,
-	.dialog select {
-		background-color: var(--default-bg-color, #2a2a2a);
-		color: var(--default-text-color, #fff);
-		border: 1px solid var(--default-text-color, #444);
-		border-radius: 4px;
-		padding: 8px 12px;
-		font-size: 14px;
-	}
-
-	.dialog textarea {
-		min-height: 120px;
-		resize: vertical;
-	}
-
-	.dialog div {
-		display: flex;
-		gap: 8px;
-	}
-
-	.dialog div select {
-		flex-shrink: 0;
-	}
-
-	.dialog div input {
-		flex: 1;
-	}
 	.note-creator {
 		position: fixed;
 		top: 20px;
 		left: 20px;
 		z-index: 1000;
+		display: flex;
+		gap: 12px;
 	}
+
+	.save-button {
+		height: 38px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background: var(--editor-interface-background, rgba(20, 20, 30, 0.85));
+		border: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.12));
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border-radius: 12px;
+		padding: 0 16px;
+		color: var(--default-text-color, #fff);
+		font-size: 0.85rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.save-button:hover {
+		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
+		border-color: rgba(255, 255, 255, 0.3);
+		transform: translateY(-1px);
+	}
+
+	.save-button:active {
+		transform: scale(0.95);
+	}
+
+	.save-button span {
+		opacity: 0.8;
+	}
+
 
 	/* Canvas viewport wrapper — transitions its right padding when sidebar is open */
 	.canvas-viewport {
@@ -443,5 +500,94 @@
 		border: 1px solid transparent;
 	}
 
+	.canvas-context-menu {
+		position: absolute;
+		transform-origin: bottom center;
+		background: #1e1e1e;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 8px;
+		padding: 12px;
+		min-width: 180px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.2);
+		z-index: 2000;
+		color: white;
+		animation: menuFadeIn 0.15s ease-out;
+		pointer-events: auto;
+	}
 
+	.ctx-arrow {
+		position: absolute;
+		bottom: -6px;
+		left: 50%;
+		transform: translateX(-50%) rotate(45deg);
+		width: 12px;
+		height: 12px;
+		background: #1e1e1e;
+		border-right: 1px solid rgba(255, 255, 255, 0.15);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+		z-index: -1;
+	}
+
+	@keyframes menuFadeIn {
+		from { opacity: 0; transform: var(--menu-transform-base) translateY(8px) scale(0.95); }
+		to { opacity: 1; transform: var(--menu-transform-base) translateY(0) scale(1); }
+	}
+
+	.ctx-header {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.8);
+		margin-bottom: -4px;
+	}
+
+	.ctx-input {
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		color: white;
+		font-size: 0.85rem;
+		padding: 6px 10px;
+		width: 100%;
+		outline: none;
+		box-sizing: border-box;
+		transition: border-color 0.2s;
+	}
+
+	.ctx-input:focus {
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.ctx-color-label {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 6px;
+		padding: 6px 10px;
+		cursor: pointer;
+		font-size: 0.8rem;
+		transition: background 0.2s;
+	}
+
+	.ctx-color-label:hover {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	.ctx-color-picker {
+		position: absolute;
+		opacity: 0;
+		width: 0;
+		height: 0;
+	}
+
+	.ctx-color-swatch {
+		width: 16px;
+		height: 16px;
+		border-radius: 3px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	}
 </style>
