@@ -85,10 +85,12 @@ export const GET = async ({ params, url }) => {
 						.select({
 							id: Board.id,
 							title: Board.name,
-							updated: Board.updated
+							updated: Board.updated,
+							likes: count(BoardLikes.board)
 						})
 						.from(Board)
 						.where(and(eq(Board.type, 'Public'), getUpdatedWithTimeframe(timeframe)))
+						.leftJoin(BoardLikes, eq(BoardLikes.board, Board.id))
 						.orderBy(desc(Board.updated))
 						.groupBy(Board.id)
 						.limit(upper)
