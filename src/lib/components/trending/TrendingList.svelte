@@ -45,4 +45,8 @@
 			likes={board.likes}
 		></DashboardBox>
 	{/each}
+	<li bind:this={watcher}></li>
+	{#if loading}
+		<div class="loader">loadenden</div>
+	{/if}
 </ul>
