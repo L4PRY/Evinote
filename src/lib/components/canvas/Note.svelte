@@ -1,13 +1,16 @@
 <script lang="ts">
 	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import type { File } from '$lib/types/canvas/File';
+	import type { Color } from '$lib/types/canvas/Color';
 	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
 	import { parseColor } from '$lib/parseColor';
-	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import DOMPurify from 'isomorphic-dompurify';
 	import { onMount } from 'svelte';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { canvasSize } from '$lib/stores/viewport';
+	import { spring } from 'svelte/motion';
+	import { fly } from 'svelte/transition';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 
 	let { data = $bindable(), remove, gridSnap = 5 }: { data: NoteData; remove: () => void; gridSnap?: number } = $props();
 	
@@ -25,6 +28,29 @@
 	let noteSize = $state(data.size ?? { width: 200, height: 200 });
 	let color = $state('var(--default-bg-color)');
 	let isCurrentlyDragging = $state(false);
+	let isCurrentlyResizing = $state(false);
+
+	let displayPos = spring(
+		{ x: data.position?.x ?? 0, y: data.position?.y ?? 0 },
+		{ stiffness: 0.1, damping: 0.35 }
+	);
+
+	let displayScale = spring(1, {
+		stiffness: 0.2, damping: 0.4
+	});
+
+	$effect(() => {
+		displayPos.set(
+			{ x: notePosition.x, y: notePosition.y },
+			{ hard: isCurrentlyResizing }
+		);
+	});
+
+	$effect(() => {
+		displayScale.set(isCurrentlyDragging ? 1.02 : 1);
+	});
+
+	let rotation = $derived(Math.max(-90, Math.min(90, (notePosition.x - $displayPos.x) * 0.12)));
 
 	let sanitizedContent = $derived(
 		data.content?.map(entry =>
@@ -48,26 +74,6 @@
 		let startClientY = 0;
 		let startNoteX = 0;
 		let startNoteY = 0;
-
-		function onPointerDown(e: PointerEvent) {
-			const handle = node.querySelector('.handle');
-			if (!handle || !handle.contains(e.target as Node)) return;
-			if (e.button !== 0) return;
-
-			isDragging = true;
-			isCurrentlyDragging = true;
-			startClientX = e.clientX;
-			startClientY = e.clientY;
-			startNoteX = notePosition.x;
-			startNoteY = notePosition.y;
-
-			node.setPointerCapture(e.pointerId);
-
-			const z = bringToFront(notePosition.z);
-			notePosition = { ...notePosition, z };
-			data = { ...data, position: notePosition };
-			e.preventDefault();
-		}
 
 		function onPointerMove(e: PointerEvent) {
 			if (!isDragging) return;
@@ -95,20 +101,43 @@
 			if (!isDragging) return;
 			isDragging = false;
 			isCurrentlyDragging = false;
+			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('pointerup', onPointerUp);
+			window.removeEventListener('pointercancel', onPointerUp);
 			node.releasePointerCapture(e.pointerId);
 		}
 
+		function onPointerDown(e: PointerEvent) {
+			const handle = node.querySelector('.handle');
+			if (!handle || !handle.contains(e.target as Node)) return;
+			if (e.button !== 0) return;
+
+			isDragging = true;
+			isCurrentlyDragging = true;
+			startClientX = e.clientX;
+			startClientY = e.clientY;
+			startNoteX = notePosition.x;
+			startNoteY = notePosition.y;
+
+			node.setPointerCapture(e.pointerId);
+			window.addEventListener('pointermove', onPointerMove);
+			window.addEventListener('pointerup', onPointerUp);
+			window.addEventListener('pointercancel', onPointerUp);
+
+			const z = bringToFront(notePosition.z);
+			notePosition = { ...notePosition, z };
+			data = { ...data, position: notePosition };
+			e.preventDefault();
+		}
+
 		node.addEventListener('pointerdown', onPointerDown);
-		node.addEventListener('pointermove', onPointerMove);
-		node.addEventListener('pointerup', onPointerUp);
-		node.addEventListener('pointercancel', onPointerUp);
 
 		return {
 			destroy() {
 				node.removeEventListener('pointerdown', onPointerDown);
-				node.removeEventListener('pointermove', onPointerMove);
-				node.removeEventListener('pointerup', onPointerUp);
-				node.removeEventListener('pointercancel', onPointerUp);
+				window.removeEventListener('pointermove', onPointerMove);
+				window.removeEventListener('pointerup', onPointerUp);
+				window.removeEventListener('pointercancel', onPointerUp);
 			}
 		};
 	}
@@ -120,21 +149,6 @@
 		let startHeight = 0;
 		let startX = 0;
 		let startY = 0;
-
-		function onPointerDown(e: PointerEvent) {
-			if (e.button !== 0) return;
-			isResizing = true;
-			startClientX = e.clientX;
-			startClientY = e.clientY;
-			startWidth = noteSize.width;
-			startHeight = noteSize.height;
-			startX = notePosition.x;
-			startY = notePosition.y;
-
-			node.setPointerCapture(e.pointerId);
-			e.stopPropagation();
-			e.preventDefault();
-		}
 
 		function onPointerMove(e: PointerEvent) {
 			if (!isResizing) return;
@@ -197,13 +211,34 @@
 		function onPointerUp(e: PointerEvent) {
 			if (!isResizing) return;
 			isResizing = false;
+			isCurrentlyResizing = false;
+			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('pointerup', onPointerUp);
+			window.removeEventListener('pointercancel', onPointerUp);
 			node.releasePointerCapture(e.pointerId);
 		}
 
+		function onPointerDown(e: PointerEvent) {
+			if (e.button !== 0) return;
+			isResizing = true;
+			isCurrentlyResizing = true;
+			startClientX = e.clientX;
+			startClientY = e.clientY;
+			startWidth = noteSize.width;
+			startHeight = noteSize.height;
+			startX = notePosition.x;
+			startY = notePosition.y;
+
+			node.setPointerCapture(e.pointerId);
+			window.addEventListener('pointermove', onPointerMove);
+			window.addEventListener('pointerup', onPointerUp);
+			window.addEventListener('pointercancel', onPointerUp);
+
+			e.stopPropagation();
+			e.preventDefault();
+		}
+
 		node.addEventListener('pointerdown', onPointerDown);
-		window.addEventListener('pointermove', onPointerMove);
-		window.addEventListener('pointerup', onPointerUp);
-		window.addEventListener('pointercancel', onPointerUp);
 
 		return {
 			destroy() {
@@ -214,18 +249,49 @@
 			}
 		};
 	}
+
+	let editingIndex = $state<number | null>(null);
+
+	function autoResize(node: HTMLTextAreaElement) {
+		const updateHeight = () => {
+			node.style.height = 'auto';
+			node.style.height = node.scrollHeight + 'px';
+		};
+		updateHeight();
+		node.addEventListener('input', updateHeight);
+		return {
+			destroy() {
+				node.removeEventListener('input', updateHeight);
+			}
+		};
+	}
+
+	let isEditingMetadata = $state(false);
+
+	function selectColor(c: string) {
+		const result: Color = { type: 'hex', value: c };
+		data.color = result;
+		color = c;
+	}
+
+	function resetColor() {
+		data.color = 'var(--default-bg-color)';
+		color = 'var(--default-bg-color)';
+	}
 </script>
 
 <div
 	use:dragNote
 	class="note"
 	class:dragging={isCurrentlyDragging}
+	class:editing-meta={isEditingMetadata}
 	title={data.title}
 	id={data.id ?? data.title}
 	style:background-color={color}
 	style:z-index={notePosition.z}
-	style:left={notePosition.x + 'px'}
-	style:top={notePosition.y + 'px'}
+	style:left={$displayPos.x + 'px'}
+	style:top={$displayPos.y + 'px'}
+	style:transform="scale({$displayScale}) rotate({rotation}deg)"
 	bind:this={note}
 	bind:clientWidth={noteSize.width}
 	bind:clientHeight={noteSize.height}
@@ -233,25 +299,100 @@
 	style:height={noteSize.height + 'px'}
 >
 	<div class="top-container">
-		<h1 class="note-title">{data.title}</h1>
-		<div class="handle" unselectable="on"></div>
-		<button class="delete-btn" onclick={remove} aria-label="Delete note" title="Delete note"
-			><LucideSymbol symbol={'X'} size={16} strokeWidth={2} /></button
-		>
+		<div class="header-section left">
+			<h1 class="note-title" title={data.title}>{data.title}</h1>
+		</div>
+		<div class:dragging={isCurrentlyDragging} class="handle" unselectable="on"></div>
+		<div class="header-section right">
+			<button 
+				class="config-btn" 
+				class:active={isEditingMetadata}
+				onclick={() => (isEditingMetadata = !isEditingMetadata)} 
+				aria-label="Configure note" 
+				title="Configure note"
+				><LucideSymbol symbol={'Sliders'} size={16} strokeWidth={2} /></button
+			>
+			<button class="delete-btn" onclick={remove} aria-label="Delete note" title="Delete note"
+				><LucideSymbol symbol={'X'} size={16} strokeWidth={2} /></button
+			>
+		</div>
+
+		{#if isEditingMetadata}
+			<div class="config-popup" transition:fly={{ y: 8, duration: 200 }}>
+				<div class="edit-toolbar">
+					<input
+						type="text"
+						bind:value={data.title}
+						onkeydown={(e) => e.key === 'Enter' && (isEditingMetadata = false)}
+						class="title-input"
+						placeholder="Note title..."
+						autofocus
+					/>
+					<div class="color-controls">
+						<label class="custom-color-btn" title="Choose custom color">
+							<input 
+								type="color" 
+								value={parseColor(data.color)} 
+								oninput={(e) => selectColor((e.target as HTMLInputElement).value)} 
+							/>
+							<div class="color-swatch" style:background-color={parseColor(data.color)}></div>
+							<span>Custom Color</span>
+						</label>
+						<button 
+							class="reset-color-btn" 
+							onclick={resetColor}
+							aria-label="Reset to default color"
+						>
+							<LucideSymbol symbol={'refresh-ccw'} size={14} strokeWidth={2} />
+							<span>Reset Default</span>
+						</button>
+					</div>
+				</div>
+                <div class="popup-arrow"></div>
+			</div>
+		{/if}
 	</div>
 
-	<div class="note-meta">
+	<!-- <div class="note-meta">
 		<div class="note-coordinates">
 			<code>[{Math.floor(notePosition.x)}x {Math.floor(notePosition.y)}y {notePosition.z}z]</code>
 			<code>[{Math.floor(noteSize.width)}w x {Math.floor(noteSize.height)}h]</code>
 		</div>
-	</div>
+	</div> -->
 	<div class="note-content-wrapper">
 		<div class="note-content">
-			{#each sanitizedContent as entry, i}
+			{#each data.content as entry, i}
 				<div class="entry">
 					{#if typeof entry === 'string'}
-						<p>{@html entry}</p>
+						{#if editingIndex === i}
+							<textarea
+								use:autoResize
+								bind:value={(data.content[i] as string)}
+								onblur={() => (editingIndex = null)}
+								onkeydown={(e) => {
+									if (e.key === 'Enter' && !e.shiftKey) {
+										e.preventDefault();
+										editingIndex = null;
+									}
+									if (e.key === 'Escape') {
+										editingIndex = null;
+									}
+								}}
+								class="entry-edit"
+							></textarea>
+						{:else}
+							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+							<p
+								onclick={() => (editingIndex = i)}
+								tabindex="0"
+								role="button"
+								aria-label="Edit text content"
+								onkeydown={(e) => e.key === 'Enter' && (editingIndex = i)}
+								class="entry-text"
+							>
+								{@html sanitizedContent[i]}
+							</p>
+						{/if}
 					{:else}
 						{@const file = entry as File}
 						{@const mimeType = file.mime.toString()}
@@ -316,49 +457,79 @@
 	}
 
 	.top-container {
-		position: absolute;
+		position: relative;
 		display: flex;
-		justify-content: space-between;
+		align-items: center;
 		width: 100%;
 		height: 30px;
-		overflow: visible;
+	}
+
+	.header-section {
+		flex: 1.2;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		height: 100%;
+	}
+
+	.header-section.left {
+		flex: 0.5;
+		padding-left: 12.5px;
+		transition: flex 0.1s ease-in-out;
+	}
+
+	.note:not(:hover) .header-section.left {
+		flex: 10;
+	}
+
+	.header-section.right {
+		justify-content: flex-end;
+		margin-right: 5px;
+		min-width: 30px;
 	}
 
 	.handle {
 		position: absolute;
 		left: 50%;
-		top: 10px;
-		transform: translateX(-50%);
+		top: 50%;
+		transform: translate(-50%, -50%);
 		width: 40px;
 		height: 10px;
 		background-color: rgba(255, 255, 255, 0.2);
 		border-radius: 999px;
 		cursor: grab;
-		transition: background-color 0.2s;
-		z-index: 50;
-		margin-left: 12.5px;
-		margin-right: 12.5px;
+		transition: background-color 0.2s, opacity 0.3s;
+		z-index: 100;
+		opacity: 0;
+		pointer-events: none;
+		user-select: none;
 
 		&:hover {
 			background-color: rgba(255, 255, 255, 0.4);
 		}
+
+		&.dragging {
+			cursor: grabbing !important;
+			opacity: 1 !important;
+		}
+	}
+
+	.note:hover .handle, .note.dragging .handle {
+		opacity: 1;
+		pointer-events: auto;
 	}
 
 	.delete-btn {
-		position: absolute;
-		right: 5px;
-		top: 5px;
 		border: none;
-		color: rgba(255, 255, 255, 0.5);
 		cursor: pointer;
 		border-radius: 50%;
 		display: flex;
-		width: 20px;
-		height: 20px;
+		width: 24px;
+		height: 24px;
 		align-items: center;
 		justify-content: center;
 		transition: all 0.2s;
-		z-index: 10;
+		z-index: 60;
 
 		&:hover {
 			color: white;
@@ -367,12 +538,8 @@
 	}
 
 	.note-title {
-		position: absolute;
-		top: 5px;
-		left: 12.5px;
 		font-size: 0.85rem;
 		font-weight: 600;
-		max-width: 35%;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -381,36 +548,180 @@
 		pointer-events: none;
 	}
 
-	.note-meta {
-		margin-top: 30px;
-		padding: 0 16px 8px 16px;
+	.config-popup {
+		position: absolute;
+		bottom: calc(100% + 8px);
+		right: 0;
+		background: #1e1e1e;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 8px;
+		padding: 8px;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.2);
+		z-index: 500;
 	}
 
-	.note-coordinates {
+	.popup-arrow {
+		position: absolute;
+		bottom: -6px;
+		right: 32px;
+		width: 12px;
+		height: 12px;
+		background: #1e1e1e;
+		border-right: 1px solid rgba(255, 255, 255, 0.15);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+		transform: rotate(45deg);
+		z-index: -1;
+	}
+
+	.edit-toolbar {
 		display: flex;
+		flex-direction: column;
 		gap: 8px;
-		opacity: 0.5;
-		margin-top: 4px;
+		min-width: 180px;
 	}
 
-	.note-coordinates code {
-		font-size: 0.7rem;
+	.title-input {
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		color: white;
+		font-size: 0.8rem;
+		padding: 6px 10px;
+		width: 100%;
+		outline: none;
+		transition: border-color 0.2s;
+
+		&:focus {
+			border-color: rgba(255, 255, 255, 0.3);
+		}
+	}
+
+	.color-controls {
+		display: flex;
+		flex-direction: row;
+		gap: 8px;
+	}
+
+	.custom-color-btn {
+		display: flex;
+		flex: 1;
+		align-items: center;
+		gap: 6px;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: 6px;
+		padding: 4px 8px;
+		cursor: pointer;
+		transition: background 0.2s;
+		font-size: 0.72rem;
+		white-space: nowrap;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.1);
+		}
+
+		input[type="color"] {
+			position: absolute;
+			opacity: 0;
+			width: 0;
+			height: 0;
+		}
+	}
+
+	.color-swatch {
+		width: 16px;
+		height: 16px;
+		border-radius: 3px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	}
+
+	.reset-color-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		background: transparent;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		padding: 4px 8px;
+		cursor: pointer;
+		color: rgba(255, 255, 255, 0.7);
+		font-size: 0.72rem;
+		transition: all 0.2s;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.05);
+			color: white;
+			border-color: rgba(255, 255, 255, 0.2);
+		}
+	}
+
+	.config-btn, .delete-btn {
+		border: none;
+		cursor: pointer;
+		border-radius: 50%;
+		display: flex;
+		width: 24px;
+		height: 24px;
+		padding: 4px;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s;
+		z-index: 60;
+		background: transparent;
+		color: white;
+
+		&:hover {
+			background-color: rgba(255, 255, 255, 0.1);
+		}
+
+		&.active {
+			background-color: rgba(255, 255, 255, 0.2);
+			color: #4da6ff;
+		}
 	}
 
 	.note-content {
 		display: flex;
 		flex-direction: column;
 		gap: 15px;
+		margin-top: 4px;
 	}
 
 	.entry {
-		border-top: 1px solid rgba(255, 255, 255, 0.05);
 		word-wrap: break-word;
-		padding: 8px 16px;
+		margin: 4px 8px;
+		transition: border 0.2s ease;
+		box-sizing: border-box;
+		border: 2px dashed transparent;
+		&:hover {
+			border: 2px dashed rgba(255, 255, 255, 0.1);
+			cursor: default;
+		}
+
+		& > * {
+			cursor: text;
+		}
 	}
 
-	.entry:first-child {
-		border-top: none;
+	.entry-text {
+		width: 100%;
+		min-height: 1.2em;
+	}
+
+	.entry-edit {
+		width: 100%;
+		background: transparent;
+		border: none;
+		color: white;
+		font-family: inherit;
+		font-size: 1rem;
+		line-height: inherit;
+		padding: 0;
+		margin: 0;
+		outline: none;
+		resize: none;
+		overflow: hidden;
+		display: block;
 	}
 
 	.note {
@@ -426,12 +737,14 @@
 		max-height: 800px;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
-		transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+		transition: box-shadow 0.2s ease;
+
+		&.editing-meta {
+			overflow: visible !important;
+		}
 
 		&.dragging {
 			z-index: 1000 !important;
-			transform: scale(1.02);
 			box-shadow: 0 10px 20px 5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
 			opacity: 0.95;
 			cursor: grabbing !important;
