@@ -365,7 +365,7 @@
 
 	.settings-toggle.active {
 		background: var(--fancygradient, linear-gradient(135deg, rgba(108, 99, 255, 0.3), rgba(168, 85, 247, 0.3)));
-		border-color: rgba(108, 99, 255, 0.5);
+		border: 1px solid transparent;
 	}
 
 

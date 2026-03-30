@@ -400,13 +400,15 @@
 							<div class="form-group">
 								<label class="form-label" for="bgColor">Color (Hex)</label>
 								<div class="color-input-row">
-									<input
-										type="color"
-										class="color-swatch"
-										value={settings.backgroundValue?.toString() ?? '#ffffff'}
-										oninput={(e) => (settings.backgroundValue = (e.target as HTMLInputElement).value)}
-										disabled={!canModify}
-									/>
+									<div class="colors-swatch-div">
+										<input
+											type="color"
+											class="color-swatch"
+											value={settings.backgroundValue?.toString() ?? '#ffffff'}
+											oninput={(e) => (settings.backgroundValue = (e.target as HTMLInputElement).value)}
+											disabled={!canModify}
+										/>
+									</div>
 									<input
 										id="bgColor"
 										class="form-input"
@@ -445,13 +447,15 @@
 								<div class="form-group">
 									<label class="form-label" for="gridColor">Grid Color</label>
 									<div class="color-input-row">
-										<input
-											type="color"
-											class="color-swatch"
-											value={settings.gridColor ?? '#cccccc'}
-											oninput={(e) => (settings.gridColor = (e.target as HTMLInputElement).value)}
-											disabled={!canModify}
-										/>
+										<div class="colors-swatch-div">
+											<input
+												type="color"
+												class="color-swatch"
+												value={settings.gridColor ?? '#cccccc'}
+												oninput={(e) => (settings.gridColor = (e.target as HTMLInputElement).value)}
+												disabled={!canModify}
+											/>
+										</div>
 										<input
 											id="gridColor"
 											class="form-input"
@@ -465,13 +469,15 @@
 								<div class="form-group">
 									<label class="form-label" for="gridBg">Background</label>
 									<div class="color-input-row">
-										<input
-											type="color"
-											class="color-swatch"
-											value={settings.gridBg ?? '#ffffff'}
-											oninput={(e) => (settings.gridBg = (e.target as HTMLInputElement).value)}
-											disabled={!canModify}
-										/>
+										<div class="colors-swatch-div">
+											<input
+												type="color"
+												class="color-swatch"
+												value={settings.gridBg ?? '#ffffff'}
+												oninput={(e) => (settings.gridBg = (e.target as HTMLInputElement).value)}
+												disabled={!canModify}
+											/>
+										</div>
 										<input
 											id="gridBg"
 											class="form-input"
@@ -910,15 +916,21 @@
 		align-items: center;
 	}
 
-	.color-swatch {
-		width: 36px;
-		height: 36px;
+	.colors-swatch-div {
+		width: 3rem;
+		aspect-ratio: 1;
 		border-radius: 8px;
 		border: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.1));
-		padding: 2px;
+		overflow: hidden;
+	}
+
+	.color-swatch {
+		width: 120%;
+		height: 120%;
+		margin: -10%;
+		border-radius: 8px;
 		cursor: pointer;
 		background: none;
-		flex-shrink: 0;
 	}
 
 	.color-swatch:disabled {
