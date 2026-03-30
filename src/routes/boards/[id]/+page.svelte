@@ -24,6 +24,7 @@
 	import type { PageProps } from './$types';
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 
 	const { params, data, form }: PageProps = $props();
 	
@@ -283,13 +284,12 @@
 <div class="canvas-viewport" class:sidebar-open={settingsOpen}>
 
 <!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
-
 {#if board && (board.owner === user?.id || perms?.perm === 'Write')}
 	<div class="note-creator">
 		<form method="post" use:enhance id="save-notes-form">
 			<input type="hidden" name="notes" value={JSON.stringify(notes)} />
 			<button type="submit" class="save-button" title="Save notes (Ctrl+S)">
-				<LucideSymbol symbol="Save" size={14} />
+				<LucideSymbol symbol="Save" size={16} strokeWidth={2} />
 				<span>Save</span>
 			</button>
 		</form>
@@ -403,11 +403,18 @@
 	boardId={data.id}
 />
 
+<button
+	class="backpedal"
+	type="button"
+	onclick={() => goto("/dashboard")}>
+	<LucideSymbol symbol="ArrowLeft" size={24} strokeWidth={2} />
+</button>	
+
 <style>
 	.note-creator {
 		position: fixed;
 		top: 20px;
-		left: 20px;
+		left: 60px;
 		z-index: 1000;
 		display: flex;
 		gap: 12px;
@@ -428,7 +435,7 @@
 		font-size: 0.85rem;
 		font-weight: 500;
 		cursor: pointer;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.save-button:hover {
@@ -443,6 +450,8 @@
 
 	.save-button span {
 		opacity: 0.8;
+		font-weight: 600;
+		font-size: 0.85rem;
 	}
 
 
@@ -590,4 +599,34 @@
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 	}
+
+	.backpedal {
+		position: absolute;
+		top: 20px;
+		left: 20px;
+		text-align: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 12px;
+		border: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.12));
+		background: var(--editor-interface-background, rgba(20, 20, 30, 0.85));
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		cursor: pointer;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+		&:hover {
+			background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
+			border-color: rgba(255, 255, 255, 0.3);
+			transform: translateX(-1px);
+		}
+
+		&:active {
+			transform: scale(0.95);
+		}
+	}
+
 </style>
