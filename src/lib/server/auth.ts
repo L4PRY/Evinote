@@ -7,13 +7,25 @@ import type { PostgresError } from 'postgres';
 import { authLogger } from './logger';
 import type { AuthenticatedUser } from '../types/auth/AuthenticatedUser';
 import { generateSecureRandomString } from '$lib/randomString';
+import { hash, verify } from '@node-rs/argon2';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 const RENEW_THRESHOLD = DAY_IN_MS * 15;
 const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 
+export const argon2Props = {
+	memoryCost: 19456,
+	timeCost: 2,
+	outputLen: 32,
+	parallelism: 1
+} as const;
+
 export const sessionCookieName = '.EVISECURITY';
+
+export const hashPassword = (password: string) => hash(password, argon2Props);
+export const verifyPassword = (hash: string, password: string) =>
+	verify(hash, password, argon2Props);
 
 export function requireLogin(): AuthenticatedUser {
 	const { locals, route } = getRequestEvent();
