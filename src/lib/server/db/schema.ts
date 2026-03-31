@@ -117,3 +117,22 @@ export const Files = pgTable(
 		index('hash_id').on(table.id, table.hash)
 	]
 );
+
+export const UserPfp = pgTable(
+	'user_pfp',
+	{
+		id: serial('id').primaryKey().notNull(),
+		user: serial('user_id')
+			.references(() => User.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			})
+			.notNull(),
+		file: serial('file_id').references(() => Files.id, {
+			onDelete: 'set null',
+			onUpdate: 'cascade'
+		}),
+		updated: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [index('user_pfp_user').on(table.user), index('user_pfp_file').on(table.file)]
+);
