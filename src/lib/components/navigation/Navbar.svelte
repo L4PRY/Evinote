@@ -102,17 +102,31 @@
 		<a
 			class="float-left"
 			href="/"
-			onclick={() => { closeHamburger(); goto(resolve('/')); }}
+			onclick={() => {
+				closeHamburger();
+				goto(resolve('/'));
+			}}
 			style="cursor: pointer;"
-			aria-label="Home">Evinote</a
+			aria-label="Home"><img src="Logo.svg" alt="Evinote" id="logo" /></a
 		>
 		<div class="nav-island">
 			<button onclick={closeHamburger}>Explore</button>
 			<div class="nav-island-divider" aria-hidden="true"></div>
 			<button onclick={closeHamburger}>Dashboard</button>
 			<div class="nav-island-divider" aria-hidden="true"></div>
-			<button onclick={() => { closeHamburger(); goto(resolve('/about')); }}>About</button>
-			<button class="login-island" onclick={() => { closeHamburger(); goto(resolve('/auth')); }}>Login</button>
+			<button
+				onclick={() => {
+					closeHamburger();
+					goto(resolve('/about'));
+				}}>About</button
+			>
+			<button
+				class="login-island"
+				onclick={() => {
+					closeHamburger();
+					goto(resolve('/auth'));
+				}}>Login</button
+			>
 		</div>
 		<div class="float-right">
 			<button
@@ -161,6 +175,15 @@
 			backdrop-filter: none;
 			border: 1px solid transparent;
 			gap: 20px;
+		}
+
+		nav #logo {
+			height: 50px;
+			width: 50px;
+			overflow: visible;
+			object-fit: cover;
+			transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+			transform: scale(0.97);
 		}
 		.float-left {
 			font-size: 1.5rem;
@@ -331,7 +354,7 @@
 		}
 
 		.nav-island button:hover {
-		    backdrop-filter: opacity(5);
+			backdrop-filter: opacity(5);
 		}
 
 		nav::before,
@@ -350,7 +373,7 @@
 		}
 
 		.login-island {
-		    margin-top: 1px;
+			margin-top: 1px;
 			display: inline-block;
 		}
 
