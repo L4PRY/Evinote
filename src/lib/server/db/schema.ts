@@ -45,7 +45,7 @@ export const User = pgTable(
 		email: varchar('email').notNull(),
 		passhash: text('passhash').notNull(),
 		role: role('role').default('User'),
-		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+		created: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	table => [index('index_username').on(table.username)]
 );
@@ -70,6 +70,7 @@ export const Board = pgTable(
 			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		name: varchar('name').notNull(),
 		updated: timestamp('updated_at'),
+		created: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		version: serial('version'),
 		canvas: jsonb('canvas').$type<CanvasData>(),
 		notes: jsonb('notes').$type<NoteData[]>()
