@@ -378,7 +378,6 @@
 				<div class="entry">
 					{#if typeof entry === 'string'}
 						<textarea
-								use:autoResize
 								bind:value={(data.content[i] as string)}
 								onblur={() => (editingIndex = null)}
 								onkeydown={(e) => {
@@ -565,7 +564,7 @@
 		border: 1px solid rgba(255, 255, 255, 0.15);
 		border-radius: 8px;
 		padding: 8px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 4px 2px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.2);
 		z-index: 500;
 	}
 
@@ -719,6 +718,7 @@
 		box-sizing: border-box;
 		position: relative;
 		width: 100%;
+		height: 100%;
 		background: transparent;
 		border: none;
 		color: white;
