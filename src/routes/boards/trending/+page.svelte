@@ -65,6 +65,7 @@
 
 <div class="container">
 	<select id="timeframe-select" bind:value={filterTimeframe}>
+		<option value="hour">Hour</option>
 		<option value="day">Day</option>
 		<option value="week">Week</option>
 		<option value="month">Month</option>
