@@ -298,7 +298,6 @@
 	</div>
 {/if}
 
-<ZoomControl />
 <!-- <Canvas
 	data={
 
