@@ -704,6 +704,7 @@
 		border: 2px dashed transparent;
 		border-radius: 10px;
 		height: 100%;
+		margin-top: 0px;
 		margin-bottom: 8px;
 		padding: 5px;
 		cursor: text;
