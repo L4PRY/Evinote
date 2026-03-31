@@ -8,7 +8,6 @@ import { routeLogger } from '$lib/server/logger.js';
 import { rmSync } from 'node:fs';
 
 export const GET = async ({ params }) => {
-	const user = requireLogin();
 	const { hash } = params;
 
 	const col = await db
@@ -24,8 +23,6 @@ export const GET = async ({ params }) => {
 	try {
 		// read file contents with correct encoding
 		const file = await readFile(path);
-
-		routeLogger.info(`User ${user.username} accessed file ${col.filename} with hash ${hash}`);
 
 		return new Response(file, {
 			status: 200,
