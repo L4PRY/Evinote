@@ -4,7 +4,7 @@
 
 <aside>
 	<div class="logo-container">
-		<img class="logo" alt="Evinote" src="https://placehold.co/600x400" />
+		<img class="logo" alt="Evinote" src="Logo.svg" />
 	</div>
 	<nav>
 		<ul>
@@ -26,17 +26,18 @@
 
 <style>
 	.logo {
+		filter: drop-shadow(2px 3px 6px rgba(20 20 20));
 		font-size: 1.5em;
 		margin: auto;
 		width: 100%;
 		height: 50px;
 		object-fit: cover;
-		filter: grayscale(100%);
-		transition: filter 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+		transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+		transform: scale(0.97);
 	}
 
 	.logo:hover {
-		filter: grayscale(0%);
+		transform: scale(1);
 	}
 
 	ul {
