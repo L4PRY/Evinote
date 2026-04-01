@@ -5,19 +5,27 @@
 	import { onMount } from 'svelte';
 	import SettingsTab from '$lib/components/settings/SettingsTab.svelte';
 
-	export let data: PageData;
-	const user = data!.user;
-	const profilePictures = data!.profilePictures || [];
+	const { data } = $props();
+	const { user, email, profilePictures } = data;
 
 	// Current picture is the latest (first in array)
-	const currentPfp = profilePictures.length > 0 ? profilePictures[0] : null;
+	const currentPfp = $derived(
+		profilePictures && profilePictures.length > 0 ? profilePictures[0] : null
+	);
 
 	// Previous pictures are the rest (up to 5)
-	const previousPfps = profilePictures.slice(1, 6);
+	const previousPfps = $derived(profilePictures.slice(1, 6));
 
-	let doHide = false;
-	let uploading = false;
+	let doHide = $state(false);
+	let uploading = $state(false);
 	let selectedPfpId: string | null = null;
+
+	// Form state for user properties
+	let formUsername = $derived(user.username);
+	let formEmail = $derived(email);
+	let formOldPassword = $state('');
+	let formNewPassword = $state('');
+	let formResponse = $state<any>(null);
 
 	function toggleHide() {
 		doHide = !doHide;
@@ -26,7 +34,6 @@
 	async function handleFileUpload(e: Event) {
 		const input = e.target as HTMLInputElement;
 		const file = input.files?.[0];
-
 		if (!file) return;
 
 		uploading = true;
@@ -59,7 +66,6 @@
 		} finally {
 			uploading = false;
 			// Reset input
-			input.value = '';
 		}
 	}
 
@@ -94,7 +100,7 @@
 	</div>
 	<div class="form-right">
 		<form method="post" action=".?/logout" use:enhance>
-			<button class="sign-out" on:click={toggleHide} class:hide={doHide}>Sign out</button>
+			<button class="sign-out" onclick={toggleHide} class:hide={doHide}>Sign out</button>
 		</form>
 	</div>
 </div>
@@ -119,7 +125,7 @@
 			id="pfp-upload"
 			type="file"
 			accept="image/*"
-			on:change={handleFileUpload}
+			onchange={handleFileUpload}
 			disabled={uploading}
 			class="file-input"
 		/>
@@ -132,21 +138,111 @@
 		<div class="previous-pfps">
 			<h4>Previous Profile Pictures</h4>
 			<div class="pfps-row">
-				{#each previousPfps as pfp (pfp.hash)}
+				{#each previousPfps as pfp (pfp.id)}
 					<form method="post" action="?/setPfp" use:enhance class="pfp-item">
 						<input type="hidden" name="id" value={pfp.id} />
 						<button type="submit" class="pfp-button" title="Set as profile picture">
-							<img
-								src={getPfpUrl(pfp.hash!)}
-								alt="Previous profile picture option"
-								class="pfp-thumbnail"
-							/>
+							<img src={getPfpUrl(pfp.hash!)} alt="Previous profile option" class="pfp-thumbnail" />
 						</button>
 					</form>
 				{/each}
 			</div>
 		</div>
 	{/if}
+</div>
+
+<!-- User Settings Form Section -->
+<div class="settings-section">
+	<h3>Account Settings</h3>
+
+	<form
+		method="post"
+		action="?/setUserProps"
+		use:enhance={() => {
+			return async ({ result }) => {
+				if (result.type === 'success' || result.type === 'failure') {
+					formResponse = result.data;
+				}
+			};
+		}}
+	>
+		<!-- Username Field -->
+		<div class="form-group">
+			<label for="username">Username</label>
+			<input
+				id="username"
+				type="text"
+				name="username"
+				bind:value={formUsername}
+				class="form-input"
+			/>
+			{#if formResponse?.formReturn?.username}
+				<p
+					class="form-feedback"
+					class:success={!formResponse.formReturn.username.message.includes('taken')}
+				>
+					{formResponse.formReturn.username.message}
+				</p>
+			{/if}
+		</div>
+
+		<!-- Email Field -->
+		<div class="form-group">
+			<label for="email">Email</label>
+			<input id="email" type="email" name="email" bind:value={formEmail} class="form-input" />
+			{#if formResponse?.formReturn?.email}
+				<p
+					class="form-feedback"
+					class:success={!formResponse.formReturn.email.message.includes('in use')}
+				>
+					{formResponse.formReturn.email.message}
+				</p>
+			{/if}
+		</div>
+
+		<!-- Old Password Field -->
+		<div class="form-group">
+			<label for="oldPassword">Current Password</label>
+			<input
+				id="oldPassword"
+				type="password"
+				name="oldPassword"
+				bind:value={formOldPassword}
+				class="form-input"
+			/>
+			{#if formResponse?.formReturn?.oldPassword}
+				<p
+					class="form-feedback"
+					class:success={formResponse.formReturn.oldPassword.message.includes('correct')}
+				>
+					{formResponse.formReturn.oldPassword.message}
+				</p>
+			{/if}
+		</div>
+
+		<!-- New Password Field -->
+		<div class="form-group">
+			<label for="newPassword">New Password</label>
+			<input
+				id="newPassword"
+				type="password"
+				name="newPassword"
+				bind:value={formNewPassword}
+				class="form-input"
+			/>
+			{#if formResponse?.formReturn?.newPassword}
+				<p
+					class="form-feedback"
+					class:success={formResponse.formReturn.newPassword.message.includes('good')}
+				>
+					{formResponse.formReturn.newPassword.message}
+				</p>
+			{/if}
+		</div>
+
+		<!-- Submit Button -->
+		<button type="submit" class="submit-btn">Update Account</button>
+	</form>
 </div>
 
 <style>
@@ -339,5 +435,89 @@
 		height: 80px;
 		object-fit: cover;
 		display: block;
+	}
+
+	.settings-section {
+		margin-top: 3rem;
+		padding: 2rem;
+		border-radius: 10px;
+		background-color: rgba(255, 255, 255, 0.05);
+	}
+
+	.settings-section h3 {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--default-text-color);
+		margin-bottom: 1.5rem;
+	}
+
+	.form-group {
+		margin-bottom: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.form-group label {
+		font-weight: 500;
+		color: var(--default-text-color);
+		font-size: 0.95rem;
+	}
+
+	.form-input {
+		padding: 0.75rem;
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		background-color: rgba(255, 255, 255, 0.05);
+		color: var(--default-text-color);
+		font-size: 1rem;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.form-input:focus {
+		outline: none;
+		border-color: var(--fancycolor-2);
+		background-color: rgba(255, 255, 255, 0.08);
+		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+	}
+
+	.form-input::placeholder {
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.form-feedback {
+		font-size: 0.85rem;
+		margin: 0;
+		padding: 0.25rem 0;
+		color: #ff6b6b;
+		transition: color 0.2s ease-in-out;
+	}
+
+	.form-feedback.success {
+		color: #51cf66;
+	}
+
+	.submit-btn {
+		margin-top: 1rem;
+		padding: 0.75rem 2rem;
+		background-color: var(--fancycolor-2);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.submit-btn:hover {
+		background-color: var(--fancycolor-2);
+		opacity: 0.9;
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+	}
+
+	.submit-btn:active {
+		transform: translateY(0);
 	}
 </style>

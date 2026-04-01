@@ -5,7 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { and, desc, eq } from 'drizzle-orm';
 import { error, fail } from '@sveltejs/kit';
 import { verify } from '@node-rs/argon2';
-import { validatePassword } from '$lib/parseInput';
+import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
 import type { SettingsForm } from '$lib/types/dashboard/SettingsForm';
 
 export const load: PageServerLoad = async event => {
@@ -101,6 +101,9 @@ export const actions: Actions = {
 			if (existingUser && existingUser.id !== user.id)
 				return fail(400, { message: 'Username already taken', formReturn });
 
+			if (!validateUsername(username))
+				return fail(400, { message: 'invalid username', formReturn });
+
 			userProps.username = username;
 			formReturn.username = { message: 'Username looks good', value: username };
 		}
@@ -115,6 +118,8 @@ export const actions: Actions = {
 
 			if (existingEmail && existingEmail.id !== user.id)
 				return fail(400, { message: 'Email already in use', formReturn });
+
+			if (!validateEmail(email)) return fail(400, { message: 'invalid email', formReturn });
 
 			userProps.email = email;
 			formReturn.email = { message: 'Email looks good', value: email };
