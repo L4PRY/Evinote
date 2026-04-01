@@ -1,4 +1,5 @@
-# Evinote
+
+![Screenshot of a comment on a GitHub issue showing an image, added in the Markdown, of an Octocat smiling and raising a tentacle.](static/Logo.svg)
 Notetaking and information sharing webapp made with sveltekit and postgres. ✨
 
 ## links
