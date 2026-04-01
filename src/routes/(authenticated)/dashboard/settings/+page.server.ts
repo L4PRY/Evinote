@@ -2,7 +2,7 @@ import { db } from '$lib/server/db';
 import { hashPassword, requireLogin, validateSessionToken, verifyPassword } from '$lib/server/auth';
 import * as table from '$lib/server/db/schema';
 import type { Actions, PageServerLoad } from './$types';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { error, fail } from '@sveltejs/kit';
 import { verify } from '@node-rs/argon2';
 import { validatePassword } from '$lib/parseInput';
@@ -39,6 +39,28 @@ export const actions: Actions = {
 		// handle uploading on client
 		// send url back to server
 		// then server adds it to db
+		const user = requireLogin();
+		const form = await event.request.formData();
+		const id = Number(form.get('id'));
+
+		if (isNaN(id)) return fail(400, 'id not a number conversible');
+
+		console.log(id);
+
+		// check wether pfp already exists with id for user, if so just update the date
+
+		const isUpdated = await db
+			.update(table.UserPfp)
+			.set({ updated: new Date(Date.now()) })
+			.where(and(eq(table.UserPfp.user, user.id), eq(table.UserPfp.file, id)))
+			.returning();
+
+		if (isUpdated.length === 0) await db.insert(table.UserPfp).values({ user: user.id, file: id });
+
+		// purge all pfps that are older than the sixth img in descending order
+		// weh; later
+
+		return { success: true, message: 'pfp set successfully' };
 	},
 	setUserProps: async event => {
 		// validate username for conflicts
