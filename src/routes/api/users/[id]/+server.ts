@@ -22,7 +22,7 @@ export async function GET(event: RequestEvent) {
 		.select()
 		.from(table.User)
 		.where(eq(table.User.id, userId))
-		.then((res) => res[0]);
+		.then(res => res[0]);
 
 	if (!user) {
 		return json({ message: 'User not found' }, { status: 404 });
@@ -39,8 +39,7 @@ export async function GET(event: RequestEvent) {
 		.from(table.Board)
 		.where(and(...conditions));
 
-	return json({ user, boards }, 
-		{ status: 200, headers: { 'Content-Type': 'application/json' } });
+	return json({ user, boards }, { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 /* =====================================================
@@ -65,7 +64,7 @@ export async function PUT(event: RequestEvent) {
 		.select()
 		.from(table.User)
 		.where(eq(table.User.id, userId))
-		.then((res) => res[0]);
+		.then(res => res[0]);
 
 	if (!user) {
 		return json({ message: 'User not found' }, { status: 404 });
@@ -104,7 +103,7 @@ export async function DELETE(event: RequestEvent) {
 		.select()
 		.from(table.User)
 		.where(eq(table.User.id, userId))
-		.then((res) => res[0]);
+		.then(res => res[0]);
 
 	if (!existing) {
 		return json({ error: 'User not found' }, { status: 404 });
