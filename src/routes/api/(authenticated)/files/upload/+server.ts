@@ -53,7 +53,10 @@ export const POST = async ({ request }) => {
 			mimetype: file.type,
 			uploader: user.id // TODO: add uploader id when auth is implemented
 		})
-		.returning({ id: Files.id, hash: Files.hash, filename: Files.filename, mime: Files.mimetype });
+		.returning({ id: Files.id, hash: Files.hash, filename: Files.filename, mime: Files.mimetype })
+		.then(r => r.at(0));
+
+	if (!result) error(500, 'undefined behaviour when uploading file index');
 
 	const folderPath = pathJoin(UPLOAD_FOLDER, hashHex.charAt(0), hashHex.charAt(1));
 	const filePath = pathJoin(folderPath, hashHex.slice(2));
@@ -66,8 +69,11 @@ export const POST = async ({ request }) => {
 	}
 	await writeFile(filePath, Buffer.from(await contents));
 
-	return new Response(JSON.stringify({ url: `/api/files/${hashHex}`, mime: file.type }), {
-		status: 200,
-		headers: { 'Content-Type': 'application/json' }
-	});
+	return new Response(
+		JSON.stringify({ id: result.id, url: `/api/files/${hashHex}`, mime: file.type }),
+		{
+			status: 200,
+			headers: { 'Content-Type': 'application/json' }
+		}
+	);
 };

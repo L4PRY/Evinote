@@ -21,7 +21,7 @@ export const load: PageServerLoad = async event => {
 		.then(res => res[0].email);
 
 	const profilePictures = await db
-		.select({ date: table.UserPfp.updated, hash: table.Files.hash })
+		.select({ id: table.Files.id, date: table.UserPfp.updated, hash: table.Files.hash })
 		.from(table.UserPfp)
 		.leftJoin(table.Files, eq(table.Files.id, table.UserPfp.file))
 		.where(eq(table.UserPfp.user, event.locals.user!.id))
