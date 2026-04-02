@@ -27,6 +27,13 @@
 	let formNewPassword = $state('');
 	let formResponse = $state<any>(null);
 
+	// Delete account state
+	let showDeleteModal = $state(false);
+	let showConfirmDeleteModal = $state(false);
+	let deleteUsername = $state('');
+	let deletePassword = $state('');
+	let deleteAllFiles = $state(false);
+
 	function toggleHide() {
 		doHide = !doHide;
 	}
@@ -78,6 +85,43 @@
 
 	function getPfpUrl(hash: string): string {
 		return `/api/files/${hash}`;
+	}
+
+	function openDeleteModal() {
+		showDeleteModal = true;
+		deleteUsername = '';
+		deletePassword = '';
+		deleteAllFiles = false;
+	}
+
+	function closeDeleteModal() {
+		showDeleteModal = false;
+		deleteUsername = '';
+		deletePassword = '';
+	}
+
+	function openConfirmDeleteModal() {
+		if (!deleteUsername || !deletePassword) {
+			alert('Please enter both username and password');
+			return;
+		}
+		showConfirmDeleteModal = true;
+	}
+
+	function closeConfirmDeleteModal() {
+		showConfirmDeleteModal = false;
+	}
+
+	async function submitDeleteAccount() {
+		const form = new FormData();
+		form.append('username', deleteUsername);
+		form.append('password', deletePassword);
+		form.append('deleteFiles', deleteAllFiles ? 'yes' : 'no');
+
+		await fetch('?/deleteAccount', {
+			method: 'POST',
+			body: form
+		});
 	}
 
 	onMount(() => {
@@ -244,6 +288,98 @@
 		<button type="submit" class="submit-btn">Update Account</button>
 	</form>
 </div>
+
+<!-- Delete Account Section -->
+<div class="delete-account-section">
+	<h3>Delete Account</h3>
+	<p style="margin-bottom: 1rem; opacity: 0.7;">
+		Permanently delete your account and all associated data. This action cannot be undone.
+	</p>
+	<button class="delete-account-btn" onclick={openDeleteModal}>Delete Account</button>
+</div>
+
+<!-- Delete Account Credentials Modal -->
+{#if showDeleteModal}
+	<div
+		class="modal-overlay"
+		role="presentation"
+		onclick={closeDeleteModal}
+		onkeydown={e => e.key === 'Escape' && closeDeleteModal()}
+	>
+		<div
+			class="modal-content"
+			role="dialog"
+			tabindex="0"
+			onclick={e => e.stopPropagation()}
+			onkeydown={e => e.key === 'Escape' && closeDeleteModal()}
+		>
+			<h2>Delete Account</h2>
+			<p>Enter your credentials to proceed with account deletion.</p>
+
+			<div class="modal-form-group">
+				<label for="delete-username">Username</label>
+				<input
+					id="delete-username"
+					type="text"
+					bind:value={deleteUsername}
+					placeholder="Enter your username"
+				/>
+			</div>
+
+			<div class="modal-form-group">
+				<label for="delete-password">Password</label>
+				<input
+					id="delete-password"
+					type="password"
+					bind:value={deletePassword}
+					placeholder="Enter your password"
+				/>
+			</div>
+
+			<div class="modal-buttons">
+				<button class="modal-btn modal-btn-secondary" onclick={closeDeleteModal}>Cancel</button>
+				<button class="modal-btn modal-btn-primary" onclick={openConfirmDeleteModal}
+					>Continue</button
+				>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Delete Account Confirmation Modal -->
+{#if showConfirmDeleteModal}
+	<div
+		class="modal-overlay"
+		role="presentation"
+		onclick={closeConfirmDeleteModal}
+		onkeydown={e => e.key === 'Escape' && closeConfirmDeleteModal()}
+	>
+		<div
+			class="modal-content confirm-modal-content"
+			role="alertdialog"
+			tabindex="-1"
+			onclick={e => e.stopPropagation()}
+			onkeydown={e => e.key === 'Escape' && closeConfirmDeleteModal()}
+		>
+			<h2>Are you sure?</h2>
+			<p>This action will permanently delete your account and cannot be undone.</p>
+
+			<div class="checkbox-group">
+				<label>
+					<input type="checkbox" bind:checked={deleteAllFiles} />
+					<span
+						>Also delete all files (profile pictures, images, videos, etc.) that I've uploaded.</span
+					>
+				</label>
+			</div>
+
+			<div class="confirm-buttons">
+				<button class="confirm-btn-no" onclick={closeConfirmDeleteModal}>No</button>
+				<button class="confirm-btn-yes" onclick={submitDeleteAccount}>Yes</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.account-settings-container {
@@ -519,5 +655,230 @@
 
 	.submit-btn:active {
 		transform: translateY(0);
+	}
+
+	.delete-account-section {
+		margin-top: 3rem;
+		padding: 2rem;
+		border-radius: 10px;
+		background-color: rgba(255, 0, 0, 0.05);
+		border: 1px solid rgba(255, 0, 0, 0.1);
+	}
+
+	.delete-account-section h3 {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: #ff6b6b;
+		margin-bottom: 1rem;
+	}
+
+	.delete-account-btn {
+		padding: 0.75rem 2rem;
+		background-color: transparent;
+		color: #ff6b6b;
+		border: 2px solid #ff6b6b;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.delete-account-btn:hover {
+		background-color: #ff6b6b;
+		color: white;
+		box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+	}
+
+	.delete-account-btn:active {
+		transform: scale(0.95);
+	}
+
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(15, 15, 15, 0.6);
+		backdrop-filter: blur(14px);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 1000;
+	}
+
+	.modal-content {
+		background-color: var(--bg-color);
+		border-radius: 10px;
+		padding: 2rem;
+		max-width: 500px;
+		width: 90%;
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+	}
+
+	.modal-content h2 {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--default-text-color);
+		margin-bottom: 1rem;
+	}
+
+	.modal-content p {
+		color: var(--default-text-color);
+		margin-bottom: 1.5rem;
+		opacity: 0.8;
+	}
+
+	.modal-form-group {
+		margin-bottom: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.modal-form-group label {
+		font-weight: 500;
+		color: var(--default-text-color);
+		font-size: 0.95rem;
+	}
+
+	.modal-form-group input {
+		padding: 0.75rem;
+		border: 2px solid rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		background-color: rgba(255, 255, 255, 0.05);
+		color: var(--default-text-color);
+		font-size: 1rem;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.modal-form-group input:focus {
+		outline: none;
+		border-color: #ff6b6b;
+		background-color: rgba(255, 255, 255, 0.08);
+		box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+	}
+
+	.modal-buttons {
+		display: flex;
+		gap: 1rem;
+		justify-content: flex-end;
+	}
+
+	.modal-btn {
+		padding: 0.75rem 1.5rem;
+		border-radius: 6px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+		border: none;
+	}
+
+	.modal-btn-primary {
+		background-color: var(--fancycolor-2);
+		color: white;
+	}
+
+	.modal-btn-primary:hover {
+		opacity: 0.9;
+		box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+	}
+
+	.modal-btn-secondary {
+		background-color: transparent;
+		color: var(--default-text-color);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.modal-btn-secondary:hover {
+		border-color: rgba(255, 255, 255, 0.4);
+	}
+
+	.confirm-modal-content {
+		text-align: center;
+	}
+
+	.confirm-modal-content h2 {
+		font-size: 1.25rem;
+		margin-bottom: 1.5rem;
+		color: #ff6b6b;
+	}
+
+	.confirm-modal-content p {
+		margin-bottom: 1.5rem;
+		font-size: 1rem;
+	}
+
+	.checkbox-group {
+		margin-bottom: 2rem;
+		padding: 1rem;
+		background-color: rgba(255, 255, 255, 0.05);
+		border-radius: 6px;
+		text-align: left;
+	}
+
+	.checkbox-group label {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		cursor: pointer;
+		color: var(--default-text-color);
+		font-size: 0.95rem;
+	}
+
+	.checkbox-group input[type='checkbox'] {
+		width: 18px;
+		height: 18px;
+		cursor: pointer;
+	}
+
+	.confirm-buttons {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+	}
+
+	.confirm-btn-yes {
+		padding: 0.75rem 2rem;
+		background-color: transparent;
+		color: #ff6b6b;
+		border: 2px solid #ff6b6b;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.confirm-btn-yes:hover {
+		background-color: #ff6b6b;
+		color: white;
+		box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+	}
+
+	.confirm-btn-yes:active {
+		transform: scale(0.95);
+	}
+
+	.confirm-btn-no {
+		padding: 0.75rem 2rem;
+		background-color: rgba(255, 255, 255, 0.1);
+		color: var(--default-text-color);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.confirm-btn-no:hover {
+		background-color: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.confirm-btn-no:active {
+		transform: scale(0.95);
 	}
 </style>
