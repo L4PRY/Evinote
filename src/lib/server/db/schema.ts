@@ -25,7 +25,7 @@ export const Session = pgTable(
 		token: varchar('token', { length: 24 }).notNull().unique(),
 		userId: serial('user_id')
 			.notNull()
-			.references(() => User.id),
+			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		iat: timestamp('issued_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		eat: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
 		description: text('description'),
@@ -53,8 +53,11 @@ export const User = pgTable(
 export const Permissions = pgTable(
 	'permissions',
 	{
-		bid: serial('board_id').references(() => Board.id),
-		uid: serial('user_id').references(() => User.id),
+		bid: serial('board_id').references(() => Board.id, {
+			onDelete: 'cascade',
+			onUpdate: 'cascade'
+		}),
+		uid: serial('user_id').references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		perm: permission('permission')
 	},
 	table => [index('user_session').on(table.bid, table.uid)]
