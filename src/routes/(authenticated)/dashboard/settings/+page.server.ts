@@ -1,5 +1,12 @@
 import { db } from '$lib/server/db';
-import { hashPassword, requireLogin, validateSessionToken, verifyPassword } from '$lib/server/auth';
+import {
+	deleteSessionTokenCookie,
+	hashPassword,
+	invalidateSession,
+	requireLogin,
+	validateSessionToken,
+	verifyPassword
+} from '$lib/server/auth';
 import * as table from '$lib/server/db/schema';
 import type { Actions, PageServerLoad } from './$types';
 import { and, desc, eq } from 'drizzle-orm';
@@ -7,6 +14,7 @@ import { error, fail } from '@sveltejs/kit';
 import { verify } from '@node-rs/argon2';
 import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
 import type { SettingsForm } from '$lib/types/dashboard/SettingsForm';
+import { goto } from '$app/navigation';
 
 export const load: PageServerLoad = async event => {
 	// username
@@ -155,5 +163,41 @@ export const actions: Actions = {
 
 		return { message: 'Account updated successfully', formReturn };
 	},
-	deleteAccount: async event => {}
+	deleteAccount: async event => {
+		const user = requireLogin();
+		const formData = await event.request.formData();
+		const username = formData.get('username') as string;
+		const password = formData.get('password') as string;
+		const files = formData.get('files') as 'yes' | 'no' | string;
+
+		let deleteFiles = files === 'yes' ? true : false;
+
+		if (!username || !password) return fail(400, 'missing required fields');
+
+		if (username !== user.username) return fail(400, 'invalid entry');
+
+		const dbUser = await db
+			.select()
+			.from(table.User)
+			.where(eq(table.User.id, user.id))
+			.then(r => r.at(0));
+
+		if (!dbUser) return fail(500, 'cannot find user on server');
+
+		const result = await verifyPassword(dbUser.passhash, password);
+
+		if (!result) return fail(403, 'invalid entry');
+
+		deleteSessionTokenCookie(event);
+		// this deletes everything from Session, Board, Permissions and BoardLikes
+		// Files is kept for if a board is using an image another user had uploaded,
+		// but should still be able to be deleted if a gdpr request is made (lol).
+
+		// todo: implement actual logic for wiping images off disk programmatically
+		// route and method already exist, just gotta think of a way to do it proper
+		if (deleteFiles) await db.delete(table.Files).where(eq(table.Files.uploader, user.id));
+		await db.delete(table.User).where(eq(table.User.id, user.id));
+
+		return await goto('/');
+	}
 };
