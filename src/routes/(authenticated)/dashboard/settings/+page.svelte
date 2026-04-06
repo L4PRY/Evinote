@@ -117,7 +117,7 @@
 		const form = new FormData();
 		form.append('username', deleteUsername);
 		form.append('password', deletePassword);
-		form.append('deleteFiles', deleteAllFiles ? 'yes' : 'no');
+		form.append('files', deleteAllFiles ? 'yes' : 'no');
 
 		await fetch('?/deleteAccount', {
 			method: 'POST',
