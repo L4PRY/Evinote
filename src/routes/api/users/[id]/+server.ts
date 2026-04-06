@@ -109,7 +109,7 @@ export async function DELETE(event: RequestEvent) {
 		return json({ error: 'User not found' }, { status: 404 });
 	}
 
-	await db.delete(table.Session).where(eq(table.Session.userId, userId));
+	await db.delete(table.Session).where(eq(table.Session.user, userId));
 
 	await db.delete(table.Board).where(eq(table.Board.owner, userId));
 

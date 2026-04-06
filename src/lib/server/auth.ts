@@ -85,7 +85,7 @@ export async function validateSessionToken(token: string) {
 			session: table.Session
 		})
 		.from(table.Session)
-		.innerJoin(table.User, eq(table.Session.userId, table.User.id))
+		.innerJoin(table.User, eq(table.Session.user, table.User.id))
 		.where(eq(table.Session.token, token));
 
 	if (!result) {

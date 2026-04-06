@@ -196,7 +196,12 @@ export const actions: Actions = {
 		// todo: implement actual logic for wiping images off disk programmatically
 		// route and method already exist, just gotta think of a way to do it proper
 		if (deleteFiles) await db.delete(table.Files).where(eq(table.Files.uploader, user.id));
-		await db.delete(table.User).where(eq(table.User.id, user.id));
+
+		// delete all boards
+		await db.delete(table.Board).where(eq(table.Board.owner, user.id));
+
+		// delete all sessions
+		await db.delete(table.Session).where(eq(table.Session.user, user.id));
 
 		return await goto('/');
 	}

@@ -23,7 +23,7 @@ export const Session = pgTable(
 	{
 		id: uuid('id').defaultRandom().primaryKey(),
 		token: varchar('token', { length: 24 }).notNull().unique(),
-		userId: serial('user_id')
+		user: serial('user_id')
 			.notNull()
 			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		iat: timestamp('issued_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -32,7 +32,7 @@ export const Session = pgTable(
 		location: text('location')
 	},
 	table => [
-		index('session_user').on(table.id, table.userId),
+		index('session_user').on(table.id, table.user),
 		index('session_token').on(table.id, table.token)
 	]
 );
