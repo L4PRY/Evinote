@@ -23,16 +23,16 @@ export const Session = pgTable(
 	{
 		id: uuid('id').defaultRandom().primaryKey(),
 		token: varchar('token', { length: 24 }).notNull().unique(),
-		userId: serial('user_id')
+		user: serial('user_id')
 			.notNull()
-			.references(() => User.id),
+			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		iat: timestamp('issued_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		eat: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
 		description: text('description'),
 		location: text('location')
 	},
 	table => [
-		index('session_user').on(table.id, table.userId),
+		index('session_user').on(table.id, table.user),
 		index('session_token').on(table.id, table.token)
 	]
 );
@@ -53,8 +53,11 @@ export const User = pgTable(
 export const Permissions = pgTable(
 	'permissions',
 	{
-		bid: serial('board_id').references(() => Board.id),
-		uid: serial('user_id').references(() => User.id),
+		bid: serial('board_id').references(() => Board.id, {
+			onDelete: 'cascade',
+			onUpdate: 'cascade'
+		}),
+		uid: serial('user_id').references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
 		perm: permission('permission')
 	},
 	table => [index('user_session').on(table.bid, table.uid)]
@@ -107,7 +110,7 @@ export const Files = pgTable(
 		mimetype: varchar('mimetype').notNull(),
 		uploaded: timestamp('uploaded_at').notNull().defaultNow(),
 		uploader: serial('uploader_id').references(() => User.id, {
-			onDelete: 'no action',
+			onDelete: 'set null',
 			onUpdate: 'cascade'
 		})
 	},
@@ -116,4 +119,23 @@ export const Files = pgTable(
 		index('file_name').on(table.filename),
 		index('hash_id').on(table.id, table.hash)
 	]
+);
+
+export const UserPfp = pgTable(
+	'user_pfp',
+	{
+		id: serial('id').primaryKey().notNull(),
+		user: serial('user_id')
+			.references(() => User.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			})
+			.notNull(),
+		file: serial('file_id').references(() => Files.id, {
+			onDelete: 'set null',
+			onUpdate: 'cascade'
+		}),
+		updated: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	table => [index('user_pfp_user').on(table.user), index('user_pfp_file').on(table.file)]
 );

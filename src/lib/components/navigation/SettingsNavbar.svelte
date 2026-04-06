@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import ThemeToggler from '$lib/components/frontend/ThemeToggler.svelte';
-	
+
 	const links = [
 		{ href: '/dashboard/settings', label: 'Account' },
 		{ href: '/dashboard/settings/sessions', label: 'Sessions' }
@@ -11,16 +11,12 @@
 <nav class="settings-nav">
 	<div class="nav-links">
 		{#each links as link}
-			<a 
-				href={link.href} 
-				class="nav-link" 
-				class:active={page.url.pathname === link.href}
-			>
+			<a href={link.href} class="nav-link" class:active={page.url.pathname === link.href}>
 				{link.label}
 			</a>
 		{/each}
 	</div>
-	
+
 	<ThemeToggler />
 </nav>
 
@@ -46,7 +42,7 @@
 		padding: 8px 16px;
 		border-radius: 8px;
 		opacity: 0.6;
-		transition: all 0.2s ease;        
+		transition: all 0.2s ease;
 	}
 
 	.nav-link:hover {

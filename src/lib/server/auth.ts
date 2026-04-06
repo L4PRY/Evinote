@@ -7,13 +7,25 @@ import type { PostgresError } from 'postgres';
 import { authLogger } from './logger';
 import type { AuthenticatedUser } from '../types/auth/AuthenticatedUser';
 import { generateSecureRandomString } from '$lib/randomString';
+import { hash, verify } from '@node-rs/argon2';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 const RENEW_THRESHOLD = DAY_IN_MS * 15;
 const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 
+export const argon2Props = {
+	memoryCost: 19456,
+	timeCost: 2,
+	outputLen: 32,
+	parallelism: 1
+} as const;
+
 export const sessionCookieName = '.EVISECURITY';
+
+export const hashPassword = (password: string) => hash(password, argon2Props);
+export const verifyPassword = (hash: string, password: string) =>
+	verify(hash, password, argon2Props);
 
 export function requireLogin(): AuthenticatedUser {
 	const { locals, route } = getRequestEvent();
@@ -32,14 +44,14 @@ export function checkLogin(): AuthenticatedUser | null {
 }
 
 let layer = 0;
-export async function createSession(userId: number, description: string, location: string) {
+export async function createSession(user: number, description: string, location: string) {
 	try {
 		layer++;
 		const result = await db
 			.insert(table.Session)
 			.values({
 				token: generateSecureRandomString(),
-				userId,
+				user,
 				description,
 				iat: new Date(),
 				eat: new Date(Date.now() + DAY_IN_MS * 30),
@@ -56,7 +68,7 @@ export async function createSession(userId: number, description: string, locatio
 				layer = 0;
 				throw new Error('Failed to create unique session token after multiple attempts');
 			}
-			createSession(userId, description, location);
+			return await createSession(user, description, location);
 		} else throw new Error('Failed to create session', { cause: error });
 	}
 }
@@ -73,7 +85,7 @@ export async function validateSessionToken(token: string) {
 			session: table.Session
 		})
 		.from(table.Session)
-		.innerJoin(table.User, eq(table.Session.userId, table.User.id))
+		.innerJoin(table.User, eq(table.Session.user, table.User.id))
 		.where(eq(table.Session.token, token));
 
 	if (!result) {
