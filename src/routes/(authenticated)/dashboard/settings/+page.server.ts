@@ -4,17 +4,14 @@ import {
 	hashPassword,
 	invalidateSession,
 	requireLogin,
-	validateSessionToken,
 	verifyPassword
 } from '$lib/server/auth';
 import * as table from '$lib/server/db/schema';
 import type { Actions, PageServerLoad } from './$types';
 import { and, desc, eq } from 'drizzle-orm';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { verify } from '@node-rs/argon2';
 import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
 import type { SettingsForm } from '$lib/types/dashboard/SettingsForm';
-import { goto } from '$app/navigation';
 
 export const load: PageServerLoad = async event => {
 	// username
