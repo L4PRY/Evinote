@@ -85,7 +85,7 @@ export const actions: Actions = {
 		let userProps = {
 			username: undefined as string | undefined,
 			email: undefined as string | undefined,
-			password: undefined as string | undefined
+			passhash: undefined as string | undefined
 		};
 
 		let formReturn = {
@@ -95,73 +95,91 @@ export const actions: Actions = {
 			newPassword: undefined as SettingsForm | undefined
 		};
 
-		if (!username || !email || !oldPassword || !newPassword)
-			return fail(400, { message: 'Missing required fields', formReturn });
-
 		if (username) {
+			// check if username is already taken
 			const existingUser = await db
 				.select()
 				.from(table.User)
 				.where(eq(table.User.username, username))
-				.limit(1)
-				.then(res => res[0]);
+				.then(r => r.at(0));
 
-			if (existingUser && existingUser.id !== user.id)
-				return fail(400, { message: 'Username already taken', formReturn });
+			if (existingUser && existingUser.id !== user.id) {
+				return fail(400, {
+					message: 'Username already taken',
+					formReturn: { ...formReturn, username: 'Username already taken' }
+				});
+			}
 
-			if (!validateUsername(username))
-				return fail(400, { message: 'invalid username', formReturn });
-
+			formReturn = {
+				...formReturn,
+				username: { message: 'Username successfully set', value: username }
+			};
 			userProps.username = username;
-			formReturn.username = { message: 'Username looks good', value: username };
 		}
 
 		if (email) {
+			// check if email is already taken
 			const existingEmail = await db
 				.select()
 				.from(table.User)
 				.where(eq(table.User.email, email))
-				.limit(1)
-				.then(res => res[0]);
+				.then(r => r.at(0));
 
-			if (existingEmail && existingEmail.id !== user.id)
-				return fail(400, { message: 'Email already in use', formReturn });
+			if (existingEmail && existingEmail.id !== user.id) {
+				return fail(400, {
+					message: 'Email already in use',
+					formReturn: { ...formReturn, email: 'Email already in use' }
+				});
+			}
 
-			if (!validateEmail(email)) return fail(400, { message: 'invalid email', formReturn });
-
+			formReturn = {
+				...formReturn,
+				email: { message: 'Email successfully set', value: email }
+			};
 			userProps.email = email;
-			formReturn.email = { message: 'Email looks good', value: email };
 		}
 
-		const passwordHash = await db
-			.select({ passwordHash: table.User.passhash })
-			.from(table.User)
-			.where(eq(table.User.id, user.id))
-			.limit(1)
-			.then(res => res[0].passwordHash);
+		if (oldPassword && newPassword) {
+			// get current password hash
+			const existingHash = await db
+				.select()
+				.from(table.User)
+				.where(eq(table.User.id, user.id))
+				.then(r => r.at(0)?.passhash);
 
-		const newPasshash = await hashPassword(newPassword);
-
-		if (!passwordHash || !(await verify(passwordHash, oldPassword))) {
-			return fail(400, {
-				message: 'Old password is incorrect',
-				formReturn: {
-					...formReturn,
-					oldPassword: { message: 'Old password is incorrect', value: undefined }
-				}
-			});
-		} else {
-			userProps.password = newPassword;
-			formReturn.oldPassword = { message: 'Old password is correct', value: undefined };
-
-			if (validatePassword(newPassword)) {
-				await db
-					.update(table.User)
-					.set({ passhash: newPasshash })
-					.where(eq(table.User.id, user.id));
-
-				formReturn.newPassword = { message: 'New password looks good', value: undefined };
+			if (!existingHash) {
+				throw error(500, 'User not found');
 			}
+
+			// verify old password
+			const isValid = await verifyPassword(existingHash, oldPassword);
+
+			if (!isValid) {
+				return fail(400, {
+					message: 'Old password is incorrect',
+					formReturn: { ...formReturn, oldPassword: 'Old password is incorrect' }
+				});
+			}
+
+			// validate new password
+			if (validatePassword(newPassword)) {
+				return fail(400, {
+					message: 'New password does not meet criteria',
+					formReturn: { ...formReturn, newPassword: validatePassword(newPassword) }
+				});
+			}
+
+			// hash new password
+			formReturn = {
+				...formReturn,
+				newPassword: { message: 'Password successfully updated', value: '' },
+				oldPassword: { message: 'Old password verified', value: '' }
+			};
+			userProps.passhash = await hashPassword(newPassword);
+		}
+
+		if (Object.keys(userProps).length > 0) {
+			await db.update(table.User).set(userProps).where(eq(table.User.id, user.id));
 		}
 
 		return { message: 'Account updated successfully', formReturn };
