@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
 	import SettingsTab from '$lib/components/settings/SettingsTab.svelte';
+	import { goto } from '$app/navigation';
 
 	const { data } = $props();
 	const { user, email, profilePictures } = data;
@@ -122,6 +123,9 @@
 			method: 'POST',
 			body: form
 		});
+
+		// After deletion, log the user out and redirect to homepage
+		goto(resolve('/auth'));
 	}
 
 	onMount(() => {
