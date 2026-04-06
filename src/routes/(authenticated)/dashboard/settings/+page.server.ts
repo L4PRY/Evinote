@@ -186,6 +186,7 @@ export const actions: Actions = {
 	},
 	deleteAccount: async event => {
 		const user = requireLogin();
+		const session = event.locals.session;
 		const formData = await event.request.formData();
 		const username = formData.get('username') as string;
 		const password = formData.get('password') as string;
@@ -241,6 +242,7 @@ export const actions: Actions = {
 			await tx.delete(table.User).where(eq(table.User.id, user.id));
 		});
 
+		invalidateSession(session!.id);
 		deleteSessionTokenCookie(event);
 		return { success: true, message: 'Account deleted successfully' };
 	}
