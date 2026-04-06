@@ -110,7 +110,7 @@ export const Files = pgTable(
 		mimetype: varchar('mimetype').notNull(),
 		uploaded: timestamp('uploaded_at').notNull().defaultNow(),
 		uploader: serial('uploader_id').references(() => User.id, {
-			onDelete: 'no action',
+			onDelete: 'set null',
 			onUpdate: 'cascade'
 		})
 	},
