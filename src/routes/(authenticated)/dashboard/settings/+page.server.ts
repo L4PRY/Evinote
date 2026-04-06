@@ -155,7 +155,10 @@ export const actions: Actions = {
 			formReturn.oldPassword = { message: 'Old password is correct', value: undefined };
 
 			if (validatePassword(newPassword)) {
-				await db.update(table.User).set({ passhash: newPasshash });
+				await db
+					.update(table.User)
+					.set({ passhash: newPasshash })
+					.where(eq(table.User.id, user.id));
 
 				formReturn.newPassword = { message: 'New password looks good', value: undefined };
 			}
