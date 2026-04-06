@@ -103,7 +103,7 @@ export const actions: Actions = {
 				.where(eq(table.User.username, username))
 				.then(r => r.at(0));
 
-			if (existingUser && existingUser.id !== user.id) {
+			if (existingUser && existingUser.id !== user.id && !validateUsername(username)) {
 				return fail(400, {
 					message: 'Username already taken',
 					formReturn: { ...formReturn, username: 'Username already taken' }
@@ -125,7 +125,7 @@ export const actions: Actions = {
 				.where(eq(table.User.email, email))
 				.then(r => r.at(0));
 
-			if (existingEmail && existingEmail.id !== user.id) {
+			if (existingEmail && existingEmail.id !== user.id && !validateEmail(email)) {
 				return fail(400, {
 					message: 'Email already in use',
 					formReturn: { ...formReturn, email: 'Email already in use' }
