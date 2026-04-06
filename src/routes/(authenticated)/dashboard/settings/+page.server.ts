@@ -10,7 +10,7 @@ import {
 import * as table from '$lib/server/db/schema';
 import type { Actions, PageServerLoad } from './$types';
 import { and, desc, eq } from 'drizzle-orm';
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { verify } from '@node-rs/argon2';
 import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
 import type { SettingsForm } from '$lib/types/dashboard/SettingsForm';
@@ -188,21 +188,39 @@ export const actions: Actions = {
 
 		if (!result) return fail(403, 'invalid entry');
 
-		deleteSessionTokenCookie(event);
 		// this deletes everything from Session, Board, Permissions and BoardLikes
 		// Files is kept for if a board is using an image another user had uploaded,
 		// but should still be able to be deleted if a gdpr request is made (lol).
 
 		// todo: implement actual logic for wiping images off disk programmatically
 		// route and method already exist, just gotta think of a way to do it proper
-		if (deleteFiles) await db.delete(table.Files).where(eq(table.Files.uploader, user.id));
+		await db.transaction(async tx => {
+			if (deleteFiles) {
+				await tx.delete(table.UserPfp).where(and(eq(table.UserPfp.user, user.id)));
+				await tx
+					.delete(table.Files)
+					.where(
+						eq(
+							table.Files.id,
+							tx
+								.select({ id: table.Files.id })
+								.from(table.UserPfp)
+								.where(eq(table.UserPfp.user, user.id))
+								.leftJoin(table.Files, eq(table.Files.id, table.UserPfp.file))
+						)
+					);
+			}
+			// delete all boards
+			await db.delete(table.Board).where(eq(table.Board.owner, user.id));
 
-		// delete all boards
-		await db.delete(table.Board).where(eq(table.Board.owner, user.id));
+			// delete all sessions
+			await db.delete(table.Session).where(eq(table.Session.user, user.id));
 
-		// delete all sessions
-		await db.delete(table.Session).where(eq(table.Session.user, user.id));
+			// delete user finally
+			await db.delete(table.User).where(eq(table.User.id, user.id));
+		});
 
-		return await goto('/');
+		deleteSessionTokenCookie(event);
+		return { success: true, message: 'Account deleted successfully' };
 	}
 };
