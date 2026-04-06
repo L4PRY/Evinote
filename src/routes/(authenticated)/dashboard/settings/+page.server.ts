@@ -232,13 +232,13 @@ export const actions: Actions = {
 					);
 			}
 			// delete all boards
-			await db.delete(table.Board).where(eq(table.Board.owner, user.id));
+			await tx.delete(table.Board).where(eq(table.Board.owner, user.id));
 
 			// delete all sessions
-			await db.delete(table.Session).where(eq(table.Session.user, user.id));
+			await tx.delete(table.Session).where(eq(table.Session.user, user.id));
 
 			// delete user finally
-			await db.delete(table.User).where(eq(table.User.id, user.id));
+			await tx.delete(table.User).where(eq(table.User.id, user.id));
 		});
 
 		deleteSessionTokenCookie(event);
