@@ -11,7 +11,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { and, desc, eq } from 'drizzle-orm';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
-import type { SettingsForm } from '$lib/types/dashboard/SettingsForm';
+import type { SettingsForm, SettingsFormReturn } from '$lib/types/dashboard/SettingsForm';
 
 export const load: PageServerLoad = async event => {
 	// username
@@ -90,7 +90,22 @@ export const actions: Actions = {
 			email: undefined as SettingsForm | undefined,
 			oldPassword: undefined as SettingsForm | undefined,
 			newPassword: undefined as SettingsForm | undefined
-		};
+		} satisfies SettingsFormReturn;
+
+		if (!oldPassword) {
+			formReturn = {
+				...formReturn,
+				oldPassword: {
+					message: 'Old password is required to make changes',
+					value: '',
+					success: false
+				}
+			};
+			return fail(400, {
+				message: 'Old password is required to make changes',
+				formReturn
+			});
+		}
 
 		if (username) {
 			// check if username is already taken
@@ -101,15 +116,19 @@ export const actions: Actions = {
 				.then(r => r.at(0));
 
 			if (existingUser && existingUser.id !== user.id && !validateUsername(username)) {
+				formReturn = {
+					...formReturn,
+					username: { message: 'Username already taken', value: username, success: false }
+				};
 				return fail(400, {
 					message: 'Username already taken',
-					formReturn: { ...formReturn, username: 'Username already taken' }
+					formReturn
 				});
 			}
 
 			formReturn = {
 				...formReturn,
-				username: { message: 'Username successfully set', value: username }
+				username: { message: 'Username successfully set', value: username, success: true }
 			};
 			userProps.username = username;
 		}
@@ -123,20 +142,24 @@ export const actions: Actions = {
 				.then(r => r.at(0));
 
 			if (existingEmail && existingEmail.id !== user.id && !validateEmail(email)) {
+				formReturn = {
+					...formReturn,
+					email: { message: 'Email already in use', value: email, success: false }
+				};
 				return fail(400, {
 					message: 'Email already in use',
-					formReturn: { ...formReturn, email: 'Email already in use' }
+					formReturn
 				});
 			}
 
 			formReturn = {
 				...formReturn,
-				email: { message: 'Email successfully set', value: email }
+				email: { message: 'Email successfully set', value: email, success: true }
 			};
 			userProps.email = email;
 		}
 
-		if (oldPassword && newPassword) {
+		if (newPassword) {
 			// get current password hash
 			const existingHash = await db
 				.select()
@@ -152,29 +175,38 @@ export const actions: Actions = {
 			const isValid = await verifyPassword(existingHash, oldPassword);
 
 			if (!isValid) {
+				formReturn = {
+					...formReturn,
+					oldPassword: { message: 'Old password is incorrect', value: '', success: false }
+				};
 				return fail(400, {
 					message: 'Old password is incorrect',
-					formReturn: { ...formReturn, oldPassword: 'Old password is incorrect' }
+					formReturn
 				});
 			}
 
 			// validate new password
-			if (validatePassword(newPassword)) {
+			if (!validatePassword(newPassword)) {
+				formReturn = {
+					...formReturn,
+					newPassword: { message: 'New password does not meet criteria', value: '', success: false }
+				};
 				return fail(400, {
 					message: 'New password does not meet criteria',
-					formReturn: { ...formReturn, newPassword: validatePassword(newPassword) }
+					formReturn
 				});
 			}
 
 			// hash new password
 			formReturn = {
 				...formReturn,
-				newPassword: { message: 'Password successfully updated', value: '' },
-				oldPassword: { message: 'Old password verified', value: '' }
+				newPassword: { message: 'Password successfully updated', value: '', success: true },
+				oldPassword: { message: 'Old password verified', value: '', success: true }
 			};
 			userProps.passhash = await hashPassword(newPassword);
 		}
 
+		console.log(userProps);
 		if (Object.keys(userProps).length > 0) {
 			await db.update(table.User).set(userProps).where(eq(table.User.id, user.id));
 		}

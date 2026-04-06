@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import SettingsTab from '$lib/components/settings/SettingsTab.svelte';
 	import { goto } from '$app/navigation';
+	import type { SettingsFormReturn } from '$lib/types/dashboard/SettingsForm';
 
 	const { data } = $props();
 	const { user, email, profilePictures } = data;
@@ -26,7 +27,8 @@
 	let formEmail = $derived(email);
 	let formOldPassword = $state('');
 	let formNewPassword = $state('');
-	let formResponse = $state<any>(null);
+	let formResponse = $state<SettingsFormReturn | undefined>();
+	let formSuccess = $state(false);
 
 	// Delete account state
 	let showDeleteModal = $state(false);
@@ -131,6 +133,10 @@
 	onMount(() => {
 		document.title = 'Evinote • Settings';
 	});
+
+	$effect(() => {
+		$inspect(formResponse);
+	});
 </script>
 
 <!-- Account Header -->
@@ -209,7 +215,8 @@
 		use:enhance={() => {
 			return async ({ result }) => {
 				if (result.type === 'success' || result.type === 'failure') {
-					formResponse = result.data;
+					formResponse = result.data!.formReturn!;
+					formSuccess = result.type === 'success';
 				}
 			};
 		}}
@@ -224,12 +231,10 @@
 				bind:value={formUsername}
 				class="form-input"
 			/>
-			{#if formResponse?.formReturn?.username}
-				<p
-					class="form-feedback"
-					class:success={!formResponse.formReturn.username.message.includes('taken')}
-				>
-					{formResponse.formReturn.username.message}
+			{#if formResponse?.username}
+				{@const success = formResponse.username.success}
+				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
+					{formResponse.username.message}
 				</p>
 			{/if}
 		</div>
@@ -238,12 +243,10 @@
 		<div class="form-group">
 			<label for="email">Email</label>
 			<input id="email" type="email" name="email" bind:value={formEmail} class="form-input" />
-			{#if formResponse?.formReturn?.email}
-				<p
-					class="form-feedback"
-					class:success={!formResponse.formReturn.email.message.includes('in use')}
-				>
-					{formResponse.formReturn.email.message}
+			{#if formResponse?.email}
+				{@const success = formResponse.email.success}
+				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
+					{formResponse.email.message}
 				</p>
 			{/if}
 		</div>
@@ -258,12 +261,10 @@
 				bind:value={formOldPassword}
 				class="form-input"
 			/>
-			{#if formResponse?.formReturn?.oldPassword}
-				<p
-					class="form-feedback"
-					class:success={formResponse.formReturn.oldPassword.message.includes('correct')}
-				>
-					{formResponse.formReturn.oldPassword.message}
+			{#if formResponse?.oldPassword}
+				{@const success = formResponse.oldPassword.success}
+				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
+					{formResponse.oldPassword.message}
 				</p>
 			{/if}
 		</div>
@@ -278,12 +279,10 @@
 				bind:value={formNewPassword}
 				class="form-input"
 			/>
-			{#if formResponse?.formReturn?.newPassword}
-				<p
-					class="form-feedback"
-					class:success={formResponse.formReturn.newPassword.message.includes('good')}
-				>
-					{formResponse.formReturn.newPassword.message}
+			{#if formResponse?.newPassword}
+				{@const success = formResponse.newPassword.success}
+				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
+					{formResponse.newPassword.message}
 				</p>
 			{/if}
 		</div>
@@ -635,6 +634,10 @@
 
 	.form-feedback.success {
 		color: #51cf66;
+	}
+
+	.form-feedback.faliure {
+		color: #ff6b6b;
 	}
 
 	.submit-btn {
