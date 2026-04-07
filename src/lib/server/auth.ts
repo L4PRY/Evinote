@@ -47,8 +47,8 @@ let layer = 0;
 export async function createSession(
 	user: number,
 	description: string,
-	location?: string,
-	eat?: Date
+	eat?: Date,
+	location?: string
 ) {
 	try {
 		layer++;
@@ -73,7 +73,7 @@ export async function createSession(
 				layer = 0;
 				throw new Error('Failed to create unique session token after multiple attempts');
 			}
-			return await createSession(user, description, location);
+			return await createSession(user, description, eat, location);
 		} else throw new Error('Failed to create session', { cause: error });
 	}
 }

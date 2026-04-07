@@ -39,8 +39,8 @@ export async function POST(event: RequestEvent) {
 		.createSession(
 			user.id,
 			request.headers.get('user-agent') ?? 'api',
-			'',
-			new Date(Date.now() + 1000 * 60 * 60 * 24) // 1 day
+			new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day
+			''
 		)
 		.then(res => res.at(0));
 
