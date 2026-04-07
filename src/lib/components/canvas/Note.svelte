@@ -1172,6 +1172,7 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
+		min-width: fit-content;
 	}
 
 	.toolbar-section {
