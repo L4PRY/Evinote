@@ -285,6 +285,13 @@
 <!-- Canvas viewport wrapper — shrinks when sidebar is open -->
 <div class="canvas-viewport" class:sidebar-open={settingsOpen}>
 
+<div class="board-title-container">
+	<div class="board-title">
+		<LucideSymbol symbol="Layout" size={16} strokeWidth={2} />
+		<span>{board?.name ?? 'Loading...'}</span>
+	</div>
+</div>
+
 <!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
 {#if board && (board.owner === user?.id || perms?.perm === 'Write')}
 	<div class="note-creator">
@@ -439,12 +446,6 @@
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
-	.save-button:hover {
-		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
-		border-color: rgba(255, 255, 255, 0.3);
-		transform: translateY(-1px);
-	}
-
 	.save-button:active {
 		transform: scale(0.95);
 	}
@@ -495,10 +496,6 @@
 
 	:global(.canvas-viewport.sidebar-open) ~ .settings-toggle {
 		right: 380px;
-	}
-
-	.settings-toggle:hover {
-		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
 	}
 
 	.settings-toggle:active {
@@ -619,14 +616,53 @@
 		cursor: pointer;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-		&:hover {
-			background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
-			border-color: rgba(255, 255, 255, 0.3);
-			transform: translateX(-1px);
-		}
-
 		&:active {
 			transform: scale(0.95);
+		}
+	}
+
+	.board-title-container {
+		position: fixed;
+		top: 20px;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+		z-index: 1000;
+	}
+
+	.board-title {
+		height: 38px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		background: var(--editor-interface-background, rgba(20, 20, 30, 0.85));
+		border: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.12));
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border-radius: 12px;
+		padding: 0 18px;
+		color: var(--default-text-color, #fff);
+		font-size: 0.9rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+		pointer-events: auto;
+		max-width: 300px;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.board-title span {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		opacity: 0.9;
+	}
+
+	@media (max-width: 768px) {
+		.board-title-container {
+			display: none; /* Hide on small screens to avoid overlap */
 		}
 	}
 
