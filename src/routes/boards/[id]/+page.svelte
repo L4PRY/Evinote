@@ -459,6 +459,12 @@
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
+	.save-button:hover {
+		background: var(--editor-interface-background, rgba(30, 30, 45, 0.95));
+		border-color: var(--editor-interface-border, rgba(255, 255, 255, 0.25));
+		transform: translateY(-2px);
+	}
+
 	.save-button:active {
 		transform: scale(0.95);
 	}
@@ -509,6 +515,12 @@
 
 	:global(.canvas-viewport.sidebar-open) ~ .settings-toggle {
 		right: 380px;
+	}
+
+	.settings-toggle:hover {
+		background: var(--editor-interface-background, rgba(30, 30, 45, 0.95));
+		border-color: var(--editor-interface-border, rgba(255, 255, 255, 0.25));
+		transform: translateY(-2px);
 	}
 
 	.settings-toggle:active {
@@ -628,6 +640,12 @@
 		-webkit-backdrop-filter: blur(10px);
 		cursor: pointer;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+		&:hover {
+			background: var(--editor-interface-background, rgba(30, 30, 45, 0.95));
+			border-color: var(--editor-interface-border, rgba(255, 255, 255, 0.25));
+			transform: translateX(-3px);
+		}
 
 		&:active {
 			transform: scale(0.95);
