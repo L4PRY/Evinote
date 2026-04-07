@@ -4,11 +4,16 @@
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
 	import SettingsTab from '$lib/components/settings/SettingsTab.svelte';
+	import ProfilePicturePopup from '$lib/components/settings/ProfilePicturePopup.svelte';
 	import { goto } from '$app/navigation';
 	import type { SettingsFormReturn } from '$lib/types/dashboard/SettingsForm';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
+	import { notifications } from '$lib/stores/notifications';
 
-	const { data } = $props();
-	const { user, email, profilePictures } = data;
+	let { data }: { data: PageData } = $props();
+	const user = $derived(data.user);
+	const email = $derived(data.email);
+	const profilePictures = $derived(data.profilePictures);
 
 	// Current picture is the latest (first in array)
 	const currentPfp = $derived(
@@ -20,15 +25,27 @@
 
 	let doHide = $state(false);
 	let uploading = $state(false);
+	let showPfpPopup = $state(false);
 	let selectedPfpId: string | null = null;
 
 	// Form state for user properties
-	let formUsername = $derived(user.username);
-	let formEmail = $derived(email);
+	// svelte-ignore state_referenced_locally
+	let formUsername = $state(user.username);
+	// svelte-ignore state_referenced_locally
+	let formEmail = $state(email);
+	let formPassword = $state(''); // For profile confirmation
 	let formOldPassword = $state('');
 	let formNewPassword = $state('');
-	let formResponse = $state<SettingsFormReturn | undefined>();
-	let formSuccess = $state(false);
+
+	let profileResponse = $state<SettingsFormReturn | undefined>();
+	let profileSuccess = $state(false);
+
+	let passwordResponse = $state<SettingsFormReturn | undefined>();
+	let passwordSuccess = $state(false);
+
+	let isEditingUsername = $state(false);
+	let isEditingEmail = $state(false);
+	let isEditingPassword = $state(false);
 
 	// Delete account state
 	let showDeleteModal = $state(false);
@@ -39,44 +56,6 @@
 
 	function toggleHide() {
 		doHide = !doHide;
-	}
-
-	async function handleFileUpload(e: Event) {
-		const input = e.target as HTMLInputElement;
-		const file = input.files?.[0];
-		if (!file) return;
-
-		uploading = true;
-		try {
-			const fileForm = new FormData();
-			fileForm.append('file', file);
-
-			const fileRes = await fetch('/api/files/upload', {
-				method: 'POST',
-				body: fileForm
-			});
-
-			if (!fileRes.ok) {
-				throw new Error('Upload failed');
-			}
-
-			const result = (await fileRes.json()) as { id: number; url: string; mime: string };
-
-			// Auto-submit the setPfp form after successful upload
-			const pfpForm = new FormData();
-			pfpForm.append('id', result.id.toString());
-
-			const pfpRes = await fetch('?/setPfp', {
-				method: 'POST',
-				body: pfpForm
-			});
-		} catch (err) {
-			console.error('File upload error:', err);
-			alert('Failed to upload profile picture. Please try again.');
-		} finally {
-			uploading = false;
-			// Reset input
-		}
 	}
 
 	function getCurrentPfpUrl(): string {
@@ -101,6 +80,8 @@
 		showDeleteModal = false;
 		deleteUsername = '';
 		deletePassword = '';
+
+		showConfirmDeleteModal = false;
 	}
 
 	function openConfirmDeleteModal() {
@@ -113,6 +94,7 @@
 
 	function closeConfirmDeleteModal() {
 		showConfirmDeleteModal = false;
+		closeDeleteModal();
 	}
 
 	async function submitDeleteAccount() {
@@ -121,13 +103,32 @@
 		form.append('password', deletePassword);
 		form.append('files', deleteAllFiles ? 'yes' : 'no');
 
-		await fetch('?/deleteAccount', {
+		const res = await fetch('?/deleteAccount', {
 			method: 'POST',
 			body: form
 		});
 
-		// After deletion, log the user out and redirect to homepage
-		goto(resolve('/auth'));
+		const data = await res.json();
+
+		console.log(data);
+
+		if (data.type === 'success') {
+			// After deletion, log the user out and redirect to homepage
+			goto(resolve('/auth'));
+			notifications.add({
+				title: 'Success',
+				message: 'Account deleted successfully.',
+				type: 'success',
+				duration: 3000
+			});
+		} else {
+			notifications.add({
+				title: 'Error during account deletion',
+				message: data.data,
+				type: 'error',
+				duration: 3000
+			});
+		}
 	}
 
 	onMount(() => {
@@ -135,18 +136,28 @@
 	});
 
 	$effect(() => {
-		$inspect(formResponse);
+		$inspect(profileResponse);
+		$inspect(passwordResponse);
 	});
 </script>
 
 <!-- Account Header -->
 <div class="account-settings-container">
 	<div class="account-settings">
-		<img
-			src={getCurrentPfpUrl()}
-			alt="User icon for {user.username}"
-			class="h-24 w-24 rounded-full"
-		/>
+		<button
+			class="pfp-trigger-btn"
+			onclick={() => (showPfpPopup = true)}
+			title="Change profile picture"
+		>
+			<img
+				src={getCurrentPfpUrl()}
+				alt="User icon for {user.username}"
+				class="avatar-img h-24 w-24 rounded-full"
+			/>
+			<div class="avatar-overlay">
+				<LucideSymbol symbol="Pencil" size={32} strokeWidth={2} />
+			</div>
+		</button>
 		<div class="account-settings-info">
 			<h2>{user.username}</h2>
 			<p>{user.role}</p>
@@ -159,232 +170,308 @@
 	</div>
 </div>
 
-<!-- Profile Picture Section -->
-<div class="pfp-section">
-	<h3>Profile Picture</h3>
-
-	<div class="current-pfp">
-		<img
-			src={getCurrentPfpUrl()}
-			alt="Current profile picture for {user.username}"
-			class="current-pfp-img"
-		/>
-	</div>
-
-	<div class="upload-section">
-		<label for="pfp-upload" class="upload-label">
-			<span>Upload New Profile Picture</span>
-		</label>
-		<input
-			id="pfp-upload"
-			type="file"
-			accept="image/*"
-			onchange={handleFileUpload}
-			disabled={uploading}
-			class="file-input"
-		/>
-		{#if uploading}
-			<p class="uploading-text">Uploading...</p>
-		{/if}
-	</div>
-
-	{#if previousPfps.length > 0}
-		<div class="previous-pfps">
-			<h4>Previous Profile Pictures</h4>
-			<div class="pfps-row">
-				{#each previousPfps as pfp (pfp.id)}
-					<form method="post" action="?/setPfp" use:enhance class="pfp-item">
-						<input type="hidden" name="id" value={pfp.id} />
-						<button type="submit" class="pfp-button" title="Set as profile picture">
-							<img src={getPfpUrl(pfp.hash!)} alt="Previous profile option" class="pfp-thumbnail" />
-						</button>
+<div class="settings-layout-container">
+	<!-- Profile Settings Form Section -->
+	<div class="settings-section">
+		<!-- Username Section -->
+		<div class="setting-item">
+			<span class="setting-title">Username</span>
+			<div class="setting-row">
+				{#if isEditingUsername}
+					<form
+						method="post"
+						action="?/updateProfile"
+						class="inline-edit-form"
+						use:enhance={() => {
+							return async ({ result }) => {
+								if (result.type === 'success' || result.type === 'failure') {
+									profileResponse = result.data?.formReturn as SettingsFormReturn;
+									profileSuccess = result.type === 'success';
+									if (profileSuccess) {
+										isEditingUsername = false;
+										formPassword = '';
+									}
+								}
+							};
+						}}
+					>
+						<div class="edit-inputs">
+							<input
+								type="text"
+								name="username"
+								bind:value={formUsername}
+								class="form-input"
+								autofocus
+							/>
+							<input
+								type="password"
+								name="password"
+								bind:value={formPassword}
+								class="form-input"
+								placeholder="Confirm password"
+							/>
+						</div>
+						<div class="edit-actions">
+							<button type="submit" class="save-btn">Save</button>
+							<button type="button" class="cancel-btn" onclick={() => (isEditingUsername = false)}
+								>Cancel</button
+							>
+						</div>
 					</form>
-				{/each}
+				{:else}
+					<p class="setting-paragraph">{user.username}</p>
+					<button class="edit-btn" onclick={() => (isEditingUsername = true)}> Edit </button>
+				{/if}
+			</div>
+			{#if profileResponse?.username}
+				{@const success = profileResponse.username.success}
+				<p class={(success ? 'success' : 'failure') + ' form-feedback'}>
+					{profileResponse.username.message}
+				</p>
+			{/if}
+		</div>
+
+		<!-- Email Section -->
+		<div class="setting-item">
+			<span class="setting-title">Email</span>
+			<div class="setting-row">
+				{#if isEditingEmail}
+					<form
+						method="post"
+						action="?/updateProfile"
+						class="inline-edit-form"
+						use:enhance={() => {
+							return async ({ result }) => {
+								if (result.type === 'success' || result.type === 'failure') {
+									profileResponse = result.data?.formReturn as SettingsFormReturn;
+									profileSuccess = result.type === 'success';
+									if (profileSuccess) {
+										isEditingEmail = false;
+										formPassword = '';
+									}
+								}
+							};
+						}}
+					>
+						<div class="edit-inputs">
+							<input
+								type="email"
+								name="email"
+								bind:value={formEmail}
+								class="form-input"
+								autofocus
+							/>
+							<input
+								type="password"
+								name="password"
+								bind:value={formPassword}
+								class="form-input"
+								placeholder="Confirm password"
+							/>
+						</div>
+						<div class="edit-actions">
+							<button type="submit" class="save-btn">Save</button>
+							<button type="button" class="cancel-btn" onclick={() => (isEditingEmail = false)}
+								>Cancel</button
+							>
+						</div>
+					</form>
+				{:else}
+					<p class="setting-paragraph">{email}</p>
+					<button class="edit-btn" onclick={() => (isEditingEmail = true)}> Edit </button>
+				{/if}
+			</div>
+			{#if profileResponse?.email}
+				{@const success = profileResponse.email.success}
+				<p class={(success ? 'success' : 'failure') + ' form-feedback'}>
+					{profileResponse.email.message}
+				</p>
+			{/if}
+		</div>
+
+		{#if profileResponse?.oldPassword && (isEditingUsername || isEditingEmail)}
+			{@const success = profileResponse.oldPassword.success}
+			<p class={(success ? 'success' : 'failure') + ' form-feedback'}>
+				{profileResponse.oldPassword.message}
+			</p>
+		{/if}
+
+		<div class="setting-item">
+			<span class="setting-title">Password</span>
+			<div class="setting-row">
+				{#if isEditingPassword}
+					<form
+						method="post"
+						action="?/changePassword"
+						class="inline-edit-form password-form"
+						use:enhance={() => {
+							return async ({ result }) => {
+								if (result.type === 'success' || result.type === 'failure') {
+									passwordResponse = result.data?.formReturn as SettingsFormReturn;
+									passwordSuccess = result.type === 'success';
+									if (passwordSuccess) {
+										isEditingPassword = false;
+										formOldPassword = '';
+										formNewPassword = '';
+									}
+								}
+							};
+						}}
+					>
+						<div class="edit-inputs">
+							<input
+								type="password"
+								name="oldPassword"
+								bind:value={formOldPassword}
+								class="form-input"
+								placeholder="Current password"
+								autofocus
+							/>
+							<input
+								type="password"
+								name="newPassword"
+								bind:value={formNewPassword}
+								class="form-input"
+								placeholder="New password"
+							/>
+						</div>
+						<div class="edit-actions">
+							<button type="submit" class="save-btn">Change</button>
+							<button type="button" class="cancel-btn" onclick={() => (isEditingPassword = false)}
+								>Cancel</button
+							>
+						</div>
+					</form>
+				{:else}
+					<p class="setting-paragraph" style="opacity: 0.5;">••••••••••••</p>
+					<button class="edit-btn" onclick={() => (isEditingPassword = true)}> Change </button>
+				{/if}
+			</div>
+			{#if passwordResponse?.oldPassword}
+				{@const success = passwordResponse.oldPassword.success}
+				<p class={(success ? 'success' : 'failure') + ' form-feedback'}>
+					{passwordResponse.oldPassword.message}
+				</p>
+			{/if}
+			{#if passwordResponse?.newPassword}
+				{@const success = passwordResponse.newPassword.success}
+				<p class={(success ? 'success' : 'failure') + ' form-feedback'}>
+					{passwordResponse.newPassword.message}
+				</p>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Delete Account Section -->
+	<div class="delete-account-section">
+		<h3>Delete Account</h3>
+		<p style="margin-bottom: 1rem; opacity: 0.7;">
+			Permanently delete your account and all associated data. This action cannot be undone.
+		</p>
+		<button class="delete-account-btn" onclick={openDeleteModal}>Delete Account</button>
+	</div>
+
+	<!-- Delete Account Credentials Modal -->
+	{#if showDeleteModal}
+		<div
+			class="modal-overlay"
+			role="presentation"
+			onclick={closeDeleteModal}
+			onkeydown={e => e.key === 'Escape' && closeDeleteModal()}
+		>
+			<div
+				class="modal-content"
+				role="dialog"
+				tabindex="0"
+				onclick={e => e.stopPropagation()}
+				onkeydown={e => e.key === 'Escape' && closeDeleteModal()}
+			>
+				<h2>Delete Account</h2>
+				<p>Enter your credentials to proceed with account deletion.</p>
+
+				<div class="modal-form-group">
+					<label for="delete-username">Username</label>
+					<input
+						id="delete-username"
+						type="text"
+						bind:value={deleteUsername}
+						placeholder="Enter your username"
+					/>
+				</div>
+
+				<div class="modal-form-group">
+					<label for="delete-password">Password</label>
+					<input
+						id="delete-password"
+						type="password"
+						bind:value={deletePassword}
+						placeholder="Enter your password"
+					/>
+				</div>
+
+				<div class="modal-buttons">
+					<button class="modal-btn modal-btn-primary" onclick={openConfirmDeleteModal}
+						>Continue</button
+					>
+					<button class="modal-btn modal-btn-secondary" onclick={closeDeleteModal}>Cancel</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Delete Account Confirmation Modal -->
+	{#if showConfirmDeleteModal}
+		<div
+			class="modal-overlay"
+			role="presentation"
+			onclick={closeConfirmDeleteModal}
+			onkeydown={e => e.key === 'Escape' && closeConfirmDeleteModal()}
+		>
+			<div
+				class="modal-content confirm-modal-content"
+				role="alertdialog"
+				tabindex="-1"
+				onclick={e => e.stopPropagation()}
+				onkeydown={e => e.key === 'Escape' && closeConfirmDeleteModal()}
+			>
+				<h2>Are you sure?</h2>
+				<p>This action will permanently delete your account and cannot be undone.</p>
+
+				<div class="checkbox-group">
+					<label>
+						<input type="checkbox" bind:checked={deleteAllFiles} />
+						<span
+							>Also delete all files (profile pictures, images, videos, etc.) that I've uploaded.</span
+						>
+					</label>
+				</div>
+
+				<div class="confirm-buttons">
+					<button class="confirm-btn-no" onclick={closeConfirmDeleteModal}>No</button>
+					<button class="confirm-btn-yes" onclick={submitDeleteAccount}>Yes</button>
+				</div>
 			</div>
 		</div>
 	{/if}
 </div>
 
-<!-- User Settings Form Section -->
-<div class="settings-section">
-	<h3>Account Settings</h3>
-
-	<form
-		method="post"
-		action="?/setUserProps"
-		use:enhance={() => {
-			return async ({ result }) => {
-				if (result.type === 'success' || result.type === 'failure') {
-					formResponse = result.data!.formReturn!;
-					formSuccess = result.type === 'success';
-				}
-			};
-		}}
-	>
-		<!-- Username Field -->
-		<div class="form-group">
-			<label for="username">Username</label>
-			<input
-				id="username"
-				type="text"
-				name="username"
-				bind:value={formUsername}
-				class="form-input"
-			/>
-			{#if formResponse?.username}
-				{@const success = formResponse.username.success}
-				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
-					{formResponse.username.message}
-				</p>
-			{/if}
-		</div>
-
-		<!-- Email Field -->
-		<div class="form-group">
-			<label for="email">Email</label>
-			<input id="email" type="email" name="email" bind:value={formEmail} class="form-input" />
-			{#if formResponse?.email}
-				{@const success = formResponse.email.success}
-				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
-					{formResponse.email.message}
-				</p>
-			{/if}
-		</div>
-
-		<!-- Old Password Field -->
-		<div class="form-group">
-			<label for="oldPassword">Current Password</label>
-			<input
-				id="oldPassword"
-				type="password"
-				name="oldPassword"
-				bind:value={formOldPassword}
-				class="form-input"
-			/>
-			{#if formResponse?.oldPassword}
-				{@const success = formResponse.oldPassword.success}
-				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
-					{formResponse.oldPassword.message}
-				</p>
-			{/if}
-		</div>
-
-		<!-- New Password Field -->
-		<div class="form-group">
-			<label for="newPassword">New Password</label>
-			<input
-				id="newPassword"
-				type="password"
-				name="newPassword"
-				bind:value={formNewPassword}
-				class="form-input"
-			/>
-			{#if formResponse?.newPassword}
-				{@const success = formResponse.newPassword.success}
-				<p class={(success ? 'success' : 'faliure') + ' form-feedback'}>
-					{formResponse.newPassword.message}
-				</p>
-			{/if}
-		</div>
-
-		<!-- Submit Button -->
-		<button type="submit" class="submit-btn">Update Account</button>
-	</form>
-</div>
-
-<!-- Delete Account Section -->
-<div class="delete-account-section">
-	<h3>Delete Account</h3>
-	<p style="margin-bottom: 1rem; opacity: 0.7;">
-		Permanently delete your account and all associated data. This action cannot be undone.
-	</p>
-	<button class="delete-account-btn" onclick={openDeleteModal}>Delete Account</button>
-</div>
-
-<!-- Delete Account Credentials Modal -->
-{#if showDeleteModal}
-	<div
-		class="modal-overlay"
-		role="presentation"
-		onclick={closeDeleteModal}
-		onkeydown={e => e.key === 'Escape' && closeDeleteModal()}
-	>
-		<div
-			class="modal-content"
-			role="dialog"
-			tabindex="0"
-			onclick={e => e.stopPropagation()}
-			onkeydown={e => e.key === 'Escape' && closeDeleteModal()}
-		>
-			<h2>Delete Account</h2>
-			<p>Enter your credentials to proceed with account deletion.</p>
-
-			<div class="modal-form-group">
-				<label for="delete-username">Username</label>
-				<input
-					id="delete-username"
-					type="text"
-					bind:value={deleteUsername}
-					placeholder="Enter your username"
-				/>
-			</div>
-
-			<div class="modal-form-group">
-				<label for="delete-password">Password</label>
-				<input
-					id="delete-password"
-					type="password"
-					bind:value={deletePassword}
-					placeholder="Enter your password"
-				/>
-			</div>
-
-			<div class="modal-buttons">
-				<button class="modal-btn modal-btn-secondary" onclick={closeDeleteModal}>Cancel</button>
-				<button class="modal-btn modal-btn-primary" onclick={openConfirmDeleteModal}
-					>Continue</button
-				>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Delete Account Confirmation Modal -->
-{#if showConfirmDeleteModal}
-	<div
-		class="modal-overlay"
-		role="presentation"
-		onclick={closeConfirmDeleteModal}
-		onkeydown={e => e.key === 'Escape' && closeConfirmDeleteModal()}
-	>
-		<div
-			class="modal-content confirm-modal-content"
-			role="alertdialog"
-			tabindex="-1"
-			onclick={e => e.stopPropagation()}
-			onkeydown={e => e.key === 'Escape' && closeConfirmDeleteModal()}
-		>
-			<h2>Are you sure?</h2>
-			<p>This action will permanently delete your account and cannot be undone.</p>
-
-			<div class="checkbox-group">
-				<label>
-					<input type="checkbox" bind:checked={deleteAllFiles} />
-					<span
-						>Also delete all files (profile pictures, images, videos, etc.) that I've uploaded.</span
-					>
-				</label>
-			</div>
-
-			<div class="confirm-buttons">
-				<button class="confirm-btn-no" onclick={closeConfirmDeleteModal}>No</button>
-				<button class="confirm-btn-yes" onclick={submitDeleteAccount}>Yes</button>
-			</div>
-		</div>
-	</div>
+{#if showPfpPopup}
+	<ProfilePicturePopup
+		user={{ username: user.username, id: user.id }}
+		{profilePictures}
+		onClose={() => (showPfpPopup = false)}
+	/>
 {/if}
 
 <style>
+	.settings-layout-container {
+		display: flex;
+		flex-direction: row;
+		gap: 2rem;
+		width: 100%;
+		flex-wrap: wrap;
+	}
+
 	.account-settings-container {
 		display: flex;
 		flex-direction: row;
@@ -413,6 +500,44 @@
 		object-fit: cover;
 	}
 
+	.pfp-trigger-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		position: relative;
+		border-radius: 50%;
+		overflow: hidden;
+		width: 100px;
+		height: 100px;
+		transition: transform 0.2s ease-in-out;
+	}
+
+	.pfp-trigger-btn:hover {
+		transform: scale(1.05);
+	}
+
+	.pfp-trigger-btn:hover .avatar-overlay {
+		opacity: 1;
+	}
+
+	.avatar-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.4);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		opacity: 0;
+		transition: opacity 0.2s ease-in-out;
+		color: white;
+		font-weight: 600;
+		font-size: 0.9rem;
+	}
+
 	.account-settings-info h2 {
 		font-size: 1.5rem;
 		font-weight: 600;
@@ -423,8 +548,7 @@
 		font-size: 1rem;
 		font-weight: 500;
 		font-style: italic;
-		opacity: 0.5;
-		color: var(--default-text-color);
+		color: var(--default-text-color-o5);
 	}
 
 	.form-right {
@@ -463,131 +587,132 @@
 		display: none;
 	}
 
-	.pfp-section {
-		margin-top: 3rem;
-		padding: 2rem;
-		border-radius: 10px;
-		background-color: rgba(255, 255, 255, 0.05);
-	}
-
-	.pfp-section h3 {
-		font-size: 1.5rem;
-		font-weight: 600;
-		color: var(--default-text-color);
-		margin-bottom: 1.5rem;
-	}
-
-	.current-pfp {
-		display: flex;
-		justify-content: center;
-		margin-bottom: 2rem;
-	}
-
-	.current-pfp-img {
-		width: 200px;
-		height: 200px;
-		border-radius: 50%;
-		object-fit: cover;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	}
-
-	.upload-section {
-		margin-bottom: 2rem;
-		padding: 1.5rem;
-		border: 2px dashed var(--fancycolor-2);
-		border-radius: 8px;
-		text-align: center;
-	}
-
-	.upload-label {
-		display: block;
-		cursor: pointer;
-		font-weight: 500;
-		color: var(--fancycolor-2);
-		margin-bottom: 0.5rem;
-	}
-
-	.file-input {
-		display: block;
-		margin: 0 auto;
-		cursor: pointer;
-	}
-
-	.file-input:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	.uploading-text {
-		margin-top: 0.5rem;
-		color: var(--default-text-color);
-		opacity: 0.7;
-		font-size: 0.9rem;
-	}
-
-	.previous-pfps {
-		margin-top: 2rem;
-	}
-
-	.previous-pfps h4 {
-		font-size: 1rem;
-		font-weight: 600;
-		color: var(--default-text-color);
-		margin-bottom: 1rem;
-	}
-
-	.pfps-row {
-		display: flex;
-		gap: 1rem;
-		flex-wrap: wrap;
-	}
-
-	.pfp-item {
-		all: unset;
-	}
-
-	.pfp-button {
-		all: unset;
-		cursor: pointer;
-		display: block;
-		border-radius: 50%;
-		overflow: hidden;
-		transition:
-			transform 0.2s ease-in-out,
-			box-shadow 0.2s ease-in-out;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		border: 2px solid transparent;
-	}
-
-	.pfp-button:hover {
-		transform: scale(1.1);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-		border-color: var(--fancycolor-2);
-	}
-
-	.pfp-button:active {
-		transform: scale(0.95);
-	}
-
-	.pfp-thumbnail {
-		width: 80px;
-		height: 80px;
-		object-fit: cover;
-		display: block;
-	}
-
 	.settings-section {
 		margin-top: 3rem;
-		padding: 2rem;
-		border-radius: 10px;
-		background-color: rgba(255, 255, 255, 0.05);
+		padding: 2.5rem;
+		border-radius: 12px;
+		background-color: rgba(255, 255, 255, 0.02);
+		border: var(--default-border-visible);
+		backdrop-filter: blur(5px);
+		width: 100%;
 	}
 
-	.settings-section h3 {
-		font-size: 1.5rem;
+	.setting-item {
+		margin-bottom: 2rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	}
+
+	.setting-item:last-child {
+		border-bottom: none;
+		margin-bottom: 0;
+		padding-bottom: 0;
+	}
+
+	.setting-title {
+		display: block;
+		font-size: 0.85rem;
 		font-weight: 600;
+		color: var(--default-text-color-o5);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-bottom: 0.75rem;
+	}
+
+	.setting-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	.setting-paragraph {
+		font-size: 1.1rem;
+		font-weight: 500;
 		color: var(--default-text-color);
-		margin-bottom: 1.5rem;
+		margin: 0;
+	}
+
+	.edit-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background-color: rgba(255, 255, 255, 0.05);
+		border: var(--default-border-visible);
+		border-radius: 6px;
+		color: var(--default-text-color);
+		font-size: 0.9rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.edit-btn:hover {
+		background-color: var(--default-bar-active);
+		border: 1px solid transparent;
+		transform: translateY(-1px);
+		color: white;
+	}
+
+	.inline-edit-form {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.edit-inputs {
+		display: flex;
+		flex-direction: row;
+		gap: 1rem;
+		width: 100%;
+	}
+
+	.edit-inputs .form-input {
+		flex: 1;
+	}
+
+	.password-form .edit-inputs {
+		flex-direction: column;
+	}
+
+	.edit-actions {
+		display: flex;
+		gap: 0.75rem;
+		justify-content: flex-end;
+	}
+
+	.save-btn {
+		padding: 0.5rem 1.5rem;
+		background-color: var(--fancycolor-2);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.save-btn:hover {
+		opacity: 0.9;
+		transform: scale(1.02);
+	}
+
+	.cancel-btn {
+		padding: 0.5rem 1.5rem;
+		background-color: transparent;
+		color: var(--default-text-color-o5);
+		border: var(--default-border-visible);
+		border-radius: 6px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease-in-out;
+	}
+
+	.cancel-btn:hover {
+		color: var(--default-text-color-o8);
+		border-color: var(--default-text-color-o5);
 	}
 
 	.form-group {
@@ -597,18 +722,11 @@
 		gap: 0.5rem;
 	}
 
-	.form-group label {
-		font-weight: 500;
-		color: var(--default-text-color);
-		font-size: 0.95rem;
-	}
-
 	.form-input {
 		padding: 0.75rem;
-		border: 2px solid rgba(255, 255, 255, 0.1);
+		border: var(--default-border-visible);
 		border-radius: 6px;
 		background-color: rgba(255, 255, 255, 0.05);
-		color: var(--default-text-color);
 		font-size: 1rem;
 		transition: all 0.2s ease-in-out;
 	}
@@ -617,11 +735,10 @@
 		outline: none;
 		border-color: var(--fancycolor-2);
 		background-color: rgba(255, 255, 255, 0.08);
-		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 	}
 
 	.form-input::placeholder {
-		color: rgba(255, 255, 255, 0.4);
+		color: var(--default-text-color-o5);
 	}
 
 	.form-feedback {
@@ -636,7 +753,7 @@
 		color: #51cf66;
 	}
 
-	.form-feedback.faliure {
+	.form-feedback.failure {
 		color: #ff6b6b;
 	}
 
@@ -666,10 +783,12 @@
 
 	.delete-account-section {
 		margin-top: 3rem;
-		padding: 2rem;
-		border-radius: 10px;
-		background-color: rgba(255, 0, 0, 0.05);
-		border: 1px solid rgba(255, 0, 0, 0.1);
+		padding: 2.5rem;
+		border-radius: 12px;
+		background-color: rgba(255, 0, 0, 0.02);
+		border: 1px solid #ff6b6b3c;
+		backdrop-filter: blur(5px);
+		width: 100%;
 	}
 
 	.delete-account-section h3 {
@@ -694,7 +813,6 @@
 	.delete-account-btn:hover {
 		background-color: #ff6b6b;
 		color: white;
-		box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 	}
 
 	.delete-account-btn:active {
@@ -707,7 +825,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: rgba(15, 15, 15, 0.6);
+		background-color: var(--default-bg-color-transparent);
 		backdrop-filter: blur(14px);
 		display: flex;
 		justify-content: center;
@@ -716,7 +834,7 @@
 	}
 
 	.modal-content {
-		background-color: var(--bg-color);
+		background-color: var(--default-bg-color);
 		border-radius: 10px;
 		padding: 2rem;
 		max-width: 500px;
@@ -732,9 +850,8 @@
 	}
 
 	.modal-content p {
-		color: var(--default-text-color);
+		color: var(--default-text-color-o8);
 		margin-bottom: 1.5rem;
-		opacity: 0.8;
 	}
 
 	.modal-form-group {
@@ -752,19 +869,22 @@
 
 	.modal-form-group input {
 		padding: 0.75rem;
-		border: 2px solid rgba(255, 255, 255, 0.1);
+		border: var(--default-border-visible);
+		border-width: 2px;
 		border-radius: 6px;
 		background-color: rgba(255, 255, 255, 0.05);
 		color: var(--default-text-color);
 		font-size: 1rem;
 		transition: all 0.2s ease-in-out;
+		box-sizing: content-box;
 	}
 
 	.modal-form-group input:focus {
 		outline: none;
 		border-color: #ff6b6b;
+		border-width: 2px;
 		background-color: rgba(255, 255, 255, 0.08);
-		box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+		box-sizing: content-box;
 	}
 
 	.modal-buttons {
@@ -794,12 +914,13 @@
 
 	.modal-btn-secondary {
 		background-color: transparent;
-		color: var(--default-text-color);
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		color: var(--default-text-color-o5);
+		border: var(--default-border-visible);
 	}
 
 	.modal-btn-secondary:hover {
-		border-color: rgba(255, 255, 255, 0.4);
+		color: var(--default-text-color-o8);
+		border-color: var(--default-text-color-o5);
 	}
 
 	.confirm-modal-content {
@@ -870,9 +991,8 @@
 
 	.confirm-btn-no {
 		padding: 0.75rem 2rem;
-		background-color: rgba(255, 255, 255, 0.1);
-		color: var(--default-text-color);
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		color: var(--default-text-color-o5);
+		border: 2px solid var(--border-colors-visible);
 		border-radius: 6px;
 		font-weight: 600;
 		font-size: 1rem;
@@ -881,8 +1001,8 @@
 	}
 
 	.confirm-btn-no:hover {
-		background-color: rgba(255, 255, 255, 0.15);
-		border-color: rgba(255, 255, 255, 0.3);
+		color: var(--default-text-color-o8);
+		border-color: var(--default-text-color-o5);
 	}
 
 	.confirm-btn-no:active {

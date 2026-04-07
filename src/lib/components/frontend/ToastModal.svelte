@@ -18,7 +18,7 @@
 					{#if toast.type === 'success'}
 						<LucideSymbol symbol="CheckCircle2" size={20} strokeWidth={2} />
 					{:else if toast.type === 'error'}
-						<LucideSymbol symbol="AlertCircle" size={20} strokeWidth={2} />
+						<LucideSymbol symbol="CircleX" size={20} strokeWidth={2} />
 					{:else if toast.type === 'warning'}
 						<LucideSymbol symbol="AlertTriangle" size={20} strokeWidth={2} />
 					{:else}
