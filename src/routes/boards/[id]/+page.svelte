@@ -62,7 +62,12 @@
 	let newNoteTitle = $state('');
 	let newNoteColor = $state('#1e1e1e');
 
+	// svelte-ignore state_referenced_locally
+	const { id, user, board, perms } = data;
+	const hasWritePermission = board && (board.owner === user?.id || perms?.perm === 'Write');
+
 	function handleCanvasContextMenu(e: MouseEvent, canvasX: number, canvasY: number) {
+		if (!hasWritePermission) return;
 		contextMenuData = {
 			show: true,
 			x: e.clientX,
@@ -95,9 +100,6 @@
 		
 		contextMenuData.show = false;
 	}
-
-	// svelte-ignore state_referenced_locally
-	const { id, user, board, perms } = data;
 
 	// svelte-ignore state_referenced_locally
 	let notes = $state((data.board?.notes ?? []).map(validateNoteData));
@@ -306,7 +308,7 @@
 </div>
 
 <!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
-{#if board && (board.owner === user?.id || perms?.perm === 'Write')}
+{#if hasWritePermission}
 	<div class="note-creator">
 		<form method="post" use:enhance id="save-notes-form">
 			<input type="hidden" name="notes" value={JSON.stringify(notes)} />
@@ -360,7 +362,7 @@
 	{@const gridSnap = 5}
 	{#each notes as _, i}
 		{console.log('added note')}
-		<Note bind:data={notes[i]} {gridSnap} remove={() => notes.splice(i, 1)} />
+		<Note bind:data={notes[i]} {gridSnap} remove={() => notes.splice(i, 1)} readonly={!hasWritePermission} />
 	{/each}
 
 	{#if contextMenuData.show}

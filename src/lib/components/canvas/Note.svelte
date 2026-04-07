@@ -12,7 +12,7 @@
 	import { fly } from 'svelte/transition';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 
-	let { data = $bindable(), remove, gridSnap = 5 }: { data: NoteData; remove: () => void; gridSnap?: number } = $props();
+	let { data = $bindable(), remove, gridSnap = 5, readonly = false }: { data: NoteData; remove: () => void; gridSnap?: number; readonly?: boolean } = $props();
 	
 	const MIN_WIDTH = 150;
 	const MAX_WIDTH = 800;
@@ -81,7 +81,7 @@
 		let startNoteY = 0;
 
 		function onPointerMove(e: PointerEvent) {
-			if (!isDragging) return;
+			if (!isDragging || readonly) return;
 
 			const physicalDx = e.clientX - startClientX;
 			const physicalDy = e.clientY - startClientY;
@@ -115,7 +115,7 @@
 		function onPointerDown(e: PointerEvent) {
 			const handle = node.querySelector('.handle');
 			if (!handle || !handle.contains(e.target as Node)) return;
-			if (e.button !== 0) return;
+			if (e.button !== 0 || readonly) return;
 
 			isDragging = true;
 			isCurrentlyDragging = true;
@@ -224,7 +224,7 @@
 		}
 
 		function onPointerDown(e: PointerEvent) {
-			if (e.button !== 0) return;
+			if (e.button !== 0 || readonly) return;
 			isResizing = true;
 			isCurrentlyResizing = true;
 			startClientX = e.clientX;
@@ -347,7 +347,7 @@
 		let startHeight = 0;
 
 		function onPointerMove(e: PointerEvent) {
-			if (!isResizing) return;
+			if (!isResizing || readonly) return;
 			const dy = (e.clientY - startY) / $zoomLevel;
 			let newHeight = Math.max(20, startHeight + dy);
 			
@@ -369,7 +369,7 @@
 		}
 
 		function onPointerDown(e: PointerEvent) {
-			if (e.button !== 0) return;
+			if (e.button !== 0 || readonly) return;
 			isResizing = true;
 			startY = e.clientY;
 			// Get current height of the entry div
@@ -401,6 +401,7 @@
 	class:editing-meta={isEditingMetadata}
 	class:manual-size={manuallyResized}
 	class:resizing={isCurrentlyResizing}
+	class:readonly={readonly}
 	title={data.title}
 	id={data.id ?? data.title}
 	style:background-color={color}
@@ -417,22 +418,24 @@
 		<div class="header-section left">
 			<h1 class="note-title" title={data.title}>{data.title}</h1>
 		</div>
-		<div class:dragging={isCurrentlyDragging} class="handle" unselectable="on"></div>
-		<div class="header-section right">
-			<button 
-				class="config-btn" 
-				class:active={isEditingMetadata}
-				onclick={() => (isEditingMetadata = !isEditingMetadata)} 
-				aria-label="Configure note" 
-				title="Configure note"
-				><LucideSymbol symbol={'Sliders'} size={16} strokeWidth={2} /></button
-			>
-			<button class="delete-btn" onclick={remove} aria-label="Delete note" title="Delete note"
-				><LucideSymbol symbol={'X'} size={16} strokeWidth={2} /></button
-			>
-		</div>
+		{#if !readonly}
+			<div class:dragging={isCurrentlyDragging} class="handle" unselectable="on"></div>
+			<div class="header-section right">
+				<button 
+					class="config-btn" 
+					class:active={isEditingMetadata}
+					onclick={() => (isEditingMetadata = !isEditingMetadata)} 
+					aria-label="Configure note" 
+					title="Configure note"
+					><LucideSymbol symbol={'Sliders'} size={16} strokeWidth={2} /></button
+				>
+				<button class="delete-btn" onclick={remove} aria-label="Delete note" title="Delete note"
+					><LucideSymbol symbol={'X'} size={16} strokeWidth={2} /></button
+				>
+			</div>
+		{/if}
 
-		{#if isEditingMetadata}
+		{#if isEditingMetadata && !readonly}
 			<div class="config-popup" transition:fly={{ y: 8, duration: 200 }}>
 				<div class="edit-toolbar">
 					<input
@@ -441,7 +444,7 @@
 						onkeydown={(e) => e.key === 'Enter' && (isEditingMetadata = false)}
 						class="title-input"
 						placeholder="Note title..."
-						autofocus
+						autofocus={true}
 					/>
 					<div class="color-controls">
 						<label class="custom-color-btn" title="Choose custom color">
@@ -467,7 +470,7 @@
 			</div>
 		{/if}
 
-		{#if editingSettingsIndex !== null}
+		{#if editingSettingsIndex !== null && !readonly}
 			{@const currentEntry = data.content[editingSettingsIndex]}
 			{@const isObject = typeof currentEntry === 'object' && currentEntry !== null && 'type' in currentEntry}
 			{@const currentTextAlign = isObject ? ((currentEntry as any).textAlign ?? 'left') : 'left'}
@@ -555,6 +558,7 @@
 					<div class="entry">
 						{#if entryType === 'text'}
 							<textarea
+									readonly={readonly}
 									bind:value={entryRef.value}
 									onblur={() => (editingIndex = null)}
 									onkeydown={(e) => {
@@ -620,81 +624,87 @@
 								<button onclick={() => window.open(url, '_blank')}>Download file ({mimeType})</button>
 							{/if}
 						{/if}
-						<button class="remove-entry-btn" onclick={() => removeBlock(i)} title="Remove block">
-							<LucideSymbol symbol="X" size={12} strokeWidth={2} />
-						</button>
-						{#if entryType === 'text'}
-							<button 
-								class="edit-entry-btn" 
-								class:active={editingSettingsIndex === i}
-								onclick={() => editingSettingsIndex = editingSettingsIndex === i ? null : i} 
-								title="Entry settings"
-							>
-								<LucideSymbol symbol="Settings2" size={12} strokeWidth={2} />
+						{#if !readonly}
+							<button class="remove-entry-btn" onclick={() => removeBlock(i)} title="Remove block">
+								<LucideSymbol symbol="X" size={12} strokeWidth={2} />
 							</button>
+							{#if entryType === 'text'}
+								<button 
+									class="edit-entry-btn" 
+									class:active={editingSettingsIndex === i}
+									onclick={() => editingSettingsIndex = editingSettingsIndex === i ? null : i} 
+									title="Entry settings"
+								>
+									<LucideSymbol symbol="Settings2" size={12} strokeWidth={2} />
+								</button>
+							{/if}
+							<div class="entry-resize-handle"></div>
 						{/if}
-						<div class="entry-resize-handle"></div>
 					</div>
 				</div>
 			{/each}
 
-			<div class="add-content-container" class:always-visible={showAddMenu || addingImage}>
-				{#if addingImage}
-					<div class="image-input-popup" transition:fly={{ y: 5, duration: 150 }}>
-						<input 
-							type="text" 
-							bind:value={newImageUrl} 
-							placeholder="Paste image URL here..." 
-							onkeydown={(e) => {
-								if (e.key === 'Enter') addImageBlock();
-								if (e.key === 'Escape') addingImage = false;
-							}}
-							autofocus
-						/>
-						<div class="image-input-actions">
-							<button class="cancel-btn" onclick={() => addingImage = false}>Cancel</button>
-							<button class="confirm-btn" onclick={addImageBlock}>Add Image</button>
+			{#if !readonly}
+				<div class="add-content-container" class:always-visible={showAddMenu || addingImage}>
+					{#if addingImage}
+						<div class="image-input-popup" transition:fly={{ y: 5, duration: 150 }}>
+							<input 
+								type="text" 
+								bind:value={newImageUrl} 
+								placeholder="Paste image URL here..." 
+								onkeydown={(e) => {
+									if (e.key === 'Enter') addImageBlock();
+									if (e.key === 'Escape') addingImage = false;
+								}}
+								autofocus={true}
+							/>
+							<div class="image-input-actions">
+								<button class="cancel-btn" onclick={() => addingImage = false}>Cancel</button>
+								<button class="confirm-btn" onclick={addImageBlock}>Add Image</button>
+							</div>
 						</div>
-					</div>
-				{:else if showAddMenu}
-					<div class="add-menu" transition:fly={{ y: 5, duration: 150 }}>
-						<button onclick={addTextBlock}>
-							<LucideSymbol symbol="Type" size={14} strokeWidth={2} />
-							<span>Text</span>
+					{:else if showAddMenu}
+						<div class="add-menu" transition:fly={{ y: 5, duration: 150 }}>
+							<button onclick={addTextBlock}>
+								<LucideSymbol symbol="Type" size={14} strokeWidth={2} />
+								<span>Text</span>
+							</button>
+							<button onclick={() => addingImage = true}>
+								<LucideSymbol symbol="Image" size={14} strokeWidth={2} />
+								<span>Image</span>
+							</button>
+							<button class="close-menu-btn" onclick={() => showAddMenu = false}>
+								<LucideSymbol symbol="X" size={14} strokeWidth={2} />
+							</button>
+						</div>
+					{:else}
+						<button 
+							class="add-placeholder" 
+							onclick={() => showAddMenu = true}
+							transition:fly={{ y: 2, duration: 200 }}
+						>
+							<LucideSymbol symbol="Plus" size={16} strokeWidth={2} />
+							<span>Add Content</span>
 						</button>
-						<button onclick={() => addingImage = true}>
-							<LucideSymbol symbol="Image" size={14} strokeWidth={2} />
-							<span>Image</span>
-						</button>
-						<button class="close-menu-btn" onclick={() => showAddMenu = false}>
-							<LucideSymbol symbol="X" size={14} strokeWidth={2} />
-						</button>
-					</div>
-				{:else}
-					<button 
-						class="add-placeholder" 
-						onclick={() => showAddMenu = true}
-						transition:fly={{ y: 2, duration: 200 }}
-					>
-						<LucideSymbol symbol="Plus" size={16} strokeWidth={2} />
-						<span>Add Content</span>
-					</button>
-				{/if}
-			</div>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	</div>
 
 	<!-- Edge resize handles -->
-	<div class="resize-handle n" use:resizeNote={'n'}></div>
-	<div class="resize-handle s" use:resizeNote={'s'}></div>
-	<div class="resize-handle e" use:resizeNote={'e'}></div>
-	<div class="resize-handle w" use:resizeNote={'w'}></div>
+	{#if !readonly}
+		<div class="resize-handle n" use:resizeNote={'n'}></div>
+		<div class="resize-handle s" use:resizeNote={'s'}></div>
+		<div class="resize-handle e" use:resizeNote={'e'}></div>
+		<div class="resize-handle w" use:resizeNote={'w'}></div>
 
-	<!-- Corner resize handles -->
-	<div class="resize-handle nw" use:resizeNote={'nw'}></div>
-	<div class="resize-handle ne" use:resizeNote={'ne'}></div>
-	<div class="resize-handle sw" use:resizeNote={'sw'}></div>
-	<div class="resize-handle se" use:resizeNote={'se'}></div>
+		<!-- Corner resize handles -->
+		<div class="resize-handle nw" use:resizeNote={'nw'}></div>
+		<div class="resize-handle ne" use:resizeNote={'ne'}></div>
+		<div class="resize-handle sw" use:resizeNote={'sw'}></div>
+		<div class="resize-handle se" use:resizeNote={'se'}></div>
+	{/if}
 </div>
 
 <style>
@@ -952,6 +962,10 @@
 		&:hover {
 			border: 2px dashed rgba(255, 255, 255, 0.1);
 		}
+	}
+
+	.note.readonly .entry:hover {
+		border: 2px dashed transparent;
 	}
 
 	.entry-edit {
