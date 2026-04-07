@@ -4,6 +4,7 @@
 	import type { Grid } from '$lib/types/canvas/Grid';
 	import type { Color } from '$lib/types/canvas/Color';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
+	import { invalidateAll } from '$app/navigation';
 
 
 	interface Contributor {
@@ -37,6 +38,48 @@
 	// Sync local state when prop changes (e.g. after a page refresh or navigation)
 	$effect(() => {
 		contributors = initialContributors;
+	});
+
+	// Sync settings state when board prop changes
+	$effect(() => {
+		const vCanvas = validateCanvasData(board.canvas);
+		const solidDefault = getBackgroundDefaults('Solid');
+		const gridDefault = getBackgroundDefaults('Grid');
+		
+		settings.boardName = board.name;
+		settings.boardType = board.type;
+		settings.canvasWidth = vCanvas.size.width;
+		settings.canvasHeight = vCanvas.size.height;
+		settings.backgroundType = vCanvas.background.type;
+		settings.backgroundValue =
+			vCanvas.background.type === 'Solid'
+				? (vCanvas.background.value as Color).value
+				: vCanvas.background.type === 'Custom'
+					? vCanvas.background.value
+					: (solidDefault.value as Color).value;
+		settings.thumbnail = vCanvas.thumbnail?.location;
+		settings.gridType =
+			vCanvas.background.type === 'Grid'
+				? (vCanvas.background.value as Grid).type
+				: (gridDefault.value as Grid).type;
+		settings.gridColor =
+			vCanvas.background.type === 'Grid'
+				? (vCanvas.background.value as Grid).color.value
+				: (gridDefault.value as Grid).color.value;
+		settings.gridLineWidth =
+			vCanvas.background.type === 'Grid' &&
+			(vCanvas.background.value as Grid).type === 'Line'
+				? (vCanvas.background.value as { type: 'Line'; background: Color; width: number; color: Color }).width
+				: (gridDefault.value as any).width || 1;
+		settings.gridDotSize =
+			vCanvas.background.type === 'Grid' &&
+			(vCanvas.background.value as Grid).type === 'Dot'
+				? (vCanvas.background.value as { type: 'Dot'; background: Color; size: number; color: Color }).size
+				: (gridDefault.value as any).size || 20;
+		settings.gridBg =
+			vCanvas.background.type === 'Grid'
+				? (vCanvas.background.value as Grid).background.value
+				: (gridDefault.value as Grid).background.value;
 	});
 
 	// State for add contributor dialog
@@ -160,6 +203,7 @@
 			if (response.ok) {
 				saveStatus = 'success';
 				saveMessage = 'Settings saved!';
+				await invalidateAll();
 				setTimeout(() => (saveStatus = 'idle'), 2500);
 			} else {
 				saveStatus = 'error';
@@ -205,6 +249,7 @@
 			});
 
 			if (response.ok) {
+				await invalidateAll();
 				showAddContributorDialog = false;
 				form.reset();
 			} else {

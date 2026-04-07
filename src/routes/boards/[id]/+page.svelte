@@ -62,9 +62,11 @@
 	let newNoteTitle = $state('');
 	let newNoteColor = $state('#1e1e1e');
 
-	// svelte-ignore state_referenced_locally
-	const { id, user, board, perms } = data;
-	const hasWritePermission = board && (board.owner === user?.id || perms?.perm === 'Write');
+	const id = $derived(data.id);
+	const user = $derived(data.user);
+	const board = $derived(data.board);
+	const perms = $derived(data.perms);
+	const hasWritePermission = $derived(board && (board.owner === user?.id || perms?.perm === 'Write'));
 
 	function handleCanvasContextMenu(e: MouseEvent, canvasX: number, canvasY: number) {
 		if (!hasWritePermission) return;

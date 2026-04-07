@@ -23,6 +23,11 @@
 	// svelte-ignore state_referenced_locally
 	let canvasData = $state<CanvasData>(validateCanvasData(data));
 
+	// Sync internal state with props
+	$effect(() => {
+		canvasData = validateCanvasData(data);
+	});
+
 	// Track if canvas is being dragged (to prevent feedback loops with MiniViewport)
 	let isCanvasDragging = $state(false);
 	let shiftHeld = $state(false);

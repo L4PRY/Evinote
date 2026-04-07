@@ -96,14 +96,21 @@ export const actions: Actions = {
 			return { error: 'You do not have permission to modify this board' };
 		}
 
-		const newUser = await db
+		await db
 			.insert(Perms)
 			.values({ bid: parseInt(id!), uid: contributor.id, perm });
 
 		routeLogger.info(
 			`Added user ${username} with permission ${perm} to board ${board.name} (ID: ${id}) by user ${user.username}`
 		);
-		return { success: 'User added successfully' };
+		return { 
+			success: 'User added successfully',
+			contributor: {
+				id: contributor.id,
+				username: contributor.username,
+				permission: perm
+			}
+		};
 	},
 	removeuser: async ({ request, params }) => {
 		const user = requireLogin();
