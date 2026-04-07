@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CanvasData } from '$lib/types/canvas/CanvasData';
+	import { validateCanvasData } from '$lib/canvas/validation';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel, minZoom, MAX_ZOOM } from '$lib/stores/zoomLevel';
 	import { bounds, canvasSize, position, isMiniViewportDragging } from '$lib/stores/viewport';
@@ -8,17 +9,19 @@
 
 	const {
 		children,
-		data
+		data,
+		contextmenu
 	}: {
 		children: Snippet;
 		data: CanvasData;
+		contextmenu?: (e: MouseEvent, canvasX: number, canvasY: number) => void;
 	} = $props();
 
 	// add a way for the current visible viewport and canvas to be movable indirectly
 	// needs a bindable for the current viewport size, scroll position and zoom level
 
 	// svelte-ignore state_referenced_locally
-	let canvasData = $state<CanvasData>(data);
+	let canvasData = $state<CanvasData>(validateCanvasData(data));
 
 	// Track if canvas is being dragged (to prevent feedback loops with MiniViewport)
 	let isCanvasDragging = $state(false);
@@ -80,6 +83,18 @@
 		canvasElement.releasePointerCapture(e.pointerId);
 	}
 
+	function handleContextMenu(e: MouseEvent) {
+		if (contextmenu) {
+			e.preventDefault();
+			const rect = canvasElement.getBoundingClientRect();
+			const cursorX = e.clientX - rect.left;
+			const cursorY = e.clientY - rect.top;
+			const canvasX = (canvasElement.scrollLeft + cursorX) / $zoomLevel;
+			const canvasY = (canvasElement.scrollTop + cursorY) / $zoomLevel;
+			contextmenu(e, canvasX, canvasY);
+		}
+	}
+
 	// Smooth zoom state
 	let targetZoom = $state($zoomLevel);
 	let zoomAnimationId: number | null = null;
@@ -95,9 +110,30 @@
 		}
 	});
 
+	// Check if an element or its ancestors are scrollable
+	function isScrollableAction(target: HTMLElement | null, deltaY: number): boolean {
+		let current = target;
+		while (current && current !== canvasElement) {
+			const style = window.getComputedStyle(current);
+			const isScrollable = style.overflowY === 'auto' || style.overflowY === 'scroll';
+			const canScroll =
+				deltaY > 0
+					? current.scrollHeight > current.scrollTop + current.clientHeight
+					: current.scrollTop > 0;
+
+			if (isScrollable && canScroll) return true;
+			current = current.parentElement;
+		}
+		return false;
+	}
+
 	// Zoom with scroll wheel, zooming toward cursor position
 	function handleWheel(e: WheelEvent) {
-		if (shiftHeld) return; // Only zoom when Shift is held
+		if (shiftHeld) return; // Stop zooming when shift is held (allow horizontal scroll)
+
+		// If cursor is over a scrollable box, don't zoom
+		if (isScrollableAction(e.target as HTMLElement, e.deltaY)) return;
+
 		e.preventDefault();
 
 		if (document.querySelector('.note')?.getAttribute('data-neodrag-state') === 'dragging') return;
@@ -165,7 +201,7 @@
 	}
 
 	export function setData(newData: CanvasData) {
-		canvasData = newData;
+		canvasData = validateCanvasData(newData);
 	}
 
 	export function scrollTo(x: number, y: number) {
@@ -263,6 +299,7 @@
 	onpointermove={handlePointerMove}
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
+	oncontextmenu={handleContextMenu}
 	onwheel={handleWheel}
 	onscroll={handleScroll}
 	class:dragging={isDragging}
@@ -295,7 +332,7 @@
 		box-sizing: border-box;
 		/* Enable scrolling with subtle scrollbars */
 		overflow: scroll;
-		scrollbar-width: thin;
+		scrollbar-width: none;
 		scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
 		/* Prevent text selection while dragging */
 		user-select: none;
@@ -304,7 +341,7 @@
 		touch-action: none;
 		/* Cursor feedback */
 		cursor: grab;
-		overscroll-behavior: none;
+		overscroll-behavior: auto;
 	}
 
 	#canvas::-webkit-scrollbar {
@@ -340,5 +377,8 @@
 		position: relative;
 		min-width: 100%;
 		min-height: 100%;
+		box-sizing: border-box;
+		box-shadow:inset 0px 0px 0px 10px var(--default-bg-color);
+		border-radius: 20px;
 	}
 </style>

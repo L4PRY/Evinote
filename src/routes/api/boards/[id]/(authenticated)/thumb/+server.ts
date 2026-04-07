@@ -179,7 +179,6 @@ export const GET = async ({ params, url, request }) => {
 					justifyContent: 'flex-start',
 					width: `${viewportSize.width}px`,
 					height: `${viewportSize.height}px`,
-					border: '1px solid rgba(255, 50, 255)',
 					borderRadius: '4px',
 					overflow: 'hidden',
 					position: 'relative'

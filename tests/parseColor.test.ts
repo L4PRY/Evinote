@@ -54,19 +54,20 @@ describe('should parse colours into proper CSS values', () => {
 		expect(parseColor('var(--primary-color)')).toBe('var(--primary-color)');
 	});
 
-	it('should throw an error for invalid color objects', () => {
+	it('should return default for invalid color objects', () => {
 		const invalidColor = { type: 'hex' } as any;
-		expect(() => parseColor(invalidColor)).toThrow('Invalid color object');
+		expect(parseColor(invalidColor)).toBe('#000000');
 
 		const noType = { value: '#FF0000' } as any;
-		expect(() => parseColor(noType)).toThrow('Invalid color object');
+		expect(parseColor(noType)).toBe('#000000');
 
 		const noValue = { type: 'rgb' } as any;
-		expect(() => parseColor(noValue)).toThrow('Invalid color object');
+		expect(parseColor(noValue)).toBe('#000000');
 	});
 
-	it('should throw an error for invalid hex color values', () => {
+	it('should return default for invalid hex color values', () => {
 		const invalidHexColor = { type: 'hex' as const, value: 'FF5733' };
-		expect(() => parseColor(invalidHexColor)).toThrow('Invalid hex color value');
+		console.log(parseColor(invalidHexColor));
+		expect(parseColor(invalidHexColor)).toBe('#000000');
 	});
 });
