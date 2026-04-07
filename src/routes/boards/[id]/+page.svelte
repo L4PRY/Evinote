@@ -13,7 +13,7 @@
 	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import type { Color } from '$lib/types/canvas/Color';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
-	import { position, getViewportPosition } from '$lib/stores/viewport';
+	import { position, getViewportPosition, getViewportCenter, getScrollFromCenter } from '$lib/stores/viewport';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { get } from 'svelte/store';
 	import { validateUrl } from '$lib/parseInput';
@@ -200,9 +200,21 @@
 		try {
 			const saved = localStorage.getItem(`board-${id}-viewport`);
 			if (saved) {
-				const { left, top, zoom } = JSON.parse(saved);
+				const { centerX, centerY, zoom, left, top } = JSON.parse(saved);
+				
+				// Restore zoom first to ensure correct scroll dimensions
 				if (zoom) zoomLevel.set(zoom);
-				position.setPosition(left, top);
+				
+				// Calculate scroll from center if available, fallback to old left/top format
+				if (centerX !== undefined && centerY !== undefined) {
+					// Use a small timeout to let the canvas resize after zoom before centering
+					setTimeout(() => {
+						const scroll = getScrollFromCenter(centerX, centerY, zoom || 1);
+						position.setPosition(scroll.left, scroll.top);
+					}, 50);
+				} else if (left !== undefined && top !== undefined) {
+					position.setPosition(left, top);
+				}
 			}
 		} catch (err) {
 			console.error('Failed to parse viewport from localStorage:', err);
@@ -232,14 +244,15 @@
 		(window as any).notes = notes;
 		
 		const saveOnUnload = () => {
-			const currentPosition = getViewportPosition();
 			const currentZoom = get(zoomLevel);
+			const { centerX, centerY } = getViewportCenter(currentZoom);
+			
 			localStorage.setItem(`board-${id}-viewport`, JSON.stringify({
-				left: currentPosition.left,
-				top: currentPosition.top,
+				centerX,
+				centerY,
 				zoom: currentZoom
 			}));
-			console.log('saved viewport/zoom to localStorage', currentPosition, currentZoom);
+			console.log('saved center-point/zoom to localStorage', { centerX, centerY }, currentZoom);
 		};
 
 		const handleWindowClick = () => closeContextMenu();
