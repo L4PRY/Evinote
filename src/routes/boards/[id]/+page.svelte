@@ -62,43 +62,6 @@
 	let newNoteTitle = $state('');
 	let newNoteColor = $state('#1e1e1e');
 
-	function handleCanvasContextMenu(e: MouseEvent, canvasX: number, canvasY: number) {
-		contextMenuData = {
-			show: true,
-			x: e.clientX,
-			y: e.clientY,
-			canvasX,
-			canvasY
-		};
-		newNoteTitle = '';
-		newNoteColor = '#1e1e1e';
-	}
-
-	function closeContextMenu() {
-		contextMenuData.show = false;
-	}
-
-	function addNoteFromCtx(e?: Event) {
-		if (e) e.stopPropagation();
-		
-		const title = newNoteTitle.trim() || null;
-		const color: Color = { type: 'hex', value: newNoteColor };
-		
-		notes.push({
-			id: generateSecureRandomString(),
-			title,
-			position: { x: contextMenuData.canvasX, y: contextMenuData.canvasY, z: 0 },
-			size: { width: 200, height: 200 },
-			color,
-			content: ['']
-		});
-		
-		contextMenuData.show = false;
-	}
-
-	let newNoteTitle = $state('');
-	let newNoteColor = $state('#1e1e1e');
-
 	const id = $derived(data.id);
 	const user = $derived(data.user);
 	const board = $derived(data.board);
@@ -306,13 +269,7 @@
 		};
 	});
 
-		window.addEventListener('beforeunload', saveOnUnload);
-		window.addEventListener('click', handleWindowClick);
-		return () => {
-			window.removeEventListener('beforeunload', saveOnUnload);
-			window.removeEventListener('click', handleWindowClick);
-		};
-	});
+	// set localstorage variable on unload
 
 	// function saveNotes() {
 	// 	// ok how do i

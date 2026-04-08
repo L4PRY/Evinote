@@ -392,38 +392,6 @@
 			}
 		};
 	}
-
-	// Auto-focus the first entry if it's a brand-new note with a single empty text slot
-	let editingIndex = $state<number | null>(
-		data.content?.length === 1 && data.content[0] === '' ? 0 : null
-	);
-
-	function autoResize(node: HTMLTextAreaElement) {
-		const updateHeight = () => {
-			node.style.height = 'auto';
-			node.style.height = node.scrollHeight + 'px';
-		};
-		updateHeight();
-		node.addEventListener('input', updateHeight);
-		return {
-			destroy() {
-				node.removeEventListener('input', updateHeight);
-			}
-		};
-	}
-
-	let isEditingMetadata = $state(false);
-
-	function selectColor(c: string) {
-		const result: Color = { type: 'hex', value: c };
-		data.color = result;
-		color = c;
-	}
-
-	function resetColor() {
-		data.color = 'var(--default-bg-color)';
-		color = 'var(--default-bg-color)';
-	}
 </script>
 
 <div
