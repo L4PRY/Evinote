@@ -7,7 +7,7 @@ import { readFile } from 'node:fs/promises';
 import { routeLogger } from '$lib/server/logger.js';
 import { rmSync } from 'node:fs';
 
-export const GET = async ({ params }) => {
+export const GET = async ({ request, params }) => {
 	const { hash } = params;
 
 	const col = await db
@@ -17,6 +17,12 @@ export const GET = async ({ params }) => {
 		.then(r => r.at(0));
 
 	if (!col) return new Response('file not found', { status: 404 });
+
+	// check for cache header
+	const ifNoneMatch = request.headers.get('if-none-match');
+	if (ifNoneMatch === col.hash) {
+		return new Response(null, { status: 304 });
+	}
 
 	const path = pathJoin('./uploads/', hash.charAt(0), '/', hash.charAt(1), '/', hash.slice(2));
 
@@ -28,7 +34,9 @@ export const GET = async ({ params }) => {
 			status: 200,
 			headers: {
 				'Content-Type': col.mimetype,
-				'Content-Disposition': `inline; filename="${col.filename}"`
+				'Content-Disposition': `inline; filename="${col.filename}"`,
+				'Cache-Control': 'public, max-age=31536000, immutable',
+				'E-Tag': col.hash
 			}
 		});
 	} catch (e: unknown) {
