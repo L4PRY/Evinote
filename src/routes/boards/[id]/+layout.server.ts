@@ -10,12 +10,7 @@ export async function load({ params }) {
 	const { id } = params;
 	const sessionUser = checkLogin();
 
-	routeLogger.info(`Loading board with id ${id}, ${typeof id}`);
-
-	if (isNaN(parseInt(id))) {
-		routeLogger.warn(`Invalid board id ${id} provided`);
-		error(400, 'invalid board id');
-	}
+	routeLogger.info(`Loading board with id ${id}`);
 
 	const board = await db
 		.select()
