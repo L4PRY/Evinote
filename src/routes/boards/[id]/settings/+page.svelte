@@ -34,31 +34,42 @@
 		gridType:
 			board.canvas?.background.type === 'Grid'
 				? (board.canvas.background.value as Grid).type
-				: null,
+				: 'Dot',
 		gridColor:
 			board.canvas?.background.type === 'Grid'
 				? (board.canvas.background.value as Grid).color.value
-				: null,
-		gridSize:
-			board.canvas?.background.type === 'Grid'
-				? (board.canvas.background.value as Grid).size
-				: null,
+				: '#cccccc',
+		gridLineWidth:
+			board.canvas?.background.type === 'Grid' && (board.canvas.background.value as Grid).type === 'Line'
+				? (board.canvas.background.value as any).width
+				: 1,
+		gridDotSize:
+			board.canvas?.background.type === 'Grid' && (board.canvas.background.value as Grid).type === 'Dot'
+				? (board.canvas.background.value as any).size
+				: 20,
 		gridBg:
 			board.canvas?.background.type === 'Grid'
 				? (board.canvas.background.value as Grid).background.value
-				: null
+				: '#ffffff'
 	});
 
 	function buildBackgroundObject(): CanvasData['background'] {
 		if (settings.backgroundType === 'Grid') {
 			return {
 				type: 'Grid',
-				value: {
-					type: settings.gridType as 'Line' | 'Dot',
-					background: { type: 'hex', value: settings.gridBg } as Color,
-					size: Number(settings.gridSize),
-					color: { type: 'hex', value: settings.gridColor } as Color
-				}
+				value: settings.gridType === 'Line' 
+					? {
+						type: 'Line',
+						background: { type: 'hex', value: settings.gridBg } as Color,
+						width: Number(settings.gridLineWidth),
+						color: { type: 'hex', value: settings.gridColor } as Color
+					}
+					: {
+						type: 'Dot',
+						background: { type: 'hex', value: settings.gridBg } as Color,
+						size: Number(settings.gridDotSize),
+						color: { type: 'hex', value: settings.gridColor } as Color
+					}
 			};
 		} else if (settings.backgroundType === 'Solid') {
 			return {
@@ -89,6 +100,7 @@
 		);
 		form.append('thumbnail', settings.thumbnail?.toString() ?? '');
 		form.append('background', JSON.stringify(buildBackgroundObject()));
+		console.log('thumbnail is:', settings.thumbnail);
 
 		for (const [key, value] of form.entries()) {
 			console.log(`${key}: ${value}`);
@@ -328,10 +340,17 @@
 						Grid background color (Hex):
 						<input type="text" placeholder="#cccccc" bind:value={settings.gridBg} />
 					</label>
-					<label>
-						Grid Size (px):
-						<input type="number" min="10" max="200" bind:value={settings.gridSize} />
-					</label>
+					{#if settings.gridType === 'Line'}
+						<label>
+							Line Width (px):
+							<input type="number" min="1" max="20" bind:value={settings.gridLineWidth} />
+						</label>
+					{:else}
+						<label>
+							Dot Size (px):
+							<input type="number" min="2" max="50" bind:value={settings.gridDotSize} />
+						</label>
+					{/if}
 				</div>
 			{:else if settings.backgroundType === 'Custom'}
 				<div>

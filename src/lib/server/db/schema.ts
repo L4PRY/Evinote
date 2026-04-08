@@ -58,6 +58,8 @@ export const Permissions = pgTable(
 			onUpdate: 'cascade'
 		}),
 		uid: serial('user_id').references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+		bid: serial('board_id').references(() => Board.id, { onDelete: 'cascade' }),
+		uid: serial('user_id').references(() => User.id),
 		perm: permission('permission')
 	},
 	table => [index('user_session').on(table.bid, table.uid)]

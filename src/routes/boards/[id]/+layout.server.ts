@@ -25,7 +25,7 @@ export async function load({ params }) {
 
 	if (!board) {
 		routeLogger.warn(`Board with id ${id} not found`);
-		error(404, 'board not found');
+		return { id, error: 'Board not found' };
 	}
 
 	// get the full user record if logged in
@@ -47,7 +47,9 @@ export async function load({ params }) {
 				.then(res => res[0])
 		: null;
 
-	return checkAccessPerms(board, user, perms)
-		? { id, user, board, perms }
-		: error(403, 'forbidden');
+	if (!checkAccessPerms(board, user, perms)) {
+		return { id, error: 'Access denied: You do not have permission to view this board' };
+	}
+
+	return { id, user, board, perms };
 }

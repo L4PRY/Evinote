@@ -3,10 +3,32 @@ import { db } from '$lib/server/db/index';
 import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { requireLogin } from '$lib/server/auth';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import type { NoteData } from '$lib/types/canvas/NoteData';
 import { checkUserCanModify } from '$lib/server/perms';
 import { diffNotes } from '$lib/server/diff';
+
+export const load: PageServerLoad = async ({ params, parent }) => {
+	const parentData = await parent();
+	const { user, perms, board } = parentData;
+	const { id } = params;
+
+	if (!board) {
+		return { contributors: [], canModify: false };
+	}
+
+	const contributors = user
+		? await db
+				.select({ username: table.User.username, id: table.User.id, permission: table.Permissions.perm })
+				.from(table.User)
+				.leftJoin(table.Permissions, eq(table.User.id, table.Permissions.uid))
+				.where(eq(table.Permissions.bid, parseInt(id)))
+		: [];
+
+	const canModify = checkUserCanModify(board, user ?? undefined, perms ?? undefined);
+
+	return { contributors, canModify };
+};
 
 export const actions: Actions = {
 	default: async ({ request, params }) => {
@@ -38,11 +60,19 @@ export const actions: Actions = {
 
 		// diff notes on server and sent by client here
 
-		if (checkUserCanModify(board, user, perms))
-			await db
-				.update(table.Board)
-				.set({ notes: diffNotes(board.notes as NoteData[], notes) })
-				// .set({ notes })
-				.where(eq(table.Board.id, parseInt(params.id)));
+		if (checkUserCanModify(board, user, perms)) {
+			try {
+				await db
+					.update(table.Board)
+					.set({ notes: diffNotes(board.notes as NoteData[], notes) })
+					.where(eq(table.Board.id, parseInt(params.id)));
+				return { success: true };
+			} catch (err) {
+				routeLogger.error(`Failed to update board ${params.id}: ${err}`);
+				return { error: 'Failed to save changes to the database' };
+			}
+		}
+
+		return { error: 'You do not have permission to modify this board' };
 	}
 };
