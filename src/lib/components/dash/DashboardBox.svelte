@@ -212,7 +212,13 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		max-width: 85%;
+		flex-grow: 1;
+		min-width: 0;
+	}
+
+	.arrow {
+		flex-shrink: 0;
+		margin-left: 0.5rem;
 	}
 
 	.arrow > * {
