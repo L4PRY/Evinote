@@ -8,6 +8,7 @@ node_modules
 /.svelte-kit
 /build
 /drizzle
+/dist
 
 .pnpm-lock.*
 pnpm-lock.*
