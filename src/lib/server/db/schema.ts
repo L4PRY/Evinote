@@ -53,16 +53,18 @@ export const User = pgTable(
 export const Permissions = pgTable(
 	'permissions',
 	{
-		bid: serial('board_id').references(() => Board.id, {
-			onDelete: 'cascade',
-			onUpdate: 'cascade'
-		}),
-		uid: serial('user_id').references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-		bid: serial('board_id').references(() => Board.id, { onDelete: 'cascade' }),
-		uid: serial('user_id').references(() => User.id, { onDelete: 'cascade' ),
+		bid: serial('board_id')
+			.references(() => Board.id, {
+				onDelete: 'cascade',
+				onUpdate: 'cascade'
+			})
+			.notNull(),
+		uid: serial('user_id')
+			.references(() => User.id, { onDelete: 'cascade', onUpdate: 'cascade' })
+			.notNull(),
 		perm: permission('permission')
 	},
-	table => [index('user_session').on(table.bid, table.uid)]
+	table => [index('permissions_board_user').on(table.bid, table.uid)]
 );
 
 export const Board = pgTable(
