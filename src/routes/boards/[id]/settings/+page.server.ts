@@ -3,7 +3,7 @@ import { User, Board, Permissions as Perms } from '$lib/server/db/schema';
 import { db } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { checkUserCanModify } from '$lib/server/perms';
-import { error, redirect, type Actions } from '@sveltejs/kit';
+import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
@@ -52,7 +52,7 @@ export const actions: Actions = {
 			routeLogger.warn(
 				`User ${user.username} attempted to add a contributor without providing a username or permission on board ID: ${id}`
 			);
-			return { error: 'Missing username or permission' };
+			return fail(400, { error: 'Missing username or permission' });
 		}
 
 		const board = id
@@ -67,7 +67,7 @@ export const actions: Actions = {
 			routeLogger.warn(
 				`User ${user.username} attempted to add a contributor to non-existent board with ID: ${id}`
 			);
-			return { error: 'Board not found' };
+			return fail(400, { error: 'Board not found' });
 		}
 
 		const perms = await db
@@ -86,14 +86,31 @@ export const actions: Actions = {
 			routeLogger.warn(
 				`User ${user.username} entry for add-contributor username: ${username} was not found`
 			);
-			return { error: 'User not found' };
+			return fail(404, { error: 'User not found' });
 		}
 
 		if (!checkUserCanModify(board, user, perms)) {
 			routeLogger.warn(
 				`User ${user.username} attempted to add a contributor to board ${board.name} (ID: ${id}) without sufficient permissions`
 			);
-			return { error: 'You do not have permission to modify this board' };
+			return fail(403, { error: 'You do not have permission to modify this board' });
+		}
+
+		if (board.owner === contributor.id) {
+			return fail(400, { error: 'User is the owner of this board' });
+		}
+
+		const existingPerms = await db
+			.select()
+			.from(Perms)
+			.where(and(eq(Perms.bid, parseInt(id!)), eq(Perms.uid, contributor.id)))
+			.then(res => res[0]);
+
+		if (existingPerms) {
+			routeLogger.warn(
+				`User ${user.username} attempted to add a contributor to board ${board.name} (ID: ${id}) who is already a contributor`
+			);
+			return fail(400, { error: 'User is already a contributor' });
 		}
 
 		await db

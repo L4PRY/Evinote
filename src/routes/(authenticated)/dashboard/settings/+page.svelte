@@ -107,11 +107,8 @@
 			method: 'POST',
 			body: form
 		});
-
 		const data = await res.json();
-
-		console.log(data);
-
+		
 		if (data.type === 'success') {
 			// After deletion, log the user out and redirect to homepage
 			goto(resolve('/auth'));
