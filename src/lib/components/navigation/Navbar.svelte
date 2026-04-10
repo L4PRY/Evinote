@@ -10,6 +10,7 @@
 
 	function navbarExpand() {
 		const nav = document.querySelector('nav');
+		const logo = document.querySelector('#logo');
 		if (!nav) return;
 
 		if (outerWidth > 600) {
@@ -18,12 +19,16 @@
 				nav.style.backdropFilter = 'blur(5px)';
 				nav.style.width = '70vw';
 				nav.style.border = '1px solid var(--button-stroke-color)';
+				nav.style.paddingLeft = '30px';
+				nav.style.marginRight = '31px';
 			} else {
 				// Reset to default styles
 				nav.style.transition = 'all 0.15s ease-in-out';
 				nav.style.backdropFilter = 'none';
 				nav.style.border = '1px solid transparent';
 				nav.style.width = '50vw';
+				nav.style.paddingLeft = '0';
+				nav.style.marginRight = '0';
 			}
 		}
 	}
@@ -110,9 +115,19 @@
 			aria-label="Home"><img src="/Logo.svg" alt="Evinote" id="logo" /></a
 		>
 		<div class="nav-island">
-			<button onclick={closeHamburger}>Explore</button>
+			<button
+				onclick={() => {
+					closeHamburger();
+					goto(resolve('/features'));
+				}}>Features</button
+			>
 			<div class="nav-island-divider" aria-hidden="true"></div>
-			<button onclick={closeHamburger}>Dashboard</button>
+			<button
+				onclick={() => {
+					closeHamburger();
+					goto(resolve('/boards/trending'));
+				}}>Trending</button
+			>
 			<div class="nav-island-divider" aria-hidden="true"></div>
 			<button
 				onclick={() => {
