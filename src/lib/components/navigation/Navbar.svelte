@@ -117,12 +117,12 @@
 		margin-top: -150px;
 		border-radius: var(--border-radius);
 		transition: 
-			width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
 			transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-			padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-			backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-			border 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-			border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+			backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+			border 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+			border-radius 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 		backdrop-filter: none;
 		border: 1px solid transparent;
 		gap: 20px;
@@ -133,22 +133,13 @@
 	}
 
 	nav #logo {
-		height: 36px;
+		height: 48px;
 		width: auto;
 		display: block;
 		object-fit: contain;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	}
 
-	nav.expanded #logo {
-		transform: scale(1.1);
-	}
-
-	nav.expanded {
-		width: 70vw;
-		backdrop-filter: blur(5px);
-		border: 1px solid var(--button-stroke-color);
-	}
 
 	@media (min-width: 600px) {
 		.main {
@@ -163,10 +154,21 @@
 		nav {
 			width: 50vw;
 		}
+
+		nav.expanded {
+			width: 70vw;
+			backdrop-filter: blur(5px);
+			border: 1px solid var(--button-stroke-color);
+		}
+
+		nav #logo:hover {
+			transform: scale(1.1);
+		}
+
 		.float-left {
 			font-size: 1.5rem;
 			justify-self: flex-start;
-			margin-left: 20px;
+			margin-left: 5px;
 		}
 		.float-right {
 			justify-self: flex-end;
@@ -286,7 +288,7 @@
 
 		.float-left {
 			font-size: 1.5rem;
-			margin-left: 20px;
+			margin-left: 10px;
 		}
 
 		.nav-island {
