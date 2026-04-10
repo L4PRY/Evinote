@@ -8,72 +8,22 @@
 	let navVisible = $state(false);
 	let hamburgerVisible = $state(false);
 
-	function navbarExpand() {
-		const nav = document.querySelector('nav');
-		const logo = document.querySelector('#logo');
-		if (!nav) return;
-
-		if (outerWidth > 600) {
-			if (scrollY > 50) {
-				nav.style.transition = 'all 0.15s ease-in-out';
-				nav.style.backdropFilter = 'blur(5px)';
-				nav.style.width = '70vw';
-				nav.style.border = '1px solid var(--button-stroke-color)';
-				nav.style.paddingLeft = '30px';
-				nav.style.marginRight = '31px';
-			} else {
-				// Reset to default styles
-				nav.style.transition = 'all 0.15s ease-in-out';
-				nav.style.backdropFilter = 'none';
-				nav.style.border = '1px solid transparent';
-				nav.style.width = '50vw';
-				nav.style.paddingLeft = '0';
-				nav.style.marginRight = '0';
-			}
-		}
-	}
+	let isExpanded = $derived(outerWidth > 600 && scrollY > 50);
 
 	function navbarAnimationToggle() {
-		const nav = document.querySelector('nav');
-		if (nav) {
-			nav.style.transition = 'none';
-		}
+		// Logic handled by CSS to avoid transition conflicts
 	}
 
 	function navHide() {
-		const nav = document.querySelector('nav');
-		if (nav) {
-			nav.style.transition = 'none';
-			nav.style.transform = 'translateY(0)';
-			navVisible = false;
-		}
+		navVisible = false;
 	}
 
 	function navShow() {
-		const nav = document.querySelector('nav');
-		if (nav) {
-			nav.style.transition = 'transform 0.8s ease-in-out';
-			nav.style.transform = 'translateY(170px)';
-			navVisible = true;
-		}
+		navVisible = true;
 	}
 
 	function hamburgerToggle() {
-		const navIsland = document.querySelector('.nav-island');
-		const nav = document.querySelector('nav');
-		if (navIsland) {
-			if (!hamburgerVisible) {
-				navIsland.style.display = 'flex';
-				navIsland.style.height = 'fit-content';
-				nav.style.borderRadius = '20px 20px 5px 5px';
-				hamburgerVisible = true;
-			} else {
-				navIsland.style.display = 'none';
-				navIsland.style.height = '0vh';
-				nav.style.borderRadius = '20px';
-				hamburgerVisible = false;
-			}
-		}
+		hamburgerVisible = !hamburgerVisible;
 	}
 
 	function closeHamburger() {
@@ -84,24 +34,13 @@
 
 	onMount(() => {
 		if (!navVisible) navShow();
-
-		// Add scroll event listener
-		window.onscroll = () => {
-			scrollY = window.scrollY;
-			navbarExpand();
-		};
-
-		// Cleanup on destroy
-		onDestroy(() => {
-			window.onscroll = null;
-		});
 	});
 </script>
 
 <svelte:window bind:scrollY bind:outerWidth on:resize={navbarAnimationToggle} />
 
 <div class="main">
-	<nav>
+	<nav class:expanded={isExpanded} class:visible={navVisible} class:hamburger-open={hamburgerVisible}>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<a
@@ -160,6 +99,57 @@
 </div>
 
 <style>
+	nav {
+		display: flex;
+		box-sizing: border-box;
+		align-items: center;
+		justify-content: space-between;
+		height: 50px;
+		background-color: transparent;
+		min-width: fit-content;
+		max-width: 100%;
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		margin: auto;
+		z-index: 10;
+		margin-top: -150px;
+		border-radius: var(--border-radius);
+		transition: 
+			width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+			padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			border 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		backdrop-filter: none;
+		border: 1px solid transparent;
+		gap: 20px;
+	}
+
+	nav.visible {
+		transform: translateY(170px);
+	}
+
+	nav #logo {
+		height: 36px;
+		width: auto;
+		display: block;
+		object-fit: contain;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	nav.expanded #logo {
+		transform: scale(1.1);
+	}
+
+	nav.expanded {
+		width: 70vw;
+		backdrop-filter: blur(5px);
+		border: 1px solid var(--button-stroke-color);
+	}
+
 	@media (min-width: 600px) {
 		.main {
 			margin-left: auto;
@@ -171,34 +161,7 @@
 			height: 60px;
 		}
 		nav {
-			display: flex;
-			box-sizing: border-box;
-			align-items: center;
-			justify-content: space-between;
-			height: 50px;
-			background-color: transparent;
 			width: 50vw;
-			min-width: fit-content;
-			max-width: 100%;
-			position: fixed;
-			top: 0;
-			margin: auto;
-			z-index: 10;
-			margin-top: -150px;
-			border-radius: var(--border-radius);
-			transition: all 0.15s ease-in-out;
-			backdrop-filter: none;
-			border: 1px solid transparent;
-			gap: 20px;
-		}
-
-		nav #logo {
-			height: 50px;
-			width: 50px;
-			overflow: visible;
-			object-fit: cover;
-			transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-			transform: scale(0.97);
 		}
 		.float-left {
 			font-size: 1.5rem;
@@ -290,28 +253,15 @@
 		}
 
 		nav {
-			display: flex;
-			box-sizing: border-box;
-			align-items: center;
-			justify-content: space-between;
-			height: 50px;
-			background-color: transparent;
 			width: 90vw;
-			margin-left: 5vw;
-			min-width: fit-content;
-			max-width: 100%;
-			position: fixed;
-			z-index: 10;
-			top: 0;
-			margin-top: -150px;
-			gap: 20px;
+			margin-left: auto;
+			margin-right: auto;
 			background: linear-gradient(
 				180deg,
 				light-dark(transparent, rgba(200, 200, 250, 0.05)),
-				light-dark(rgba(0, 0, 100, 0.05), transparent)
+				light-dark(rgba(0, 100, 0.05), transparent)
 			);
 			border-radius: 20px;
-			/*border: 1px solid var(--default-stroke-color);*/
 			transition: height 0.5s ease-in-out;
 		}
 
@@ -341,27 +291,31 @@
 
 		.nav-island {
 			position: fixed;
-			display: flex;
+			display: none;
 			gap: 2px;
 			flex-direction: column;
 			align-items: center;
 			text-align: center;
 			top: 52px;
 			width: 90vw;
-			/*background-color: light-dark(#e2dde2, #13091a);*/
-
 			background: linear-gradient(
 				180deg,
-				light-dark(rgba(0, 0, 100, 0.05), transparent),
-				light-dark(transparent, rgba(200, 200, 250, 0.05))
+				light-dark(rgba(0, 100, 0.05), transparent),
+				light-dark(transparent, rgba(200, 250, 200, 0.05))
 			);
-
 			border-radius: 5px 5px 20px 20px;
-			/*border: 1px solid var(--default-stroke-color);*/
 			height: 0;
-			display: none;
 			overflow: hidden;
 			transition: all 0.5s ease-in-out;
+		}
+
+		nav.hamburger-open {
+			border-radius: 20px 20px 5px 5px;
+		}
+
+		nav.hamburger-open .nav-island {
+			display: flex;
+			height: fit-content;
 		}
 
 		.nav-island button {
