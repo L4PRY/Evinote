@@ -107,7 +107,7 @@
 				goto(resolve('/'));
 			}}
 			style="cursor: pointer;"
-			aria-label="Home"><img src="Logo.svg" alt="Evinote" id="logo" /></a
+			aria-label="Home"><img src="/Logo.svg" alt="Evinote" id="logo" /></a
 		>
 		<div class="nav-island">
 			<button onclick={closeHamburger}>Explore</button>

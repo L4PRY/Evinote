@@ -4,7 +4,7 @@
 
 <aside>
 	<div class="logo-container">
-		<img class="logo" alt="Evinote" src="Logo.svg" />
+		<img class="logo" alt="Evinote" src="/Logo.svg" />
 	</div>
 	<nav>
 		<ul>
