@@ -2,7 +2,7 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { requireLogin } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { and, eq, desc } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 /* =====================================================
    GET
@@ -34,31 +34,12 @@ export async function GET(event: RequestEvent) {
 		conditions.push(eq(table.Board.type, 'Public'));
 	}
 
-	const userPfp = await db
-		.select()
-		.from(table.Files)
-		.leftJoin(table.UserPfp, eq(table.UserPfp.file, table.Files.id))
-		.where(eq(table.UserPfp.user, userId))
-		.orderBy(desc(table.UserPfp.updated))
-		.limit(1)
-		.then(res => res[0]);
-
 	const boards = await db
 		.select()
 		.from(table.Board)
 		.where(and(...conditions));
 
-	return json(
-		{
-			id: user.id,
-			email: requestingUser?.role === 'Admin' ? user.email : null,
-			username: user.username,
-			role: requestingUser?.role === 'Admin' ? user.role : null,
-			created: user.created,
-			pfp: userPfp ? `/api/files/${userPfp.files.hash}` : null
-		},
-		{ status: 200, headers: { 'Content-Type': 'application/json' } }
-	);
+	return json({ user, boards }, { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 /* =====================================================

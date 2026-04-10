@@ -20,7 +20,6 @@ export function parseColor(color: Color | string | null | undefined): string {
 			return `hsl(${h ?? 0} ${s ?? 0}% ${l ?? 0}%${a !== undefined ? ' / ' + a : ''})`;
 		}
 		case 'hex': {
-			console.log('got to hex case');
 			const value = String(color.value);
 			const regex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 			if (!regex.test(value)) return '#000000';
@@ -28,7 +27,6 @@ export function parseColor(color: Color | string | null | undefined): string {
 			return value;
 		}
 		default: {
-			console.warn(`Unknown color type for object '${color}'`);
 			return '#000000';
 		}
 	}

@@ -13,7 +13,7 @@
 	import type { NoteData } from '$lib/types/canvas/NoteData';
 	import type { Color } from '$lib/types/canvas/Color';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
-	import { position, getViewportPosition } from '$lib/stores/viewport';
+	import { position, getViewportPosition, getViewportCenter, getScrollFromCenter } from '$lib/stores/viewport';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { get } from 'svelte/store';
 	import { validateUrl } from '$lib/parseInput';
@@ -62,7 +62,14 @@
 	let newNoteTitle = $state('');
 	let newNoteColor = $state('#1e1e1e');
 
+	const id = $derived(data.id);
+	const user = $derived(data.user);
+	const board = $derived(data.board);
+	const perms = $derived(data.perms);
+	const hasWritePermission = $derived(board && (board.owner === user?.id || perms?.perm === 'Write'));
+
 	function handleCanvasContextMenu(e: MouseEvent, canvasX: number, canvasY: number) {
+		if (!hasWritePermission) return;
 		contextMenuData = {
 			show: true,
 			x: e.clientX,
@@ -95,9 +102,6 @@
 		
 		contextMenuData.show = false;
 	}
-
-	// svelte-ignore state_referenced_locally
-	const { id, user, board, perms } = data;
 
 	// svelte-ignore state_referenced_locally
 	let notes = $state((data.board?.notes ?? []).map(validateNoteData));
@@ -200,9 +204,21 @@
 		try {
 			const saved = localStorage.getItem(`board-${id}-viewport`);
 			if (saved) {
-				const { left, top, zoom } = JSON.parse(saved);
+				const { centerX, centerY, zoom, left, top } = JSON.parse(saved);
+				
+				// Restore zoom first to ensure correct scroll dimensions
 				if (zoom) zoomLevel.set(zoom);
-				position.setPosition(left, top);
+				
+				// Calculate scroll from center if available, fallback to old left/top format
+				if (centerX !== undefined && centerY !== undefined) {
+					// Use a small timeout to let the canvas resize after zoom before centering
+					setTimeout(() => {
+						const scroll = getScrollFromCenter(centerX, centerY, zoom || 1);
+						position.setPosition(scroll.left, scroll.top);
+					}, 50);
+				} else if (left !== undefined && top !== undefined) {
+					position.setPosition(left, top);
+				}
 			}
 		} catch (err) {
 			console.error('Failed to parse viewport from localStorage:', err);
@@ -232,14 +248,15 @@
 		(window as any).notes = notes;
 		
 		const saveOnUnload = () => {
-			const currentPosition = getViewportPosition();
 			const currentZoom = get(zoomLevel);
+			const { centerX, centerY } = getViewportCenter(currentZoom);
+			
 			localStorage.setItem(`board-${id}-viewport`, JSON.stringify({
-				left: currentPosition.left,
-				top: currentPosition.top,
+				centerX,
+				centerY,
 				zoom: currentZoom
 			}));
-			console.log('saved viewport/zoom to localStorage', currentPosition, currentZoom);
+			console.log('saved center-point/zoom to localStorage', { centerX, centerY }, currentZoom);
 		};
 
 		const handleWindowClick = () => closeContextMenu();
@@ -251,6 +268,8 @@
 			window.removeEventListener('click', handleWindowClick);
 		};
 	});
+
+	// set localstorage variable on unload
 
 	// function saveNotes() {
 	// 	// ok how do i
@@ -283,8 +302,15 @@
 <!-- Canvas viewport wrapper — shrinks when sidebar is open -->
 <div class="canvas-viewport" class:sidebar-open={settingsOpen}>
 
+<div class="board-title-container">
+	<div class="board-title">
+		<LucideSymbol symbol="Layout" size={16} strokeWidth={2} />
+		<span>{board?.name ?? 'Loading...'}</span>
+	</div>
+</div>
+
 <!-- if perms then check for write or if board.owner == perm.uid, otherwise check for board.owner = checkLogin().id-->
-{#if board && (board.owner === user?.id || perms?.perm === 'Write')}
+{#if hasWritePermission}
 	<div class="note-creator">
 		<form method="post" use:enhance id="save-notes-form">
 			<input type="hidden" name="notes" value={JSON.stringify(notes)} />
@@ -338,7 +364,7 @@
 	{@const gridSnap = 5}
 	{#each notes as _, i}
 		{console.log('added note')}
-		<Note bind:data={notes[i]} {gridSnap} remove={() => notes.splice(i, 1)} />
+		<Note bind:data={notes[i]} {gridSnap} remove={() => notes.splice(i, 1)} readonly={!hasWritePermission} />
 	{/each}
 
 	{#if contextMenuData.show}
@@ -438,9 +464,9 @@
 	}
 
 	.save-button:hover {
-		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
-		border-color: rgba(255, 255, 255, 0.3);
-		transform: translateY(-1px);
+		background: var(--editor-interface-background, rgba(30, 30, 45, 0.95));
+		border-color: var(--editor-interface-border, rgba(255, 255, 255, 0.25));
+		transform: translateY(-2px);
 	}
 
 	.save-button:active {
@@ -496,7 +522,9 @@
 	}
 
 	.settings-toggle:hover {
-		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
+		background: var(--editor-interface-background, rgba(30, 30, 45, 0.95));
+		border-color: var(--editor-interface-border, rgba(255, 255, 255, 0.25));
+		transform: translateY(-2px);
 	}
 
 	.settings-toggle:active {
@@ -618,13 +646,58 @@
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
 		&:hover {
-			background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
-			border-color: rgba(255, 255, 255, 0.3);
-			transform: translateX(-1px);
+			background: var(--editor-interface-background, rgba(30, 30, 45, 0.95));
+			border-color: var(--editor-interface-border, rgba(255, 255, 255, 0.25));
+			transform: translateX(-3px);
 		}
 
 		&:active {
 			transform: scale(0.95);
+		}
+	}
+
+	.board-title-container {
+		position: fixed;
+		top: 20px;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+		z-index: 1000;
+	}
+
+	.board-title {
+		height: 38px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		background: var(--editor-interface-background, rgba(20, 20, 30, 0.85));
+		border: 1px solid var(--editor-interface-border, rgba(255, 255, 255, 0.12));
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border-radius: 12px;
+		padding: 0 18px;
+		color: var(--default-text-color, #fff);
+		font-size: 0.9rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+		pointer-events: auto;
+		max-width: 300px;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.board-title span {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		opacity: 0.9;
+	}
+
+	@media (max-width: 768px) {
+		.board-title-container {
+			display: none; /* Hide on small screens to avoid overlap */
 		}
 	}
 

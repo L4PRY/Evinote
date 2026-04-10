@@ -67,7 +67,6 @@ describe('should parse colours into proper CSS values', () => {
 
 	it('should return default for invalid hex color values', () => {
 		const invalidHexColor = { type: 'hex' as const, value: 'FF5733' };
-		console.log(parseColor(invalidHexColor));
 		expect(parseColor(invalidHexColor)).toBe('#000000');
 	});
 });

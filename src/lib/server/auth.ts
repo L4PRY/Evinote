@@ -44,12 +44,7 @@ export function checkLogin(): AuthenticatedUser | null {
 }
 
 let layer = 0;
-export async function createSession(
-	user: number,
-	description: string,
-	eat?: Date,
-	location?: string
-) {
+export async function createSession(user: number, description: string, location: string) {
 	try {
 		layer++;
 		const result = await db
@@ -58,9 +53,9 @@ export async function createSession(
 				token: generateSecureRandomString(),
 				user,
 				description,
-				iat: new Date(Date.now()),
-				eat: eat ?? new Date(Date.now() + DAY_IN_MS * 30),
-				location: location ?? 'Unknown'
+				iat: new Date(),
+				eat: new Date(Date.now() + DAY_IN_MS * 30),
+				location
 			})
 			.returning();
 
@@ -73,7 +68,7 @@ export async function createSession(
 				layer = 0;
 				throw new Error('Failed to create unique session token after multiple attempts');
 			}
-			return await createSession(user, description, eat, location);
+			return await createSession(user, description, location);
 		} else throw new Error('Failed to create session', { cause: error });
 	}
 }

@@ -3,7 +3,7 @@ import { User, Board, Permissions as Perms } from '$lib/server/db/schema';
 import { db } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { checkUserCanModify } from '$lib/server/perms';
-import { error, redirect, text, type Actions } from '@sveltejs/kit';
+import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
@@ -52,14 +52,7 @@ export const actions: Actions = {
 			routeLogger.warn(
 				`User ${user.username} attempted to add a contributor without providing a username or permission on board ID: ${id}`
 			);
-			return error(400, 'Missing username or permission');
-		}
-
-		if (perm !== 'Read' && perm !== 'Write') {
-			routeLogger.warn(
-				`User ${user.username} attempted to add a contributor with invalid permission '${perm}' on board ID: ${id}`
-			);
-			return error(400, 'Invalid permission value');
+			return fail(400, { error: 'Missing username or permission' });
 		}
 
 		const board = id
@@ -74,7 +67,7 @@ export const actions: Actions = {
 			routeLogger.warn(
 				`User ${user.username} attempted to add a contributor to non-existent board with ID: ${id}`
 			);
-			return error(404, 'Board not found');
+			return fail(400, { error: 'Board not found' });
 		}
 
 		const perms = await db
@@ -82,8 +75,6 @@ export const actions: Actions = {
 			.from(Perms)
 			.where(and(eq(Perms.bid, parseInt(id!)), eq(Perms.uid, user.id)))
 			.then(res => res[0]);
-
-		if (perms) error(400, 'Contributor already has access');
 
 		const contributor = await db
 			.select()
@@ -95,24 +86,48 @@ export const actions: Actions = {
 			routeLogger.warn(
 				`User ${user.username} entry for add-contributor username: ${username} was not found`
 			);
-			return { error: 'User not found' };
+			return fail(404, { error: 'User not found' });
 		}
 
 		if (!checkUserCanModify(board, user, perms)) {
 			routeLogger.warn(
 				`User ${user.username} attempted to add a contributor to board ${board.name} (ID: ${id}) without sufficient permissions`
 			);
-			return error(403, 'You do not have permission to modify this board');
+			return fail(403, { error: 'You do not have permission to modify this board' });
 		}
 
-		await db.insert(Perms).values({ bid: parseInt(id!), uid: contributor.id, perm });
+		if (board.owner === contributor.id) {
+			return fail(400, { error: 'User is the owner of this board' });
+		}
+
+		const existingPerms = await db
+			.select()
+			.from(Perms)
+			.where(and(eq(Perms.bid, parseInt(id!)), eq(Perms.uid, contributor.id)))
+			.then(res => res[0]);
+
+		if (existingPerms) {
+			routeLogger.warn(
+				`User ${user.username} attempted to add a contributor to board ${board.name} (ID: ${id}) who is already a contributor`
+			);
+			return fail(400, { error: 'User is already a contributor' });
+		}
+
+		await db
+			.insert(Perms)
+			.values({ bid: parseInt(id!), uid: contributor.id, perm });
 
 		routeLogger.info(
 			`Added user ${username} with permission ${perm} to board ${board.name} (ID: ${id}) by user ${user.username}`
 		);
-		return text(`User ${username} added successfully with ${perm} permission`, {
-			status: 200
-		}) as unknown as Response;
+		return { 
+			success: 'User added successfully',
+			contributor: {
+				id: contributor.id,
+				username: contributor.username,
+				permission: perm
+			}
+		};
 	},
 	removeuser: async ({ request, params }) => {
 		const user = requireLogin();
@@ -122,10 +137,7 @@ export const actions: Actions = {
 		const { id } = params;
 
 		if (!uid) {
-			routeLogger.warn(
-				`User ${user.username} attempted to remove a contributor without providing a user ID on board ID: ${id}`
-			);
-			return error(400, 'Missing user ID');
+			return { error: 'Missing user ID' };
 		}
 
 		const board = id
@@ -137,7 +149,7 @@ export const actions: Actions = {
 			: undefined;
 
 		if (!board) {
-			return error(404, 'board not found');
+			return { error: 'Board not found' };
 		}
 
 		const perms = await db
@@ -147,7 +159,7 @@ export const actions: Actions = {
 			.then(res => res[0]);
 
 		if (!checkUserCanModify(board, user, perms)) {
-			return error(403, 'You do not have permission to modify this board');
+			return { error: 'You do not have permission to modify this board' };
 		}
 
 		await db.delete(Perms).where(and(eq(Perms.bid, parseInt(id!)), eq(Perms.uid, parseInt(uid))));

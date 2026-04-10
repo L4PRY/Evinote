@@ -99,7 +99,12 @@ export function validateNoteData(note: any): NoteData {
 	const validated: Partial<NoteData> = {
 		id: note.id || Math.random().toString(36).substr(2, 9),
 		title: note.title ?? 'Note',
-		content: Array.isArray(note.content) ? note.content : [],
+		content: Array.isArray(note.content) ? note.content.map((item: any) => {
+			if (typeof item === 'object' && item !== null && 'type' in item && 'value' in item) {
+				return item;
+			}
+			return item; // Keep as is if it's string or File-like
+		}) : [],
 		color: note.color || 'var(--default-bg-color)'
 	};
 

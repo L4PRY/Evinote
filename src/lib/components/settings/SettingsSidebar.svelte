@@ -4,6 +4,8 @@
 	import type { Grid } from '$lib/types/canvas/Grid';
 	import type { Color } from '$lib/types/canvas/Color';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
+	import { invalidateAll } from '$app/navigation';
+	import { notifications } from '$lib/stores/notifications';
 
 
 	interface Contributor {
@@ -39,8 +41,51 @@
 		contributors = initialContributors;
 	});
 
+	// Sync settings state when board prop changes
+	$effect(() => {
+		const vCanvas = validateCanvasData(board.canvas);
+		const solidDefault = getBackgroundDefaults('Solid');
+		const gridDefault = getBackgroundDefaults('Grid');
+		
+		settings.boardName = board.name;
+		settings.boardType = board.type;
+		settings.canvasWidth = vCanvas.size.width;
+		settings.canvasHeight = vCanvas.size.height;
+		settings.backgroundType = vCanvas.background.type;
+		settings.backgroundValue =
+			vCanvas.background.type === 'Solid'
+				? (vCanvas.background.value as Color).value
+				: vCanvas.background.type === 'Custom'
+					? vCanvas.background.value
+					: (solidDefault.value as Color).value;
+		settings.thumbnail = vCanvas.thumbnail?.location;
+		settings.gridType =
+			vCanvas.background.type === 'Grid'
+				? (vCanvas.background.value as Grid).type
+				: (gridDefault.value as Grid).type;
+		settings.gridColor =
+			vCanvas.background.type === 'Grid'
+				? (vCanvas.background.value as Grid).color.value
+				: (gridDefault.value as Grid).color.value;
+		settings.gridLineWidth =
+			vCanvas.background.type === 'Grid' &&
+			(vCanvas.background.value as Grid).type === 'Line'
+				? (vCanvas.background.value as { type: 'Line'; background: Color; width: number; color: Color }).width
+				: (gridDefault.value as any).width || 1;
+		settings.gridDotSize =
+			vCanvas.background.type === 'Grid' &&
+			(vCanvas.background.value as Grid).type === 'Dot'
+				? (vCanvas.background.value as { type: 'Dot'; background: Color; size: number; color: Color }).size
+				: (gridDefault.value as any).size || 20;
+		settings.gridBg =
+			vCanvas.background.type === 'Grid'
+				? (vCanvas.background.value as Grid).background.value
+				: (gridDefault.value as Grid).background.value;
+	});
+
 	// State for add contributor dialog
 	let showAddContributorDialog = $state(false);
+	let contributorError = $state('');
 
 	// State for delete dialog
 	let showDeleteDialog = $state(false);
@@ -160,6 +205,7 @@
 			if (response.ok) {
 				saveStatus = 'success';
 				saveMessage = 'Settings saved!';
+				await invalidateAll();
 				setTimeout(() => (saveStatus = 'idle'), 2500);
 			} else {
 				saveStatus = 'error';
@@ -204,11 +250,28 @@
 				body: formData
 			});
 
-			if (response.ok) {
+			const data = await response.json();
+
+			if (data.type === 'success') {
+				await invalidateAll();
 				showAddContributorDialog = false;
+				contributorError = '';
+				notifications.add({
+					title: 'Success',
+					message: 'Contributor added successfully.',
+					type: 'success',
+					duration: 3000
+				});
 				form.reset();
 			} else {
-				console.error('Failed to add contributor');
+				showAddContributorDialog = false;
+				const [{ error }, message] = JSON.parse(data.data) as [{ error: number }, string];
+				notifications.add({
+					title: 'Error',
+					message: message,
+					type: 'error',
+					duration: 3000
+				});
 			}
 		} catch (error) {
 			console.error('Error adding contributor:', error);
@@ -531,9 +594,9 @@
 					{#if canModify}
 						<div class="form-actions">
 							{#if saveStatus === 'success'}
-								<span class="save-msg success"><LucideSymbol symbol="Check" size={14} /> {saveMessage}</span>
+								<span class="save-msg success"><LucideSymbol symbol="Check" size={14} strokeWidth={2} /> {saveMessage}</span>
 							{:else if saveStatus === 'error'}
-								<span class="save-msg error"><LucideSymbol symbol="X" size={14} /> {saveMessage}</span>
+								<span class="save-msg error"><LucideSymbol symbol="X" size={14} strokeWidth={2} /> {saveMessage}</span>
 							{/if}
 
 							<button type="submit" class="btn-primary" disabled={saveStatus === 'saving'}>
@@ -591,6 +654,13 @@
 					<div class="modal-backdrop" onclick={() => (showAddContributorDialog = false)}>
 						<div class="modal" onclick={(e) => e.stopPropagation()}>
 							<h3 class="modal-title">Add Contributor</h3>
+							
+							{#if contributorError}
+								<div class="delete-error-banner" style="margin-bottom: 0.5rem;">
+									{contributorError}
+								</div>
+							{/if}
+
 							<form onsubmit={handleAddUserSubmit}>
 								<div class="form-group">
 									<label class="form-label" for="addUsername">Username</label>
@@ -625,7 +695,7 @@
 			{:else if activeTab === 'danger'}
 				<div class="danger-zone">
 					<div class="danger-header">
-						<LucideSymbol symbol="TriangleAlert" size={18} />
+						<LucideSymbol symbol="TriangleAlert" size={18} strokeWidth={2} />
 
 						<h3>Danger Zone</h3>
 					</div>
@@ -1171,16 +1241,14 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
+		color: #f87171;
 	}
 
 	.danger-header h3 {
 		margin: 0;
 		font-size: 0.9rem;
 		font-weight: 700;
-		color: #f87171;
 	}
-
-
 
 	.danger-desc {
 		font-size: 0.8rem;
@@ -1235,7 +1303,7 @@
 
 	.modal-actions {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: space-between;
 		gap: 8px;
 	}
 </style>
