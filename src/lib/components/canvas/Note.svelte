@@ -1006,17 +1006,17 @@
 		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
 		z-index: 500;
 
-		/* Ensure popup content stays white regardless of note theme */
-		--note-fg: white;
-		--note-fg-o8: rgba(255, 255, 255, 0.8);
-		--note-fg-o7: rgba(255, 255, 255, 0.7);
-		--note-fg-o6: rgba(255, 255, 255, 0.6);
-		--note-fg-o5: rgba(255, 255, 255, 0.5);
-		--note-fg-o4: rgba(255, 255, 255, 0.4);
-		--note-fg-o3: rgba(255, 255, 255, 0.3);
-		--note-fg-o2: rgba(255, 255, 255, 0.2);
-		--note-fg-o1: rgba(255, 255, 255, 0.08);
-		--note-fg-o05: rgba(255, 255, 255, 0.05);
+		/* Ensure popup content follows the system theme regardless of note background */
+		--note-fg: var(--default-text-color);
+		--note-fg-o8: var(--default-text-color-o8);
+		--note-fg-o7: var(--default-text-color-o7);
+		--note-fg-o6: var(--default-text-color-o6);
+		--note-fg-o5: var(--default-text-color-o5);
+		--note-fg-o4: var(--default-text-color-o4);
+		--note-fg-o3: var(--default-text-color-o3);
+		--note-fg-o2: var(--default-text-color-o2);
+		--note-fg-o1: var(--default-text-color-o1);
+		--note-fg-o05: var(--default-text-color-o05);
 	}
 
 	.popup-arrow {
@@ -1043,7 +1043,7 @@
 		background: var(--note-fg-o1);
 		border: 1px solid var(--note-fg-o1);
 		border-radius: 6px;
-		color: white;
+		color: var(--default-text-color);
 		font-size: 0.8rem;
 		padding: 6px 10px;
 		width: 100%;
@@ -1073,6 +1073,7 @@
 		transition: background 0.2s;
 		font-size: 0.72rem;
 		white-space: nowrap;
+		color: var(--default-text-color);
 
 		&:hover {
 			background: rgba(255, 255, 255, 0.1);
@@ -1341,7 +1342,7 @@
         width: 18px;
         height: 18px;
         border-radius: 4px;
-        background: #1e1e1e;
+        background: var(--note-fg-o1);
         border: 1px solid var(--note-fg-o2);
         color: var(--note-fg-o8);
         display: flex;
@@ -1370,7 +1371,7 @@
 		width: 18px;
 		height: 18px;
 		border-radius: 4px;
-		background: #1e1e1e;
+		background: var(--note-fg-o1);
 		border: 1px solid var(--note-fg-o2);
 		color: var(--note-fg-o8);
 		display: flex;
@@ -1408,17 +1409,17 @@
 		gap: 12px;
 		min-width: fit-content;
 
-		/* Ensure popup content stays white regardless of note theme */
-		--note-fg: white;
-		--note-fg-o8: rgba(255, 255, 255, 0.8);
-		--note-fg-o7: rgba(255, 255, 255, 0.7);
-		--note-fg-o6: rgba(255, 255, 255, 0.6);
-		--note-fg-o5: rgba(255, 255, 255, 0.5);
-		--note-fg-o4: rgba(255, 255, 255, 0.4);
-		--note-fg-o3: rgba(255, 255, 255, 0.3);
-		--note-fg-o2: rgba(255, 255, 255, 0.2);
-		--note-fg-o1: rgba(255, 255, 255, 0.08);
-		--note-fg-o05: rgba(255, 255, 255, 0.05);
+		/* Ensure popup content follows the system theme regardless of note background */
+		--note-fg: var(--default-text-color);
+		--note-fg-o8: var(--default-text-color-o8);
+		--note-fg-o7: var(--default-text-color-o7);
+		--note-fg-o6: var(--default-text-color-o6);
+		--note-fg-o5: var(--default-text-color-o5);
+		--note-fg-o4: var(--default-text-color-o4);
+		--note-fg-o3: var(--default-text-color-o3);
+		--note-fg-o2: var(--default-text-color-o2);
+		--note-fg-o1: var(--default-text-color-o1);
+		--note-fg-o05: var(--default-text-color-o05);
 	}
 
 	.toolbar-section {
@@ -1487,7 +1488,7 @@
 		cursor: pointer;
 		padding: 4px;
 		display: flex;
-		&:hover { color: white; }
+		&:hover { color: var(--note-fg); }
 	}
 
 	.add-content-container {
@@ -1543,16 +1544,16 @@
 	}
 
 	.add-menu {
-		--note-fg: white;
-		--note-fg-o8: rgba(255, 255, 255, 0.8);
-		--note-fg-o7: rgba(255, 255, 255, 0.7);
-		--note-fg-o6: rgba(255, 255, 255, 0.6);
-		--note-fg-o5: rgba(255, 255, 255, 0.5);
-		--note-fg-o4: rgba(255, 255, 255, 0.4);
-		--note-fg-o3: rgba(255, 255, 255, 0.3);
-		--note-fg-o2: rgba(255, 255, 255, 0.2);
-		--note-fg-o1: rgba(255, 255, 255, 0.08);
-		--note-fg-o05: rgba(255, 255, 255, 0.05);
+		--note-fg: var(--default-text-color);
+		--note-fg-o8: var(--default-text-color-o8);
+		--note-fg-o7: var(--default-text-color-o7);
+		--note-fg-o6: var(--default-text-color-o6);
+		--note-fg-o5: var(--default-text-color-o5);
+		--note-fg-o4: var(--default-text-color-o4);
+		--note-fg-o3: var(--default-text-color-o3);
+		--note-fg-o2: var(--default-text-color-o2);
+		--note-fg-o1: var(--default-text-color-o1);
+		--note-fg-o05: var(--default-text-color-o05);
 		display: flex;
 		align-items: stretch;
 		flex-wrap: wrap;
@@ -1606,16 +1607,16 @@
 	}
 
 	.image-input-popup {
-		--note-fg: white;
-		--note-fg-o8: rgba(255, 255, 255, 0.8);
-		--note-fg-o7: rgba(255, 255, 255, 0.7);
-		--note-fg-o6: rgba(255, 255, 255, 0.6);
-		--note-fg-o5: rgba(255, 255, 255, 0.5);
-		--note-fg-o4: rgba(255, 255, 255, 0.4);
-		--note-fg-o3: rgba(255, 255, 255, 0.3);
-		--note-fg-o2: rgba(255, 255, 255, 0.2);
-		--note-fg-o1: rgba(255, 255, 255, 0.08);
-		--note-fg-o05: rgba(255, 255, 255, 0.05);
+		--note-fg: var(--default-text-color);
+		--note-fg-o8: var(--default-text-color-o8);
+		--note-fg-o7: var(--default-text-color-o7);
+		--note-fg-o6: var(--default-text-color-o6);
+		--note-fg-o5: var(--default-text-color-o5);
+		--note-fg-o4: var(--default-text-color-o4);
+		--note-fg-o3: var(--default-text-color-o3);
+		--note-fg-o2: var(--default-text-color-o2);
+		--note-fg-o1: var(--default-text-color-o1);
+		--note-fg-o05: var(--default-text-color-o05);
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -1720,9 +1721,11 @@
 		}
 
 		.cancel-btn {
-			background: rgba(255, 255, 255, 0.05);
-			color: rgba(255, 255, 255, 0.6);
-			&:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+			background: var(--default-bg-color-transparent);
+			color: var(--default-text-color-o5);
+			border: var(--default-border-visible);
+			transition: all 0.2s;
+			&:hover {color: var(--default-text-color); transform: translateY(-1px); }
 		}
 
 		.confirm-btn {

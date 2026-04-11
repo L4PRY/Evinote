@@ -13,7 +13,9 @@
 
 	let overlayElement: HTMLDivElement;
 	let imageElement: HTMLImageElement;
-	let overlay: HTMLDivElement;
+	let workspaceElement: HTMLDivElement;
+	let headerElement: HTMLDivElement;
+	let footerElement: HTMLDivElement;
 
 	let imageLoaded = $state(false);
 	let imgWidth = $state(0);
@@ -39,28 +41,32 @@
 		const img = e.target as HTMLImageElement;
 		naturalWidth = img.naturalWidth;
 		naturalHeight = img.naturalHeight;
-		
-		// Initial fit based on screen constraints
-		const rect = overlayElement.getBoundingClientRect();
-		// No workspace padding, so we can use more of the screen
-		const maxW = Math.min(1000, rect.width - 40); 
-		const maxH = rect.height - 140; 
 
-		let displayW = naturalWidth;
-		let displayH = naturalHeight;
-		const ratio = naturalWidth / naturalHeight;
+		const imgRatio = naturalWidth / naturalHeight;
 
-		if (displayW > maxW) {
-			displayW = maxW;
-			displayH = displayW / ratio;
+		// Measure fixed chrome heights (header + footer are always in DOM)
+		const headerH = headerElement?.offsetHeight ?? 56;
+		const footerH = footerElement?.offsetHeight ?? 72;
+
+		// Viewport budget (leave a small margin for aesthetics)
+		const margin = 24;
+		const borderPad = 2; // For modal border thickness
+		const maxImgW = window.innerWidth  - margin - borderPad;
+		const maxImgH = window.innerHeight - margin - borderPad - headerH - footerH;
+
+		// Always fill the full available width, then clamp by height if needed
+		let iw = maxImgW;
+		let ih = iw / imgRatio;
+		if (ih > maxImgH) { ih = maxImgH; iw = ih * imgRatio; }
+
+		// Don't upscale small images if they fit perfectly natively
+		if (naturalWidth < iw && naturalHeight < maxImgH) {
+			iw = naturalWidth;
+			ih = naturalHeight;
 		}
-		if (displayH > maxH) {
-			displayH = maxH;
-			displayW = displayH * ratio;
-		}
 
-		imgWidth = displayW;
-		imgHeight = displayH;
+		imgWidth  = iw;
+		imgHeight = ih;
 
 		// Initial crop box (centered 80% of min dimension)
 		const boxSize = Math.min(imgWidth, imgHeight) * 0.8;
@@ -186,18 +192,33 @@
 			if (cropY + cropH > imgHeight) cropY = imgHeight - cropH;
 		}
 	}
+
+	function portal(node: HTMLElement) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				if (node.parentNode) {
+					node.parentNode.removeChild(node);
+				}
+			}
+		};
+	}
 </script>
 
-<div class="cropper-overlay" transition:fade={{ duration: 200 }} bind:this={overlayElement}>
-	<div class="cropper-modal" transition:fly={{ y: 20, duration: 300 }} style:width={imageLoaded ? imgWidth + 'px' : 'fit-content'}>
-		<div class="cropper-header">
+<div class="cropper-overlay" transition:fade={{ duration: 200 }} bind:this={overlayElement} use:portal>
+	<div
+		class="cropper-modal"
+		transition:fly={{ y: 20, duration: 300 }}
+		style:width={imgWidth ? `${imgWidth + 2}px` : undefined}
+	>
+		<div class="cropper-header" bind:this={headerElement}>
 			<h3>Crop Image</h3>
 			<button class="icon-btn" onclick={onCancel} title="Cancel">
 				<LucideSymbol symbol="X" size={20} />
 			</button>
 		</div>
 
-		<div class="cropper-workspace">
+		<div class="cropper-workspace" bind:this={workspaceElement}>
 			{#if !imageLoaded}
 				<div class="loader">
 					<div class="spinner"></div>
@@ -205,7 +226,13 @@
 				</div>
 			{/if}
 			
-			<div class="image-container" style:width="{imgWidth}px" style:height="{imgHeight}px" class:visible={imageLoaded}>
+			<div
+				class="image-container"
+				style:width="{imgWidth}px"
+				style:height="{imgHeight}px"
+				style:aspect-ratio="{naturalWidth}/{naturalHeight}"
+				class:visible={imageLoaded}
+			>
 				<img {src} alt="To crop" bind:this={imageElement} onload={handleImageLoad} crossorigin="anonymous" />
 				
 				<div class="mask">
@@ -237,7 +264,7 @@
 			</div>
 		</div>
 
-		<div class="cropper-footer">
+		<div class="cropper-footer" bind:this={footerElement}>
 			<div class="presets">
 				<button class:active={aspectRatio === null} onclick={() => setPreset(null)}>Free</button>
 				<button class:active={aspectRatio === 1} onclick={() => setPreset(1)}>1:1</button>
@@ -257,26 +284,28 @@
 	.cropper-overlay {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.85);
+		background: var(--default-bg-color-transparent);
 		backdrop-filter: blur(8px);
 		z-index: 9999;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 20px;
+		padding: 0;
 	}
 
 	.cropper-modal {
 		background: var(--default-bg-color);
 		border: var(--default-border-visible);
-		border-radius: 20px;
+		border-radius: 12px;
+		height: fit-content;
 		width: fit-content;
-		max-width: 95vw;
-		max-height: 95vh;
+		max-width: calc(100vw - 24px);
+		max-height: calc(100vh - 24px);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+		transition: max-width 0.2s ease;
 	}
 
 	.cropper-header {
@@ -301,7 +330,8 @@
 		justify-content: center;
 		overflow: hidden;
 		position: relative;
-		padding: 0;
+		flex: 1;
+		min-height: 0;
 	}
 
 	.image-container {
@@ -318,6 +348,7 @@
 		display: block;
 		width: 100%;
 		height: 100%;
+		object-fit: contain;
 		user-select: none;
 		pointer-events: none;
 	}

@@ -534,6 +534,7 @@
 	.settings-toggle.active {
 		background: var(--fancygradient, linear-gradient(135deg, rgba(108, 99, 255, 0.3), rgba(168, 85, 247, 0.3)));
 		border: 1px solid transparent;
+		color:white;
 	}
 
 	.canvas-context-menu {
@@ -682,7 +683,6 @@
 		font-size: 0.9rem;
 		font-weight: 600;
 		letter-spacing: 0.01em;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 		pointer-events: auto;
 		max-width: 300px;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
