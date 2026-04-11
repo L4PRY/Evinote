@@ -28,7 +28,6 @@
 
 <style>
 	.logo {
-		filter: drop-shadow(2px 3px 6px rgba(20 20 20));
 		font-size: 1.5em;
 		margin: auto;
 		width: 100%;
@@ -36,6 +35,7 @@
 		object-fit: cover;
 		transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 		transform: scale(0.9);
+		padding-left: 10px;
 	}
 
 	ul {
