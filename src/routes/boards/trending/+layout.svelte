@@ -8,7 +8,9 @@
 </svelte:head>
 
 {#if data.user}
-	<Sidebar />
+	<aside class="sidebar-wrapper">
+		<Sidebar />
+	</aside>
 {/if}
 
 <main class="trending-layout">
@@ -18,7 +20,7 @@
 <style>
 	.trending-layout {
 		min-height: 100vh;
-		background-color: var(--default-bg-color);
+		background-color: transparent;
 		display: flex;
 		flex-direction: column;
 	}
@@ -27,6 +29,10 @@
 		.trending-layout {
 			margin-left: 0;
 			margin-bottom: 60px;
+		}
+
+		.sidebar-wrapper {
+			display: none;
 		}
 	}
 </style>

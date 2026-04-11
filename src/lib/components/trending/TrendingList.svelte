@@ -109,7 +109,8 @@
 	@media (max-width: 600px) {
 		#trending-list {
 			grid-template-columns: 1fr;
-			gap: 1.5rem;
+			gap: 1.25rem;
+			padding: 0 0.5rem 5rem 0.5rem;
 		}
 	}
 </style>

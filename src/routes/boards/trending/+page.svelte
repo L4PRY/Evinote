@@ -6,6 +6,7 @@
 	import { page } from '$app/state';
 	import DashboardTab from '$lib/components/dash/DashboardTab.svelte';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
+	import backgroundImage from '$lib/assets/evi_bg.png';
 
 	let { data } = $props();
 
@@ -91,6 +92,10 @@
 	});
 </script>
 
+{#if !data.user}
+	<div class="background" style="background-image: url({backgroundImage});"></div>
+{/if}
+
 <div class="site-content" class:has-sidebar={data.user}>
 	{#if data.user}
 		<DashboardTab>Trending Boards</DashboardTab>
@@ -154,12 +159,26 @@
 	}
 
 	.page-title {
-		font-size: 2.5rem;
-		font-weight: 600;
-		margin: 2rem 0 3rem 0;
-		color: var(--default-text-color);
-		letter-spacing: -0.02em;
+		font-size: 3.2rem;
+		font-weight: 700;
+		margin: 2.5rem 0 3.5rem 0;
+		color: white;
+		letter-spacing: -0.03em;
 		text-align: center;
+		text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+	}
+
+	.background {
+		width: 100%;
+		height: 100vh;
+		position: fixed;
+		background-size: cover;
+		background-position: top;
+		filter: brightness(0.6);
+		top: 0;
+		left: 0;
+		margin: 0;
+		z-index: -1;
 	}
 
 	.controls-bar {
@@ -194,9 +213,15 @@
 	}
 
 	.select-group label {
-		font-size: 0.9rem;
-		color: var(--default-text-color-o5);
+		font-size: 0.95rem;
+		color: var(--default-text-color-o6);
 		font-weight: 500;
+		letter-spacing: 0.01em;
+	}
+
+	.site-content:not(.has-sidebar) .select-group label {
+		color: rgba(255, 255, 255, 0.8);
+		text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.custom-select {
@@ -219,6 +244,14 @@
 		transition: all 0.2s ease;
 	}
 
+	.site-content:not(.has-sidebar) .custom-select select {
+		background: rgba(255, 255, 255, 0.05);
+		border-color: rgba(255, 255, 255, 0.2);
+		color: white;
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+	}
+
 	.custom-select select:hover {
 		background: var(--default-blur-hover-color);
 		border-color: var(--default-text-color-o5);
@@ -234,17 +267,46 @@
 	@media (max-width: 600px) {
 		.site-content {
 			padding: 1rem;
+			margin-top: 2rem;
 		}
 
 		.page-title {
-			margin-top: 3rem;
-			font-size: 1.8rem;
+			font-size: 2.2rem;
+			margin-bottom: 2rem;
 		}
 		
+		.controls-bar {
+			margin-bottom: 2rem;
+		}
+
 		.filter-controls {
 			flex-direction: column;
-			align-items: flex-start;
-			gap: 1rem;
+			width: 100%;
+			gap: 1.25rem;
+		}
+
+		.select-group {
+			width: 100%;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		.select-group label {
+			font-size: 0.85rem;
+			opacity: 0.8;
+		}
+
+		.custom-select {
+			width: 100%;
+			max-width: 300px;
+		}
+
+		.custom-select select {
+			width: 100%;
+			padding: 0.75rem 2.5rem 0.75rem 1rem;
+			text-align: center;
+			font-size: 1rem;
 		}
 	}
 </style>

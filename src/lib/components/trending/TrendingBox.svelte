@@ -222,7 +222,7 @@
 
 	h3 {
 		margin: 0;
-		font-size: 1.05rem;
+		font-size: 1.2rem;
 		font-weight: 500;
 		color: var(--default-text-color);
 		white-space: nowrap;
@@ -247,6 +247,7 @@
 	.dashboard-box:hover .arrow > * {
 		opacity: 1;
 		transform: translateX(0);
+		font-size: 0.95rem;
 	}
 
 	.stats {
@@ -302,7 +303,7 @@
 		align-items: center;
 		gap: 6px;
 		margin: 0;
-		font-size: 0.9rem;
+		font-size: 1rem;
 		font-weight: 500;
 	}
 
