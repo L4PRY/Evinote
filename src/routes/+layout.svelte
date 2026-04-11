@@ -12,7 +12,10 @@
 	const disallowedPaths = ['/dashboard', '/boards', '/auth'];
 
 	// Optional: Derived state for better readability
-	const isDisallowed = $derived(disallowedPaths.some(path => page.url.pathname.startsWith(path)));
+	const isDisallowed = $derived(
+		disallowedPaths.some(path => page.url.pathname.startsWith(path)) &&
+		!(page.url.pathname === '/boards/trending' && !page.data.user)
+	);
 	
 	onNavigate(navigation => {
 		if (!document.startViewTransition) return;
@@ -36,6 +39,11 @@
 		const forcedDarkPaths = (window as any).__forceDark || [];
 		const forcedLightPaths = (window as any).__forceLight || [];
 		
+		if (!page.data.user) {
+			document.documentElement.style.colorScheme = 'dark';
+			return;
+		}
+
 		if (forcedDarkPaths.includes(path)) {
 			document.documentElement.style.colorScheme = 'dark';
 			return;

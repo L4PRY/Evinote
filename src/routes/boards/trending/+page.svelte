@@ -92,7 +92,11 @@
 </script>
 
 <div class="site-content" class:has-sidebar={data.user}>
-	<DashboardTab>Trending Boards</DashboardTab>
+	{#if data.user}
+		<DashboardTab>Trending Boards</DashboardTab>
+	{:else}
+		<h1 class="page-title">Trending Boards</h1>
+	{/if}
 
 	<div class="controls-bar">
 		<div class="filter-controls">
@@ -133,23 +137,48 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		max-width: 100%;
+		max-width: 1200px;
 		width: 100%;
+		margin: 0 auto;
 		box-sizing: border-box;
-		transition: margin-left 0.3s ease;
+		transition: all 0.3s ease;
 	}
 
 	.site-content.has-sidebar {
 		margin-left: 150px;
+		max-width: calc(100% - 150px);
+	}
+
+	.site-content:not(.has-sidebar) {
+		align-items: center;
+	}
+
+	.page-title {
+		font-size: 2.5rem;
+		font-weight: 600;
+		margin: 2rem 0 3rem 0;
+		color: var(--default-text-color);
+		letter-spacing: -0.02em;
+		text-align: center;
 	}
 
 	.controls-bar {
 		margin-bottom: 3rem;
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: center;
 		gap: 1.5rem;
 		flex-wrap: wrap;
+		width: 100%;
+	}
+
+	.site-content.has-sidebar .controls-bar {
+		justify-content: space-between;
+	}
+
+	.site-content.has-sidebar .page-title {
+		text-align: left;
+		font-size: 1.5rem; /* Match DashboardTab size if needed, but it's hidden anyway */
 	}
 
 	.filter-controls {
@@ -205,6 +234,11 @@
 	@media (max-width: 600px) {
 		.site-content {
 			padding: 1rem;
+		}
+
+		.page-title {
+			margin-top: 3rem;
+			font-size: 1.8rem;
 		}
 		
 		.filter-controls {

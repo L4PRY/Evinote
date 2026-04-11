@@ -62,7 +62,8 @@
 <style>
 	#trending-list {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		grid-template-columns: repeat(3, 1fr);
+		justify-content: center;
 		gap: 1.5rem;
 		padding: 0 0 5rem 0;
 		margin: 1rem 0 0 0;
@@ -96,6 +97,12 @@
 	@keyframes spin {
 		to {
 			transform: rotate(360deg);
+		}
+	}
+
+	@media (max-width: 900px) {
+		#trending-list {
+			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 
