@@ -11,6 +11,9 @@
 			<li>
 				<DashboardButton symbol="LayoutDashboard" href="/dashboard">Overview</DashboardButton>
 			</li>
+			<li>
+				<DashboardButton symbol="Users" href="/dashboard/collaboration">Collaboration</DashboardButton>
+			</li>
 			<li><DashboardButton symbol="TrendingUp" href="/boards/trending">Trending</DashboardButton></li>
 		</ul>
 		<ul class="lower">
@@ -32,7 +35,7 @@
 		height: 50px;
 		object-fit: cover;
 		transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-		transform: scale(0.97);
+		transform: scale(0.9);
 	}
 
 	ul {
