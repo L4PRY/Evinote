@@ -62,12 +62,12 @@
 <style>
 	#trending-list {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		justify-content: center;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 		gap: 1.5rem;
+		list-style: none;
 		padding: 0 0 5rem 0;
 		margin: 1rem 0 0 0;
-		list-style: none;
+		width: 100%;
 	}
 
 	.watcher {
@@ -100,15 +100,9 @@
 		}
 	}
 
-	@media (max-width: 900px) {
-		#trending-list {
-			grid-template-columns: repeat(2, 1fr);
-		}
-	}
 
 	@media (max-width: 600px) {
 		#trending-list {
-			grid-template-columns: 1fr;
 			gap: 1.25rem;
 			padding: 0 0.5rem 5rem 0.5rem;
 		}
