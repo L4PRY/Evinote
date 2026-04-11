@@ -55,4 +55,22 @@
 		font-weight: 600;
 		background-color: var(--default-stroke-color);
 	}
+
+	@media (max-width: 600px) {
+		.settings-nav {
+			flex-direction: row;
+			gap: 0.5rem;
+		}
+
+		.nav-links {
+			width: auto;
+			gap: 4px;
+		}
+
+		.nav-link {
+			font-size: 0.95rem;
+			padding: 6px 10px;
+			flex: 0 1 auto;
+		}
+	}
 </style>

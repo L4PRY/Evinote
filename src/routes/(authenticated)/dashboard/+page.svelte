@@ -98,4 +98,11 @@
 	.create-link:hover {
 		color: #2b6cb0;
 	}
+
+	@media (max-width: 600px) {
+		.site-content {
+			margin-left: 0;
+			padding-top: 4rem; /* Accounts for the 50px fixed top bar */
+		}
+	}
 </style>

@@ -88,4 +88,11 @@
 		color: var(--default-text-color);
 		opacity: 0.7;
 	}
+
+	@media (max-width: 600px) {
+		.site-content {
+			margin-left: 0;
+			padding-top: 4rem; /* Accounts for the 50px fixed top bar */
+		}
+	}
 </style>

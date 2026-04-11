@@ -267,7 +267,14 @@
 	@media (max-width: 600px) {
 		.site-content {
 			padding: 1rem;
+			padding-top: 4rem; /* Accounts for the 50px fixed top bar */
 			margin-top: 2rem;
+		}
+
+		.site-content.has-sidebar {
+			margin-left: 0;
+			max-width: 100%;
+			margin-top: 0;
 		}
 
 		.page-title {

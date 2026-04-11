@@ -1005,4 +1005,74 @@
 	.confirm-btn-no:active {
 		transform: scale(0.95);
 	}
+
+	/* Mobile Layout adjustments */
+	@media (max-width: 600px) {
+		.account-settings-container {
+			flex-direction: column;
+			align-items: center;
+			padding-right: 0;
+			text-align: center;
+		}
+
+		.account-settings {
+			flex-direction: column;
+		}
+
+		.account-settings-info {
+			align-items: center;
+		}
+
+		.form-right {
+			width: 100%;
+		}
+
+		.sign-out {
+			width: 100%;
+		}
+
+		.settings-section, .delete-account-section {
+			padding: 1.5rem;
+			margin-top: 1.5rem;
+		}
+
+		.setting-row {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 1rem;
+		}
+
+		.setting-paragraph {
+			font-size: 1rem;
+			word-break: break-all;
+		}
+
+		.edit-btn {
+			width: 100%;
+			justify-content: center;
+		}
+
+		.edit-inputs {
+			flex-direction: column;
+		}
+
+		.edit-actions {
+			flex-direction: column;
+			width: 100%;
+		}
+
+		.save-btn, .cancel-btn {
+			width: 100%;
+			text-align: center;
+		}
+
+		.modal-buttons, .confirm-buttons {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+
+		.modal-btn, .confirm-btn-yes, .confirm-btn-no {
+			width: 100%;
+		}
+	}
 </style>

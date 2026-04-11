@@ -81,12 +81,15 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		gap: 1.5rem;
+		gap: 0.5rem;
 		padding: 1.25rem 1.5rem;
 		border: var(--default-border);
 		border-radius: var(--border-radius);
 		background-color: var(--default-bg-color-transparent);
 		transition: background-color 0.2s;
+		position: relative;
+		overflow: hidden;
+		z-index: 0;
 	}
 
 	.session-card:hover {
@@ -94,13 +97,21 @@
 	}
 
 	.session-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 1rem;
-		border-radius: 50%;
-		background-color: var(--default-blur-color);
+		position: absolute;
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		opacity: 0.1;
 		color: var(--default-text-color);
+		pointer-events: none;
+		z-index: -1;
+		-webkit-mask-image: linear-gradient(to right, transparent 0%, black 60%);
+		mask-image: linear-gradient(to right, transparent 0%, black 60%);
+	}
+
+	.session-icon :global(svg) {
+		width: 150px !important;
+		height: 150px !important;
 	}
 
 	.session-details {
@@ -108,6 +119,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
+		position: relative;
+		z-index: 1;
 	}
 
 	.session-ua {
@@ -127,6 +140,8 @@
 		align-items: center;
 		min-width: 120px;
 		justify-content: flex-end;
+		position: relative;
+		z-index: 1;
 	}
 
 	.current-session-badge {
@@ -158,5 +173,50 @@
 
 	.close-session-btn:active {
 		transform: scale(0.95);
+	}
+
+	@media (max-width: 600px) {
+		.session-card {
+			flex-direction: row;
+			gap: 1rem;
+			padding: 1.25rem;
+		}
+
+		.session-details {
+			width: auto;
+		}
+
+		.session-ua {
+			font-size: 0.95rem;
+			word-break: break-word;
+		}
+
+		.session-info {
+			font-size: 0.75rem;
+		}
+
+		.session-actions {
+			min-width: 0;
+			justify-content: flex-end;
+		}
+
+		.session-actions form {
+			width: auto;
+		}
+
+		.close-session-btn {
+			padding: 0.4rem 0.6rem;
+			font-size: 0.8rem;
+			width: auto;
+			text-align: center;
+		}
+
+		.current-session-badge {
+			display: inline-block;
+			padding: 0.4rem 0.6rem;
+			font-size: 0.8rem;
+			width: auto;
+			text-align: center;
+		}
 	}
 </style>

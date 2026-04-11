@@ -1,5 +1,10 @@
 <script lang="ts">
-	const { children, href, symbol }: { children: any; href?: string; symbol?: string } = $props();
+	const {
+		children,
+		href,
+		symbol,
+		fullwidth = false
+	}: { children: any; href?: string; symbol?: string; fullwidth?: boolean } = $props();
 	import { page } from '$app/state';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 
@@ -20,7 +25,7 @@
 </script>
 
 <a {href}>
-	<div class:active={isActive(href || 'inactive')}>
+	<div class:active={isActive(href || 'inactive')} class:fullwidth>
 		{#if symbol}
 			<LucideSymbol {symbol} size={42} strokeWidth={1.5} />
 		{/if}
@@ -52,7 +57,7 @@
 		font-size: 2rem;
 	}
 
-	div:not(.active):hover {
+	div:not(.active):not(.fullwidth):hover {
 		background-color: var(--default-blur-hover-color);
 		box-sizing: content-box;
 		border-radius: 15px;
@@ -75,5 +80,31 @@
 		transform: scale(0.6);
 		transform-origin: 0px;
 		box-shadow: 0 5px 6px 3px rgba(0, 0, 0, 0.2);
+	}
+
+	@media (max-width: 600px) {
+		.fullwidth {
+			width: 100%;
+			height: 50px;
+			transform: none !important;
+			font-size: 1.2rem;
+			box-sizing: border-box;
+			margin: 0;
+			border-radius: 0;
+			justify-content: flex-start;
+			padding-left: 20px;
+		}
+
+		.fullwidth.active {
+			background-color: var(--default-bar-active);
+			color: var(--default-bar-color);
+			border-radius: 0;
+			box-shadow: none;
+		}
+
+		.fullwidth :global(svg) {
+			width: 24px;
+			height: 24px;
+		}
 	}
 </style>

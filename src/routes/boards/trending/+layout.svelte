@@ -25,14 +25,10 @@
 		flex-direction: column;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 600px) {
 		.trending-layout {
 			margin-left: 0;
 			margin-bottom: 60px;
-		}
-
-		.sidebar-wrapper {
-			display: none;
 		}
 	}
 </style>

@@ -18,11 +18,20 @@
 	}
 
 	.site-content {
-		padding: 3rem;
+		padding: 2rem;
 		margin-left: 150px;
 		padding-top: 2rem;
 		padding-bottom: 3rem;
 		display: flex;
 		flex-direction: column;
+	}
+
+	@media (max-width: 600px) {
+		.nav, .site-content {
+			margin-left: 0;
+		}
+		.nav {
+			padding-top: 4rem; /* Accounts for the 50px fixed top bar */
+		}
 	}
 </style>
