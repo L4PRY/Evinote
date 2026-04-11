@@ -12,7 +12,7 @@
 				<DashboardButton symbol="LayoutDashboard" href="/dashboard">Overview</DashboardButton>
 			</li>
 			<li>
-				<DashboardButton symbol="Users" href="/dashboard/collaboration">Collaboration</DashboardButton>
+				<DashboardButton symbol="Users" href="/dashboard/collaboration">Shared</DashboardButton>
 			</li>
 			<li><DashboardButton symbol="TrendingUp" href="/boards/trending">Trending</DashboardButton></li>
 		</ul>
