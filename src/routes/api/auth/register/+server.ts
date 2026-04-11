@@ -1,60 +1,77 @@
 import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
-import { hash } from '@node-rs/argon2';
 import * as auth from '$lib/server/auth';
 import * as table from '$lib/server/db/schema';
 import { db } from '$lib/server/db';
+import { json } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 
 export async function POST({ request, cookies }) {
-	const { username, email, password } = await request.json();
+	const body = await request.json();
+
+	const username = body.username?.toString() ?? '';
+	const email = body.email?.toString() ?? '';
+	const password = body.password?.toString() ?? '';
 
 	if (!validateUsername(username)) {
-		return new Response(JSON.stringify({ error: 'Invalid username' }), { status: 400 });
+		return json({ error: 'Invalid username' }, { status: 400 });
 	}
 	if (!validateEmail(email)) {
-		return new Response(JSON.stringify({ error: 'Invalid email' }), { status: 400 });
+		return json({ error: 'Invalid email' }, { status: 400 });
 	}
 	if (!validatePassword(password)) {
-		return new Response(JSON.stringify({ error: 'Invalid password' }), { status: 400 });
+		return json({ error: 'Invalid password' }, { status: 400 });
 	}
 
-	const passhash = await hash(password, {
-		// recommended minimum parameters
-		memoryCost: 19456,
-		timeCost: 2,
-		outputLen: 32,
-		parallelism: 1
+	const existingUser = await db
+		.select()
+		.from(table.User)
+		.where(eq(table.User.username, username))
+		.then(r => r.at(0));
+
+	if (existingUser) {
+		return json({ error: 'Username already taken' }, { status: 400 });
+	}
+
+	const passhash = await auth.hashPassword(password.toString());
+
+	const user = await db
+		.insert(table.User)
+		.values({ username, passhash, email, role: 'User' })
+		.returning()
+		.then(r => r.at(0));
+
+	if (!user) {
+		return json({ error: 'Failed to create user' }, { status: 500 });
+	}
+
+	const userAgent = 'api-' + (request.headers.get('user-agent') ?? 'unkown');
+
+	const session = await auth
+		.createSession(
+			user.id,
+			userAgent,
+			new Date(Date.now() + 1000 * 60 * 60 * 24) // 1 day
+		)
+		.then(r => r.at(0));
+
+	if (!session) {
+		return json({ error: 'Failed to create session' }, { status: 500 });
+	}
+
+	cookies.set('.EVI_API', session.token, {
+		path: '/',
+		httpOnly: true,
+		secure: true,
+		sameSite: 'strict'
 	});
 
-	try {
-		const result = await db
-			.insert(table.User)
-			.values({ username, passhash, email, role: 'User' })
-			.returning();
-
-		const userId = result[0]?.id;
-		if (!userId) {
-			return new Response(JSON.stringify({ error: 'Failed to create user' }), { status: 500 });
-		}
-
-		const userAgent = 'api-' + (request.headers.get('user-agent') ?? 'unkown');
-
-		const sessionResult = await auth.createSession(userId, userAgent, '');
-
-		if (!sessionResult || sessionResult.length === 0) {
-			return new Response(JSON.stringify({ error: 'Failed to create session' }), { status: 500 });
-		}
-
-		const session = sessionResult[0]; // createSession always returns an array with one element
-
-		cookies.set('.EVI_API', session.token, {
-			path: '/',
-			httpOnly: true,
-			secure: true,
-			sameSite: 'strict'
-		});
-	} catch {
-		return new Response(JSON.stringify({ error: 'An error has occurred' }), { status: 500 });
-	}
-
-	return new Response(JSON.stringify({ message: 'Registration successful' }), { status: 200 });
+	return json(
+		{
+			message: 'User created successfully',
+			id: user.id,
+			key: session.token,
+			eat: session.eat
+		},
+		{ status: 201 }
+	);
 }
