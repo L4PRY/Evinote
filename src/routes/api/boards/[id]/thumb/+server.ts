@@ -1,10 +1,11 @@
 import { generateETag } from '$lib/cache/generateETag';
 import { parseBackground } from '$lib/parseBackground.js';
 import { parseColor } from '$lib/parseColor.js';
+import { checkLogin } from '$lib/server/auth.js';
 import { db } from '$lib/server/db/index.js';
 import * as table from '$lib/server/db/schema.js';
 import { routeLogger } from '$lib/server/logger.js';
-import { getBoard } from '$lib/server/perms.js';
+import { checkBoardPerms, getBoard } from '$lib/server/perms.js';
 import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
@@ -29,6 +30,12 @@ export const GET = async ({ params, url, request }) => {
 	const zoom = zoomParam ? parseFloat(zoomParam) : 1;
 
 	const { board, likes } = await getBoard(id);
+
+	if (!board) {
+		throw error(404, 'Board not found');
+	}
+
+	checkBoardPerms(board);
 
 	// Generate ETag from board data BEFORE rendering
 	const etag = await generateETag(board, theme);
