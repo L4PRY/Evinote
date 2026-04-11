@@ -2,9 +2,9 @@
 	import * as icons from '@lucide/svelte';
 	let {
 		symbol,
-		size,
-		strokeWidth,
-		fill
+		size = 32,
+		strokeWidth = 2,
+		fill = 'none'
 	}: {
 		symbol: string;
 		size?: number;
@@ -19,8 +19,8 @@
 	<Icon
 		style="display: inline-block;"
 		class="icon"
-		size={size || 32}
-		strokeWidth={strokeWidth || 1}
+		{size}
+		{strokeWidth}
 		{fill}
 	/>
 {/if}

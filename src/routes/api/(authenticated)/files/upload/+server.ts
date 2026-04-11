@@ -39,7 +39,7 @@ export const POST = async ({ request }) => {
 
 	// return already existing file if exists
 	if (fileLoc) {
-		return new Response(JSON.stringify({ id: fileLoc.id, url: `/api/files/${fileLoc.hash}` }), {
+		return new Response(JSON.stringify({ id: fileLoc.id, url: `/api/files/${fileLoc.hash}`, mime: fileLoc.mimetype }), {
 			status: 200,
 			headers: { 'Content-Type': 'application/json' }
 		});

@@ -7,6 +7,7 @@ export type NoteContent = {
 	height?: number;
 	textAlign?: 'left' | 'center' | 'right' | 'justify';
 	fontSize?: number;
+	verticalAlign?: 'top' | 'middle' | 'bottom';
 };
 
 export type NoteData = {
