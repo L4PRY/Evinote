@@ -11,8 +11,7 @@
 			<li>
 				<DashboardButton symbol="LayoutDashboard" href="/dashboard">Overview</DashboardButton>
 			</li>
-			<li><DashboardButton symbol="NotebookPen" href="asfda">Projects</DashboardButton></li>
-			<li><DashboardButton symbol="UsersRound" href="asdfa2">Groups</DashboardButton></li>
+			<li><DashboardButton symbol="TrendingUp" href="/boards/trending">Trending</DashboardButton></li>
 		</ul>
 		<ul class="lower">
 			<li>
@@ -34,10 +33,6 @@
 		object-fit: cover;
 		transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 		transform: scale(0.97);
-	}
-
-	.logo:hover {
-		transform: scale(1);
 	}
 
 	ul {

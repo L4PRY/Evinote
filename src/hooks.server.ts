@@ -29,10 +29,18 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-const protectRoutes: Handle = async ({ event, resolve }) =>
-	!event.locals.user && event.route.id?.includes('/(authenticated)/')
-		? redirect(303, '/auth')
-		: resolve(event);
+const protectRoutes: Handle = async ({ event, resolve }) => {
+	if (!event.locals.user && event.route.id?.includes('/(authenticated)/')) {
+		if (event.url.pathname.startsWith('/api/')) {
+			return new Response(JSON.stringify({ error: 'unauthorized' }), {
+				status: 401,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		}
+		return redirect(303, '/auth');
+	}
+	return resolve(event);
+};
 
 const logRoute: Handle = async ({ event, resolve }) => {
 	routeLogger.trace(`Handling route: ${event.route.id}`);
