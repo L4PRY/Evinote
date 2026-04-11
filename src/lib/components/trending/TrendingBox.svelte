@@ -24,56 +24,60 @@
 
 	let isLiked = $state(liked);
 	let likesCount = $state(likes);
+	let lastSyncedLiked = liked;
 
 	let isHovered = $state(false);
 
-	async function toggleLike(e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
+	async function syncLike() {
+		if (isLiked === lastSyncedLiked || !id) return;
 
-		if (!id) return;
-
-		const previousState = isLiked;
-		const method = isLiked ? 'DELETE' : 'POST';
-
-		// Optimistic update
-		isLiked = !isLiked;
-		likesCount += isLiked ? 1 : -1;
+		const targetLiked = isLiked;
+		const previousSyncedLiked = lastSyncedLiked;
+		const method = targetLiked ? 'POST' : 'DELETE';
+		lastSyncedLiked = targetLiked;
 
 		try {
 			const res = await fetch(`/api/boards/${id}/like`, { method });
-			
+
 			if (res.status === 401) {
 				throw new Error('Please log in to like boards');
 			}
-			
+
 			if (!res.ok) {
 				throw new Error('Failed to update like');
 			}
 
-			let data;
-			try {
-				data = await res.json();
-			} catch (jsonErr) {
-				console.error('API returned non-JSON response:', jsonErr);
-				throw new Error('Invalid server response');
-			}
-
+			const data = await res.json();
 			if (data && data.likes !== undefined) {
 				likesCount = data.likes;
 			}
 		} catch (err) {
 			console.error(err);
 			// Rollback state on error
-			isLiked = previousState;
+			isLiked = previousSyncedLiked;
+			lastSyncedLiked = previousSyncedLiked;
 			likesCount += isLiked ? 1 : -1;
-			
+
 			notifications.add({
 				title: 'Error',
 				message: (err as Error).message || 'Could not update like. Please try again.',
 				type: 'error'
 			});
 		}
+	}
+
+	function toggleLike(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+
+		if (!id) return;
+
+		// Optimistic update
+		isLiked = !isLiked;
+		likesCount += isLiked ? 1 : -1;
+
+		// Immediate sync
+		syncLike();
 	}
 </script>
 
@@ -109,7 +113,7 @@
 					symbol="Heart"
 					size={20}
 					strokeWidth={2}
-					fill={isLiked || (isHovered && !isLiked) ? '#ff4d4d' : 'none'}
+					fill={isLiked ? '#ff4d4d' : (isHovered ? '#ff4d4d33' : 'none')}
 				/>
 				{likesCount}
 			</p>
@@ -288,8 +292,7 @@
 	}
 
 	.stats.interactive.is-liked {
-		color: var(--fancycolor-2);
-		border-color: rgba(251, 53, 112, 0.3);
+		color: #ff4d4d;
 	}
 
 	.stats p {

@@ -22,29 +22,43 @@
 	let offset = $state(0);
 	let expected = $state(0);
 	let loading = $state(false);
+	let abortController: AbortController | null = null;
 	const increment = 5;
 
 	async function addBoards(amount: number) {
+		if (loading) return;
 		loading = true;
-		offset += amount;
-		expected += amount;
 
-		const req = await fetch(
-			`/api/boards/trending/${filterType}/${filterTimeframe}?limit=${amount}&offset=${offset}`
-		);
+		const currentOffset = offset;
+		const signal = abortController?.signal;
 
-		const data = await req.json();
+		try {
+			const req = await fetch(
+				`/api/boards/trending/${filterType}/${filterTimeframe}?limit=${amount}&offset=${currentOffset}`,
+				{ signal }
+			);
 
-		if (req.ok && Array.isArray(data)) boards = [...boards, ...data];
-		else {
-			console.error('Failed to fetch boards:', data);
-			expected -= amount;
+			const data = await req.json();
+
+			if (req.ok && Array.isArray(data)) {
+				// Safety check for duplicates
+				const newBoards = data.filter((nb) => !boards.some((b) => b.id === nb.id));
+				boards = [...boards, ...newBoards];
+				offset += data.length;
+			} else {
+				console.error('Failed to fetch boards:', data);
+			}
+		} catch (e: any) {
+			if (e.name !== 'AbortError') {
+				console.error('Fetch error:', e);
+			}
+		} finally {
+			loading = false;
 		}
-		loading = false;
 	}
 
 	onMount(() => {
-		addBoards(limit);
+		// Initial data handled by the $effect below
 	});
 
 	$effect(() => {
@@ -62,10 +76,18 @@
 		offset = 0;
 		expected = 0;
 
+		// Cancel previous requests on filter change
+		if (abortController) abortController.abort();
+		abortController = new AbortController();
+
 		// schedule reload
 		queueMicrotask(() => {
 			addBoards(limit);
 		});
+
+		return () => {
+			if (abortController) abortController.abort();
+		};
 	});
 </script>
 

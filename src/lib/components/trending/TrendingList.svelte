@@ -46,6 +46,7 @@
 				src={`/api/boards/${board.id}/thumb?theme=dark&zoom=0.2`}
 				name={board.title}
 				likes={board.likes}
+				liked={board.liked}
 			></TrendingBox>
 		</li>
 	{/each}
