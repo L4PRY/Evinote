@@ -2,103 +2,377 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import backgroundImage from '$lib/assets/evi_bg.png';
-	//import Divider from '$lib/components/frontend/Divider.svelte';
+	import mockupImage from '$lib/assets/mockup.png';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
-		document.title = 'Evinote • Welcome';
-
-		contentShow();
+		document.title = 'Evinote • Redefining Notes';
 	});
-
-	function contentShow() {
-		setTimeout(() => {
-			const cont = document.querySelector('.top') as HTMLElement | null;
-			if (cont) {
-				cont.style.transition = 'all 1s ease-in-out';
-				cont.style.opacity = '1';
-				cont.style.transform = 'translateX(0)';
-			}
-		}, 500);
-	}
 </script>
-
-<svelte:body />
 
 <div class="background" style="background-image: url({backgroundImage});"></div>
 
-<div class="content">
-	<div class="top">
-		<div class="side-by-side">
-			<h1>Welcome to Evinote</h1>
-			<FancyButton1
-				style="margin-top: 8px; font-size: 1.2rem;"
-				onclick={() => goto(resolve('/auth/register'))}>Get started</FancyButton1
-			>
+<div class="landing-wrapper">
+	<!-- Hero Section -->
+	<section class="hero">
+		<div class="hero-content">
+			<!-- <div class="badge">Open Source & Free</div> -->
+			<h1 class="gradient-text">Welcome to Evinote</h1>
+			<p class="hero-subtitle">
+				Evinote is the spatial note-taking workspace where your thoughts can take shape. 
+				Organize, visualize, and collaborate on Boards.
+			</p>
+			<div class="hero-actions">
+				<FancyButton1
+					style="font-size: 1.1rem; padding: 0.8rem 2.5rem;"
+					onclick={() => goto(resolve('/auth/register'))}
+				>
+					Get started for free
+				</FancyButton1>
+			</div>
 		</div>
-		<p>Note-taking and sharing app !</p>
-	</div>
+		
+		<div class="hero-mockup-container">
+			<div class="mockup-glow"></div>
+			<img src={mockupImage} alt="Evinote Interface Mockup" class="hero-mockup" />
+		</div>
+	</section>
+
+	<!-- Social/Trust Section -->
+	<section class="trust-section">
+		<div class="trust-grid">
+			<div class="trust-item">
+				<span class="stat">100%</span>
+				<span class="label">Open Source</span>
+			</div>
+			<div class="divider"></div>
+			<div class="trust-item">
+				<span class="stat">∞</span>
+				<span class="label">Infinite Space</span>
+			</div>
+			<div class="divider"></div>
+			<div class="trust-item">
+				<span class="stat">0€</span>
+				<span class="label">Forever Free</span>
+			</div>
+		</div>
+	</section>
+
+	<!-- Call to Action -->
+	<section class="final-cta">
+		<div class="cta-card">
+			<h2>Ready to declutter your mind?</h2>
+			<p>Join thousands of users organizing their thoughts on Evinote.</p>
+		</div>
+	</section>
 </div>
 
 <style>
 	.background {
-		width: 100%;
-		height: 100vh;
 		position: fixed;
-		background-size: cover;
-		background-position: top;
-		filter: brightness(0.7);
 		top: 0;
 		left: 0;
-		margin: 0;
+		width: 100%;
+		height: 100%;
 		z-index: -1;
-		animation: float 6s ease-in-out infinite;
+		background-size: cover;
+		background-position: center;
+		filter: brightness(0.5) contrast(1.1);
 	}
 
-	.side-by-side {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		justify-content: center;
-		margin-top: 15vh;
-		gap: 20px;
-	}
-
-	.top {
+	.landing-wrapper {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		opacity: 0;
-		transform: translateX(-170px);
+		color: var(--default-text-color);
+		padding: 0 2rem;
+		overflow-x: hidden;
+	}
+
+	/* Hero Section */
+	.hero {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		padding: 10rem 0 5rem 0;
+		max-width: 1000px;
+		width: 100%;
+	}
+
+	.badge {
+		background: rgba(255, 255, 255, 0.05);
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		padding: 0.5rem 1.25rem;
+		border-radius: 100px;
+		font-size: 0.9rem;
+		font-weight: 600;
+		margin-bottom: 2rem;
+		color: var(--fancycolor-2);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		animation: fadeInDown 0.8s ease-out;
 	}
 
 	h1 {
-		color: white;
-		font-size: 3rem;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-		text-align: center;
+		font-size: 4.5rem;
+		font-weight: 800;
+		line-height: 1.1;
+		margin-bottom: 1.5rem;
+		letter-spacing: -0.02em;
+		animation: fadeInUp 0.8s ease-out;
 	}
 
-	p {
-		color: rgba(231, 235, 255, 0.63);
-		font-size: 1.2rem;
-		text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-		text-align: center;
-		margin-top: 1rem;
+	.gradient-text {
+		background: var(--fancygradient);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	.hero-subtitle {
+		font-size: 1.25rem;
+		color: var(--default-text-color-o7);
+		max-width: 650px;
+		line-height: 1.6;
+		margin-bottom: 3rem;
+		animation: fadeInUp 0.8s ease-out 0.1s backwards;
+	}
+
+	.hero-actions {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		align-items: center;
+		animation: fadeInUp 0.8s ease-out 0.2s backwards;
+	}
+
+	.secondary-btn {
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		color: var(--default-text-color);
+		padding: 0.8rem 2rem;
+		border-radius: 12px;
+		font-size: 1.1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		backdrop-filter: blur(10px);
+	}
+
+	.secondary-btn:hover {
+		background: rgba(255, 255, 255, 0.08);
+		transform: translateY(-2px);
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	/* Hero Mockup */
+	.hero-mockup-container {
+		margin-top: 6rem;
+		position: relative;
+		width: 100%;
+		max-width: 1100px;
+		animation: fadeInUp 1s ease-out 0.4s backwards;
+	}
+
+	.mockup-glow {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
 		width: 80%;
+		height: 60%;
+		background: radial-gradient(circle, var(--fancycolor-1) 0%, transparent 70%);
+		opacity: 0.2;
+		filter: blur(80px);
+		z-index: -1;
 	}
 
-	@media (max-width: 600px) {
-        .side-by-side {
-            flex-direction: column;
-            gap: 10px;
-            width: 90vw;
-        }
+	.hero-mockup {
+		width: 100%;
+		height: auto;
+		border-radius: 24px;
+		box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		transform: perspective(1000px) rotateX(5deg);
+		transition: transform 0.5s ease;
+	}
 
-        h1 {
-            font-size: 2.5rem;
-        }
-    }
+	.hero-mockup:hover {
+		transform: perspective(1000px) rotateX(0deg) scale(1.01);
+	}
+
+	/* Features Grid */
+	.features-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 2rem;
+		max-width: 1100px;
+		width: 100%;
+		margin-top: 8rem;
+	}
+
+	.feature-card {
+		background: var(--editor-interface-background);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border: 1px solid rgba(255, 255, 255, 0.05);
+		padding: 2.5rem;
+		border-radius: 32px;
+		transition: all 0.3s ease;
+		animation: fadeInUp 0.8s ease-out backwards;
+	}
+
+	.feature-card:hover {
+		transform: translateY(-10px);
+		border-color: rgba(255, 255, 255, 0.2);
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.feature-icon {
+		width: 60px;
+		height: 60px;
+		background: var(--fancygradient);
+		border-radius: 16px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 2rem;
+		color: white;
+		box-shadow: 0 10px 20px rgba(251, 53, 112, 0.2);
+	}
+
+	.feature-card h3 {
+		font-size: 1.5rem;
+		margin-bottom: 1rem;
+		font-weight: 700;
+	}
+
+	.feature-card p {
+		color: var(--default-text-color-o7);
+		line-height: 1.6;
+	}
+
+	/* Trust Section */
+	.trust-section {
+		margin-top: 8rem;
+		width: 100%;
+		max-width: 800px;
+	}
+
+	.trust-grid {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 3rem;
+		background: rgba(255, 255, 255, 0.02);
+		border-radius: 24px;
+		border: 1px solid rgba(255, 255, 255, 0.05);
+	}
+
+	.trust-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.stat {
+		font-size: 2.5rem;
+		font-weight: 800;
+		background: var(--fancygradient);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	.label {
+		text-transform: uppercase;
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: var(--default-text-color-o5);
+		letter-spacing: 0.1em;
+	}
+
+	.divider {
+		width: 1px;
+		height: 40px;
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	/* Final CTA */
+	.final-cta {
+		padding: 10rem 0;
+		width: 100%;
+		max-width: 1100px;
+	}
+
+	.cta-card {
+		background: var(--fancygradient);
+		border-radius: 48px;
+		padding: 5rem 2rem;
+		text-align: center;
+		color: white;
+		position: relative;
+		overflow: hidden;
+		box-shadow: 0 30px 60px rgba(251, 53, 112, 0.3);
+	}
+
+	.cta-card::before {
+		content: "";
+		position: absolute;
+		top: -50%;
+		left: -50%;
+		width: 200%;
+		height: 200%;
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+		animation: rotate 20s linear infinite;
+	}
+
+	.cta-card h2 {
+		font-size: 3rem;
+		margin-bottom: 1rem;
+		font-weight: 800;
+	}
+
+	.cta-card p {
+		font-size: 1.25rem;
+		opacity: 0.9;
+		max-width: 500px;
+		margin: 0 auto;
+	}
+
+	/* Animations */
+	@keyframes fadeInUp {
+		from { opacity: 0; transform: translateY(30px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes fadeInDown {
+		from { opacity: 0; transform: translateY(-20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes rotate {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
+	}
+
+	@media (max-width: 1024px) {
+		h1 { font-size: 3.5rem; }
+		.features-grid { grid-template-columns: repeat(2, 1fr); }
+	}
+
+	@media (max-width: 768px) {
+		.hero { padding: 7rem 0 3rem 0; }
+		h1 { font-size: 2.75rem; }
+		.hero-actions { flex-direction: column; width: 100%; }
+		.secondary-btn { width: 100%; }
+		.features-grid { grid-template-columns: 1fr; }
+		.trust-grid { flex-direction: column; gap: 3rem; }
+		.divider { display: none; }
+		.cta-card h2 { font-size: 2.25rem; }
+	}
 </style>
