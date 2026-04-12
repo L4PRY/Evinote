@@ -10,40 +10,55 @@
 		document.title = 'Evinote • Features';
 	});
 
+	function parallax(node: HTMLElement) {
+		const update = () => {
+			const rect = node.getBoundingClientRect();
+			const winHeight = window.innerHeight;
+			// progress = 0 (bottom entered) to 1 (top exited)
+			const progress = Math.min(Math.max((winHeight - rect.top) / (winHeight + rect.height), 0), 1);
+			node.style.setProperty('--scroll-progress', progress.toString());
+		};
+
+		window.addEventListener('scroll', update, { passive: true });
+		window.addEventListener('resize', update);
+		update();
+
+		return {
+			destroy() {
+				window.removeEventListener('scroll', update);
+				window.removeEventListener('resize', update);
+			}
+		};
+	}
+
 	const features = [
 		{
-			title: 'Infinite Spatial Canvas',
-			description: 'Break free from linear constraints. Organize your thoughts spatially on an infinite canvas that grows with your ideas.',
+			title: 'Canvas With No Limits',
+			description: 'Organize your thoughts spatially on an infinite canvas that grows with your ideas.',
 			icon: 'Layout',
 			delay: '0.1s'
 		},
 		{
-			title: 'Rich Multimedia Content',
+			title: 'Share Anything',
 			description: 'Embed images, audio, and video directly into your notes. Create interactive boards that bring your projects to life.',
 			icon: 'Image',
 			delay: '0.2s'
 		},
 		{
-			title: 'Seamless Collaboration',
-			description: 'Share your boards with others and manage access with granular permissions. Work together in real-time.',
+			title: 'Create Together',
+			description: 'Share your boards with friends, work together!',
 			icon: 'Users',
 			delay: '0.3s'
 		},
 		{
-			title: 'Precision Navigation',
-			description: 'Stay oriented on large boards with our integrated mini-map and smooth zoom controls. Find what you need, fast.',
-			icon: 'Map',
+			title: 'Easy Controls',
+			description: 'User interface designed for ease of use. ',
+			icon: 'MousePointer2',
 			delay: '0.4s'
 		},
 		{
-			title: 'Secure & Private',
-			description: 'Your thoughts are yours alone. Benefit from industry-standard security and private board management.',
-			icon: 'Lock',
-			delay: '0.5s'
-		},
-		{
 			title: 'Fully Responsive',
-			description: 'Access and edit your boards from any device. Evinote is designed to provide a premium experience on desktop and mobile.',
+			description: 'Access and edit your boards from any device. Evinote provides a way to share your ideas on both desktop and mobile.',
 			icon: 'Smartphone',
 			delay: '0.6s'
 		}
@@ -54,22 +69,25 @@
 
 <div class="features-wrapper">
 	<section class="hero">
-		<h1 class="gradient-text">Features that Empower Your Mind</h1>
+		<h1 class="gradient-text">Features of Evinote</h1>
 		<p class="hero-subtitle">
-			Experience a faster, more intuitive way to organize your thoughts, 
-			collaborate with your team, and bring your visions to life.
+			Evinote is a free and open-source note-taking application that allows you to organize your thoughts on boards.
 		</p>
 	</section>
 
-	<div class="features-grid">
-		{#each features as feature}
-			<div class="feature-card" style="animation-delay: {feature.delay}">
-				<div class="icon-wrapper">
-					<LucideSymbol symbol={feature.icon} size={32} strokeWidth={1.5} />
+	<div class="features-container">
+		{#each features as feature, i}
+			<section class="feature-section" use:parallax style="animation-delay: {feature.delay}">
+				<div class="content-side">
+					<h3>{feature.title}</h3>
+					<p>{feature.description}</p>
 				</div>
-				<h3>{feature.title}</h3>
-				<p>{feature.description}</p>
-			</div>
+				<div class="icon-side">
+					<div class="background-icon">
+						<LucideSymbol symbol={feature.icon} size={450} strokeWidth={1.5} />
+					</div>
+				</div>
+			</section>
 		{/each}
 	</div>
 
@@ -108,7 +126,7 @@
 
 	.hero {
 		text-align: center;
-		margin-bottom: 5rem;
+		margin-bottom: 3rem;
 		max-width: 800px;
 	}
 
@@ -132,51 +150,104 @@
 		line-height: 1.6;
 	}
 
-	.features-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 2rem;
-		max-width: 1200px;
+	.features-container {
+		display: flex;
+		flex-direction: column;
+		gap: 5rem;
+		max-width: 1400px;
 		width: 100%;
 	}
 
-	.feature-card {
-		background: var(--editor-interface-background);
-		border: 1px solid var(--editor-interface-border);
-		backdrop-filter: blur(15px);
-		-webkit-backdrop-filter: blur(15px);
-		padding: 2.5rem;
-		border-radius: 24px;
-		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	.feature-section {
+		display: flex;
+		align-items: center;
+		min-height: 450px;
+		width: 100%;
+		gap: 4rem;
 		opacity: 0;
 		animation: fadeInUp 0.8s forwards;
+		position: relative;
+		background: var(--editor-interface-background);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(16px);
+		border: 1px solid rgba(255, 255, 255, 0.05);
+		border-radius: 48px;
+		padding: 4rem;
+		overflow: hidden;
 	}
 
-	.feature-card:hover {
-		transform: translateY(-8px);
-		border-color: var(--fancycolor-2);
-		box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+	.feature-section:nth-child(even) {
+		flex-direction: row-reverse;
 	}
 
-	.icon-wrapper {
-		margin-bottom: 1.5rem;
-		display: inline-flex;
-		padding: 12px;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 12px;
-		color: var(--fancycolor-2);
+	.content-side {
+		flex: 1;
+		padding: 2rem;
+		z-index: 2;
+		text-align: right;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
 	}
 
-	.feature-card h3 {
-		font-size: 1.5rem;
+	.feature-section:nth-child(even) .content-side {
+		text-align: left;
+		align-items: flex-start;
+	}
+
+	.content-side h3 {
+		font-size: 2rem;
 		margin-bottom: 1rem;
-		font-weight: 700;
+		font-weight: 800;
+		background: var(--fancygradient);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
-	.feature-card p {
-		font-size: 1rem;
+	.content-side p {
+		font-size: 1.2rem;
 		color: var(--default-text-color-o7);
-		line-height: 1.6;
+		line-height: 1.8;
+		max-width: 500px;
+	}
+
+	.icon-side {
+		flex: 1;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		position: relative;
+		height: 100%;
+		min-height: 400px;
+	}
+
+	.background-icon {
+		position: absolute;
+		color: var(--fancycolor-2);
+		opacity: 0.45;
+		z-index: 1;
+		pointer-events: none;
+		transition: transform 0.1s linear, opacity 0.4s ease, filter 0.4s ease;
+		filter: blur(calc(1px - var(--scroll-progress) * 2px));
+		transform: 
+			rotate(calc(var(--scroll-progress) * 20deg - 10deg)) 
+			scale(calc(0.85 + var(--scroll-progress) * 0.3))
+			translateY(calc(var(--scroll-progress) * -20px + 10px));
+	}
+
+	.feature-section:nth-child(odd) .background-icon {
+		mask-image: radial-gradient(circle at center, black 20%, transparent 100%);
+		-webkit-mask-image: radial-gradient(circle at center, black 20%, transparent 100%);
+	}
+
+	.feature-section:nth-child(even) .background-icon {
+		mask-image: radial-gradient(circle at center, black 20%, transparent 100%);
+		-webkit-mask-image: radial-gradient(circle at center, black 20%, transparent 100%);
+	}
+
+	.feature-section:hover .background-icon {
+		opacity: 0.8;
+		filter: blur(0px);
 	}
 
 	.cta {
@@ -208,22 +279,67 @@
 	}
 
 	@media (max-width: 1024px) {
-		.features-grid {
-			grid-template-columns: repeat(2, 1fr);
+		.features-container {
+			gap: 4rem;
+		}
+
+		.content-side h3 {
+			font-size: 2rem;
 		}
 	}
 
 	@media (max-width: 768px) {
 		.features-wrapper {
-			padding-top: 6rem;
+			padding: 7rem 1.5rem 4rem 1.5rem;
 		}
 		
 		h1 {
 			font-size: 2.5rem;
 		}
 
-		.features-grid {
-			grid-template-columns: 1fr;
+		.features-container {
+			gap: 2rem;
+		}
+
+		.feature-section, .feature-section:nth-child(even) {
+			flex-direction: column;
+			text-align: center;
+			min-height: auto;
+			gap: 1.5rem;
+			padding: 2rem;
+			border-radius: 32px;
+		}
+
+		.content-side {
+			padding: 0;
+		}
+
+		.content-side p {
+			max-width: 100%;
+		}
+
+		.icon-side {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 100%;
+			height: 100%;
+			opacity: 0.25;
+			pointer-events: none;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 1;
+		}
+
+		.background-icon {
+			transform: scale(0.65);
+			filter: blur(2px);
+		}
+
+		.feature-section:hover .background-icon {
+			transform: scale(0.7);
 		}
 
 		.hero {

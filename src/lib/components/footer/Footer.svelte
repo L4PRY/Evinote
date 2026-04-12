@@ -15,7 +15,7 @@
 				<div class="footer-section brand">
 					<h2 class="footer-logo">Evinote</h2>
 					<p class="footer-description">
-						Modern, lightweight note taking app designed for ease of use. 
+						Modern, lightweight note taking app designed for collaboration and ease-of-use in the second dimension. 
 					</p>
 					<div class="social-links">
 						<a href="https://github.com/L4PRY/Evinote" target="_blank" aria-label="GitHub">
