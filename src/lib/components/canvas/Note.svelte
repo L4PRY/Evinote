@@ -257,8 +257,12 @@
 			node.style.height = 'auto';
 			node.style.height = node.scrollHeight + 'px';
 		};
+
 		updateHeight();
+		setTimeout(updateHeight, 50);
+
 		node.addEventListener('input', updateHeight);
+
 		return {
 			destroy() {
 				node.removeEventListener('input', updateHeight);
@@ -666,7 +670,12 @@
 					}
 				}}
 
-				<div class="entry-container" use:resizeEntry={i} style:height={entryHeight ? entryHeight + 'px' : 'auto'}>
+				<div 
+					class="entry-container" 
+					class:is-only-entry={data.content.length === 1}
+					use:resizeEntry={i} 
+					style:height={entryHeight ? entryHeight + 'px' : 'auto'}
+				>
 					<div 
 						class="entry" 
 						role="textbox"
@@ -681,6 +690,7 @@
 					>
 						{#if entryType === 'text'}
 							<textarea
+									use:autoResize
 									readonly={readonly}
 									bind:value={entryRef.value}
 									onblur={() => (editingIndex = null)}
@@ -708,6 +718,7 @@
 									class="entry-edit"
 									style:text-align={entryTextAlign}
 									style:font-size={entryFontSize + 'px'}
+									style:max-height={entryHeight ? '100%' : 'none'}
 								></textarea>
 						{:else}
 							{@const file = entryValue as File}
@@ -1157,6 +1168,11 @@
 		&:hover {
 			border: 2px dashed var(--note-fg-o1);
 		}
+        & > .entry-edit {
+            margin: 0;
+            padding: 0;
+            line-height: normal;
+        }
 	}
 
 	.note.readonly .entry:hover {
@@ -1167,7 +1183,8 @@
 		box-sizing: border-box;
 		position: relative;
 		width: 100%;
-		height: 100%;
+		height: auto;
+
 		min-height: 1.2em;
 		background: transparent;
 		border: none;
@@ -1178,7 +1195,7 @@
 		padding: 0;
 		outline: none;
 		resize: none;
-		overflow: scroll;
+		overflow-y: auto;
 		display: block;
 		cursor: text;
 	}
@@ -1202,7 +1219,7 @@
 		position: absolute;
 		border-radius: 16px;
 		min-width: 150px;
-		min-height: 100px;
+		min-height: 40px;
 		display: flex;
 		flex-direction: column;
 		transition: box-shadow 0.2s ease;
@@ -1287,6 +1304,12 @@
         position: relative;
         min-height: 20px;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .note.manual-size .entry-container.is-only-entry {
+        flex-grow: 1;
     }
 
     .entry {
@@ -1295,8 +1318,9 @@
 
     .entry img, .entry video {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: auto;
+        max-height: 100%;
+        object-fit: contain;
         border-radius: inherit;
     }
 
