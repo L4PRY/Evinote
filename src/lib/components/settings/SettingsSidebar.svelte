@@ -318,7 +318,9 @@
 			<div class="header-title">
 				<span>Board Settings</span>
 			</div>
-
+			<button class="close-button" onclick={() => (open = false)} aria-label="Close settings">
+				<LucideSymbol symbol="X" size={20} strokeWidth={2} />
+			</button>
 		</div>
 
 		<!-- Board name badge -->
@@ -805,6 +807,25 @@
 		font-weight: 600;
 		color: var(--default-text-color);
 		letter-spacing: 0.01em;
+	}
+
+	.close-button {
+		background: transparent;
+		border: none;
+		color: var(--default-text-color);
+		opacity: 0.6;
+		cursor: pointer;
+		padding: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 6px;
+		transition: opacity 0.15s, background 0.15s;
+	}
+
+	.close-button:hover {
+		opacity: 1;
+		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.05));
 	}
 
 
@@ -1305,5 +1326,33 @@
 		display: flex;
 		justify-content: space-between;
 		gap: 8px;
+	}
+
+	@media (max-width: 600px) {
+		.settings-sidebar {
+			width: 100%;
+			border-left: none;
+		}
+
+		.sidebar-header {
+			padding: 16px 16px 12px;
+		}
+
+		.board-name-badge {
+			padding: 10px 16px;
+		}
+
+		.sidebar-content {
+			padding: 16px;
+		}
+
+		.tabs {
+			padding: 8px 8px 0;
+		}
+
+		.tab {
+			padding: 6px 10px;
+			font-size: 0.74rem;
+		}
 	}
 </style>

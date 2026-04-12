@@ -492,6 +492,12 @@
 		right: 360px;
 	}
 
+	@media (max-width: 600px) {
+		.canvas-viewport.sidebar-open {
+			right: 100%;
+		}
+	}
+
 	/* Settings toggle button — fixed top-right */
 	.settings-toggle {
 		position: fixed;
@@ -519,6 +525,13 @@
 
 	:global(.canvas-viewport.sidebar-open) ~ .settings-toggle {
 		right: 380px;
+	}
+
+	@media (max-width: 600px) {
+		:global(.canvas-viewport.sidebar-open) ~ .settings-toggle {
+			opacity: 0;
+			pointer-events: none;
+		}
 	}
 
 	.settings-toggle:hover {
@@ -613,6 +626,13 @@
 		background: rgba(255, 255, 255, 0.1);
 	}
 
+	@media (max-width: 600px) {
+		.sidebar-open .note-creator {
+			opacity: 0;
+			pointer-events: none;
+		}
+	}
+
 	.ctx-color-picker {
 		position: absolute;
 		opacity: 0;
@@ -698,6 +718,12 @@
 	@media (max-width: 768px) {
 		.board-title-container {
 			display: none; /* Hide on small screens to avoid overlap */
+		}
+	}
+
+	@media (max-width: 600px) {
+		.sidebar-open .board-title-container {
+			display: none;
 		}
 	}
 
