@@ -31,6 +31,7 @@
 	let color = $state('var(--default-bg-color)');
 	let isCurrentlyDragging = $state(false);
 	let isCurrentlyResizing = $state(false);
+	let isCurrentlyResizingEntry = $state(false);
 	// True once the user has manually dragged a resize handle
 	let manuallyResized = $state(
 		// Consider it manually resized if the stored size differs from the default
@@ -391,6 +392,7 @@
 
 		function onPointerUp() {
 			isResizing = false;
+			isCurrentlyResizingEntry = false;
 			window.removeEventListener('pointermove', onPointerMove);
 			window.removeEventListener('pointerup', onPointerUp);
 		}
@@ -398,6 +400,7 @@
 		function onPointerDown(e: PointerEvent) {
 			if (e.button !== 0 || readonly) return;
 			isResizing = true;
+			isCurrentlyResizingEntry = true;
 			startY = e.clientY;
 			// Get current height of the entry div
 			startHeight = node.getBoundingClientRect().height / $zoomLevel;
@@ -480,6 +483,7 @@
 	class:editing-meta={isEditingMetadata}
 	class:manual-size={manuallyResized}
 	class:resizing={isCurrentlyResizing}
+	class:resizing-entry={isCurrentlyResizingEntry}
 	class:readonly={readonly}
 	title={data.title}
 	id={data.id ?? data.title}
@@ -1163,7 +1167,7 @@
 		box-sizing: border-box;
 		position: relative;
 		width: 100%;
-		height: auto;
+		height: 100%;
 		min-height: 1.2em;
 		background: transparent;
 		border: none;
@@ -1215,7 +1219,8 @@
 			cursor: grabbing !important;
 		}
 
-		&.resizing .add-content-container {
+		&.resizing .add-content-container,
+		&.resizing-entry .add-content-container {
 			opacity: 0 !important;
 			max-height: 0 !important;
 			padding: 0 !important;
@@ -1250,8 +1255,12 @@
 	.note.manual-size .note-content-wrapper {
 		overflow-y: auto;
 		overflow-x: hidden;
-		scrollbar-width: thin;
-		scrollbar-color: var(--note-fg-o2) transparent;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.note.manual-size .note-content-wrapper::-webkit-scrollbar {
+		display: none;
 	}
 
     .entry-resize-handle {
