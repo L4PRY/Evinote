@@ -67,8 +67,6 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
 	}
 
 	.toast-content {
@@ -154,5 +152,22 @@
 	@keyframes progress {
 		0% { transform: scaleX(1); }
 		100% { transform: scaleX(0); }
+	}
+
+	@media (max-width: 600px) {
+		.toast-container {
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			transform: none;
+			gap: 0;
+			padding: 10px;
+		}
+
+		.toast {
+			width: 100%;
+			max-width: 100%;
+			border-radius: 12px;
+		}
 	}
 </style>
