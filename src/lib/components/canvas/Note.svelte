@@ -17,9 +17,7 @@
 	let { data = $bindable(), remove, gridSnap = 5, readonly = false }: { data: NoteData; remove: () => void; gridSnap?: number; readonly?: boolean } = $props();
 	
 	const MIN_WIDTH = 150;
-	const MAX_WIDTH = 800;
 	const MIN_HEIGHT = 100;
-	const MAX_HEIGHT = 800;
 
 	let note: HTMLDivElement;
 
@@ -172,38 +170,22 @@
 
 			// Horizontal resizing logic
 			if (direction.includes('e')) {
-				newWidth = Math.max(MIN_WIDTH, Math.min(startWidth + dx, MAX_WIDTH));
+				newWidth = Math.max(MIN_WIDTH, startWidth + dx);
 			} else if (direction.includes('w')) {
 				const maxDx = startWidth - MIN_WIDTH;
 				const clampedDx = Math.min(dx, maxDx);
-				const potentialWidth = startWidth - clampedDx;
-				
-				if (potentialWidth > MAX_WIDTH) {
-					const excess = potentialWidth - MAX_WIDTH;
-					newWidth = MAX_WIDTH;
-					newX = startX + clampedDx + excess;
-				} else {
-					newWidth = potentialWidth;
-					newX = startX + clampedDx;
-				}
+				newWidth = startWidth - clampedDx;
+				newX = startX + clampedDx;
 			}
 
 			// Vertical resizing logic
 			if (direction.includes('s')) {
-				newHeight = Math.max(MIN_HEIGHT, Math.min(startHeight + dy, MAX_HEIGHT));
+				newHeight = Math.max(MIN_HEIGHT, startHeight + dy);
 			} else if (direction.includes('n')) {
 				const maxDy = startHeight - MIN_HEIGHT;
 				const clampedDy = Math.min(dy, maxDy);
-				const potentialHeight = startHeight - clampedDy;
-				
-				if (potentialHeight > MAX_HEIGHT) {
-					const excess = potentialHeight - MAX_HEIGHT;
-					newHeight = MAX_HEIGHT;
-					newY = startY + clampedDy + excess;
-				} else {
-					newHeight = potentialHeight;
-					newY = startY + clampedDy;
-				}
+				newHeight = startHeight - clampedDy;
+				newY = startY + clampedDy;
 			}
 
 			// Apply snapping to resizing results
@@ -984,11 +966,14 @@
 	}
 
 	.note-title {
+		margin: 0;
 		font-size: 1rem;
 		font-weight: 600;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		width: 100%;
+		min-width: 0;
 		opacity: 0.8;
 		z-index: 10;
 		pointer-events: none;
@@ -1213,9 +1198,7 @@
 		position: absolute;
 		border-radius: 16px;
 		min-width: 150px;
-		max-width: 800px;
 		min-height: 100px;
-		max-height: 800px;
 		display: flex;
 		flex-direction: column;
 		transition: box-shadow 0.2s ease;
