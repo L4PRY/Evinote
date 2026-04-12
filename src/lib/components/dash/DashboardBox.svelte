@@ -19,6 +19,8 @@
 	import { notifications } from '$lib/stores/notifications';
 
 	let menuOpen = $state(false);
+	let windowWidth = $state(0);
+	const isMobile = $derived(windowWidth > 0 && windowWidth <= 600);
 
 	function toggleMenu(e: MouseEvent) {
 		e.preventDefault();
@@ -49,13 +51,14 @@
 </script>
 
 <svelte:window
+	bind:innerWidth={windowWidth}
 	onclick={() => {
 		menuOpen = false;
 	}}
 />
 
 {#if type === 'board'}
-	<a {href} class="dashboard-box" onmouseleave={handleMouseLeave}>
+	<a {href} class="dashboard-box" class:mobile={isMobile} onmouseleave={handleMouseLeave}>
 		<div class="preview-container">
 			<div class="placeholder">
 				<img {src} alt="" />
@@ -106,7 +109,7 @@
 		</div>
 	</a>
 {:else if type === 'createNew'}
-	<button class="dashboard-box create-new" {onclick}>
+	<button class="dashboard-box create-new" class:mobile={isMobile} {onclick}>
 		<div class="preview-container">
 			<div class="placeholder">
 				<LucideSymbol symbol="Plus" size={42} strokeWidth={1.5} />
@@ -143,7 +146,7 @@
 		position: relative;
 	}
 
-	.dashboard-box:hover {
+	.dashboard-box:not(.mobile):hover {
 		transform: translateY(-4px);
 		box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.5);
 		border: 1px solid var(--default-stroke-color);
@@ -172,7 +175,7 @@
 		position: relative;
 	}
 
-	.dashboard-box:hover .preview-container {
+	.dashboard-box:not(.mobile):hover .preview-container {
 		opacity: 1;
 	}
 
@@ -190,7 +193,7 @@
 		left: 0;
 	}
 
-	.dashboard-box:hover .placeholder {
+	.dashboard-box:not(.mobile):hover .placeholder {
 		transform: scale(1.1);
 	}
 
@@ -228,7 +231,7 @@
 		transform: translateX(-5px);
 	}
 
-	.dashboard-box:hover .arrow > * {
+	.dashboard-box:not(.mobile):hover .arrow > * {
 		opacity: 1;
 		transform: translateX(0);
 		font-size: 0.95rem;
@@ -252,7 +255,8 @@
 		overflow: hidden;
 	}
 
-	.dashboard-box:hover .actions-menu {
+	.dashboard-box:not(.mobile):hover .actions-menu,
+	.dashboard-box.mobile .actions-menu {
 		opacity: 1;
 		border-color: rgba(255, 255, 255, 0.2);
 	}
@@ -284,7 +288,8 @@
 		padding: 0.2rem;
 	}
 
-	.dashboard-box:hover .stats {
+	.dashboard-box:not(.mobile):hover .stats,
+	.dashboard-box.mobile .stats {
 		opacity: 1;
 		border-color: rgba(255, 255, 255, 0.2);
 	}

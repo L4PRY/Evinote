@@ -27,6 +27,8 @@
 	let lastSyncedLiked = liked;
 
 	let isHovered = $state(false);
+	let windowWidth = $state(0);
+	const isMobile = $derived(windowWidth > 0 && windowWidth <= 600);
 
 	async function syncLike() {
 		if (isLiked === lastSyncedLiked || !id) return;
@@ -81,8 +83,12 @@
 	}
 </script>
 
+<svelte:window
+	bind:innerWidth={windowWidth}
+/>
+
 {#if type === 'board'}
-	<a {href} class="dashboard-box">
+	<a {href} class="dashboard-box" class:mobile={isMobile}>
 		<div class="preview-container">
 			<div class="placeholder">
 				<img {src} alt="" />
@@ -120,7 +126,7 @@
 		</button>
 	</a>
 {:else if type === 'createNew'}
-	<button class="dashboard-box create-new" {onclick}>
+	<button class="dashboard-box create-new" class:mobile={isMobile} {onclick}>
 		<div class="preview-container">
 			<div class="placeholder">
 				<LucideSymbol symbol="Plus" size={42} strokeWidth={1.5} />
@@ -157,7 +163,7 @@
 		position: relative;
 	}
 
-	.dashboard-box:hover {
+	.dashboard-box:not(.mobile):hover {
 		transform: translateY(-4px);
 		box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.5);
 		border: 1px solid var(--default-stroke-color);
@@ -186,7 +192,7 @@
 		position: relative;
 	}
 
-	.dashboard-box:hover .preview-container {
+	.dashboard-box:not(.mobile):hover .preview-container {
 		opacity: 1;
 	}
 
@@ -204,7 +210,7 @@
 		left: 0;
 	}
 
-	.dashboard-box:hover .placeholder {
+	.dashboard-box:not(.mobile):hover .placeholder {
 		transform: scale(1.1);
 	}
 
@@ -242,7 +248,7 @@
 		transform: translateX(-5px);
 	}
 
-	.dashboard-box:hover .arrow > * {
+	.dashboard-box:not(.mobile):hover .arrow > * {
 		opacity: 1;
 		transform: translateX(0);
 		font-size: 0.95rem;
@@ -271,7 +277,8 @@
 		color: var(--default-text-color);
 	}
 
-	.dashboard-box:hover .stats {
+	.dashboard-box:hover .stats,
+	.dashboard-box.mobile .stats {
 		opacity: 1;
 		border-color: rgba(255, 255, 255, 0.2);
 	}
