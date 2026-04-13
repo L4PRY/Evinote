@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import backgroundImage from '$lib/assets/evi_bg.png';
-	import showcaseImage from '$lib/assets/screenshot.png';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { onMount } from 'svelte';
@@ -38,7 +36,7 @@
 	});
 </script>
 
-<div class="background" style="background-image: url({backgroundImage});"></div>
+<div class="background" style="background-image: url(/evi_bg.png);"></div>
 
 <div class="landing-wrapper">
 	<!-- Hero Section -->
@@ -69,7 +67,7 @@
 		>
 			<div class="showcase-glow" class:is-clicked={isClicked}></div>
 			<img
-				src={showcaseImage}
+				src={'/screenshot.png'}
 				alt="Evinote Editor Showcase"
 				class="hero-showcase"
 				class:is-active={isHovered || isClicked}
