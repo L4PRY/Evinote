@@ -84,20 +84,7 @@
 		display: block;
 	}
 
-	.create-link {
-		background: none;
-		border: none;
-		color: #3182ce;
-		text-decoration: underline;
-		cursor: pointer;
-		padding: 0;
-		font-family: inherit;
-		font-size: 1rem;
-	}
 
-	.create-link:hover {
-		color: #2b6cb0;
-	}
 
 	@media (max-width: 600px) {
 		.site-content {
