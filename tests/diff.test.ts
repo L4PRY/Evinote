@@ -112,8 +112,9 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 		// With the less aggressive merge, notes from oldNotes are preserved
 		// even if they're not in newNotes. All notes are kept.
-		expect(Object.keys(result).includes('foo')).toBeTruthy();
-		expect(Object.keys(result).includes('bar')).toBeFalsy();
+		//
+		expect(result['foo']).toBeDefined();
+		expect(result['bar']).toBeNull();
 	});
 
 	it('should handle complex nested changes', () => {
