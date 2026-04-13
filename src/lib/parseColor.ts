@@ -29,8 +29,7 @@ export function parseColor(color: Color | string | null | undefined): string {
 			return value;
 		}
 		default: {
-			const res = String(color);
-			return res === 'initial' ? '#000000' : res;
+			return '#000000';
 		}
 	}
 }

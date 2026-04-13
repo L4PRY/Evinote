@@ -39,7 +39,7 @@ export const actions: Actions = {
 
 			const userAgent = event.request.headers.get('user-agent') ?? 'unknown';
 
-			const sessionResult = await auth.createSession(userId, userAgent, '');
+			const sessionResult = await auth.createSession(userId, userAgent, undefined);
 
 			if (!sessionResult || sessionResult.length === 0) {
 				return fail(500, { message: 'Failed to create session' });

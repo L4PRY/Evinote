@@ -63,12 +63,13 @@
 		<button
 			class="hero-showcase-container"
 			bind:this={showcaseEl}
-			onmouseenter={() => (isHovered = true)}
-			onmouseleave={() => {
-				isHovered = false;
-				isClicked = false;
-			}}
-			onclick={() => (isClicked = !isClicked)}
+			role="button"
+			tabindex="0"
+			aria-label="Toggle editor showcase magnification"
+			onmouseenter={() => isHovered = true}
+			onmouseleave={() => { isHovered = false; isClicked = false; }}
+			onclick={() => isClicked = !isClicked}
+			onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); isClicked = !isClicked; } }}
 		>
 			<div class="showcase-glow" class:is-clicked={isClicked}></div>
 			<img
@@ -170,8 +171,8 @@
 	.gradient-text {
 		background: var(--fancygradient);
 		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
 		background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
 	.hero-subtitle {
@@ -191,24 +192,6 @@
 		animation: fadeInUp 0.8s ease-out 0.2s backwards;
 	}
 
-	.secondary-btn {
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		color: var(--default-text-color);
-		padding: 0.8rem 2rem;
-		border-radius: 12px;
-		font-size: 1.1rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		backdrop-filter: blur(10px);
-	}
-
-	.secondary-btn:hover {
-		background: rgba(255, 255, 255, 0.08);
-		transform: translateY(-2px);
-		border-color: rgba(255, 255, 255, 0.2);
-	}
 
 	/* Hero showcase */
 	.hero-showcase-container {
@@ -261,61 +244,7 @@
 		z-index: 5;
 	}
 
-	.hero-showcase.is-hovered {
-		z-index: 100;
-		box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
-	}
 
-	/* Features Grid */
-	.features-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 2rem;
-		max-width: 1100px;
-		width: 100%;
-		margin-top: 8rem;
-	}
-
-	.feature-card {
-		background: var(--editor-interface-background);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		border: 1px solid rgba(255, 255, 255, 0.05);
-		padding: 2.5rem;
-		border-radius: 32px;
-		transition: all 0.3s ease;
-		animation: fadeInUp 0.8s ease-out backwards;
-	}
-
-	.feature-card:hover {
-		transform: translateY(-10px);
-		border-color: rgba(255, 255, 255, 0.2);
-		background: rgba(255, 255, 255, 0.05);
-	}
-
-	.feature-icon {
-		width: 60px;
-		height: 60px;
-		background: var(--fancygradient);
-		border-radius: 16px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin-bottom: 2rem;
-		color: white;
-		box-shadow: 0 10px 20px rgba(251, 53, 112, 0.2);
-	}
-
-	.feature-card h3 {
-		font-size: 1.5rem;
-		margin-bottom: 1rem;
-		font-weight: 700;
-	}
-
-	.feature-card p {
-		color: var(--default-text-color-o7);
-		line-height: 1.6;
-	}
 
 	/* Trust Section */
 	.trust-section {
@@ -347,6 +276,7 @@
 		font-weight: 800;
 		background: var(--fancygradient);
 		-webkit-background-clip: text;
+		background-clip: text;
 		-webkit-text-fill-color: transparent;
 		display: flex;
 		align-items: center;

@@ -13,11 +13,18 @@ describe('diffNotes', () => {
 		...overrides
 	});
 
+	const toRecord = (notes: NoteData[]): NotesRecord => {
+		const record: NotesRecord = {};
+		notes.forEach(n => record[n.id] = n);
+		return record;
+	};
+
 	it('should handle property creation (CREATE operation)', () => {
 		const oldNotes = { '1': createMockNote({ title: null }) };
 		const newNotes = { '1': createMockNote({ title: 'New Title' }) };
 
 		const result = diffNotes(oldNotes, newNotes);
+		const notes = Object.values(result);
 
 		expect(Object.values(result)).toHaveLength(1);
 		expect(Object.values(result)[0]?.title).toBe('New Title');
@@ -32,6 +39,7 @@ describe('diffNotes', () => {
 		};
 
 		const result = diffNotes(oldNotes, newNotes);
+		const notes = Object.values(result);
 
 		expect(Object.values(result)).toHaveLength(1);
 		expect(Object.values(result)[0]?.title).toBe('Updated Title');
@@ -42,6 +50,7 @@ describe('diffNotes', () => {
 		const newNotes = { '1': createMockNote({ position: { x: 100, y: 200, z: 0 } }) };
 
 		const result = diffNotes(oldNotes, newNotes);
+		const notes = Object.values(result);
 
 		expect(Object.values(result)).toHaveLength(1);
 		expect(Object.values(result)[0]?.position.x).toBe(100);
@@ -53,6 +62,7 @@ describe('diffNotes', () => {
 		const newNotes = { '1': createMockNote({ content: ['text1', 'text2', 'text3'] }) };
 
 		const result = diffNotes(oldNotes, newNotes);
+		const notes = Object.values(result);
 
 		expect(Object.values(result)).toHaveLength(1);
 		expect(Object.values(result)[0]?.content).toContain('text3');
@@ -70,6 +80,7 @@ describe('diffNotes', () => {
 		};
 
 		const result = diffNotes(oldNotes, newNotes);
+		const notes = Object.values(result);
 
 		expect(Object.values(result)).toHaveLength(2);
 		expect(Object.values(result)[0]?.title).toBe('Note 1 Updated');
@@ -84,6 +95,7 @@ describe('diffNotes', () => {
 		};
 
 		const result = diffNotes(oldNotes, newNotes);
+		const notes = Object.values(result);
 
 		expect(Object.values(result)).toHaveLength(2);
 		expect(Object.values(result)[1]?.id).toBe('2');

@@ -29,7 +29,7 @@ export const actions: Actions = {
 					background: { type: 'Solid', value: { type: 'rgb', value: [255, 255, 255, 1] } },
 					thumbnail: undefined
 				},
-				notes: []
+				notes: {}
 			})
 			.returning();
 

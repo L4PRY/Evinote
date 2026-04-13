@@ -241,6 +241,9 @@
 						<div class="mask-left" style:width="{cropX}px"></div>
 						<div 
 							class="crop-box" 
+							role="button"
+							tabindex="-1"
+							aria-label="Drag to move crop area"
 							style:width="{cropW}px" 
 							style:height="{cropH}px"
 							onpointerdown={(e) => startInteraction(e, 'move')}
@@ -248,14 +251,14 @@
 							<div class="grid-lines"></div>
 							
 							<!-- Handles -->
-							<div class="handle nw" onpointerdown={(e) => startInteraction(e, 'nw')}></div>
-							<div class="handle ne" onpointerdown={(e) => startInteraction(e, 'ne')}></div>
-							<div class="handle sw" onpointerdown={(e) => startInteraction(e, 'sw')}></div>
-							<div class="handle se" onpointerdown={(e) => startInteraction(e, 'se')}></div>
-							<div class="handle n" onpointerdown={(e) => startInteraction(e, 'n')}></div>
-							<div class="handle s" onpointerdown={(e) => startInteraction(e, 's')}></div>
-							<div class="handle e" onpointerdown={(e) => startInteraction(e, 'e')}></div>
-							<div class="handle w" onpointerdown={(e) => startInteraction(e, 'w')}></div>
+							<div class="handle nw" role="button" tabindex="-1" aria-label="Resize northwest" onpointerdown={(e) => startInteraction(e, 'nw')}></div>
+							<div class="handle ne" role="button" tabindex="-1" aria-label="Resize northeast" onpointerdown={(e) => startInteraction(e, 'ne')}></div>
+							<div class="handle sw" role="button" tabindex="-1" aria-label="Resize southwest" onpointerdown={(e) => startInteraction(e, 'sw')}></div>
+							<div class="handle se" role="button" tabindex="-1" aria-label="Resize southeast" onpointerdown={(e) => startInteraction(e, 'se')}></div>
+							<div class="handle n" role="button" tabindex="-1" aria-label="Resize north" onpointerdown={(e) => startInteraction(e, 'n')}></div>
+							<div class="handle s" role="button" tabindex="-1" aria-label="Resize south" onpointerdown={(e) => startInteraction(e, 's')}></div>
+							<div class="handle e" role="button" tabindex="-1" aria-label="Resize east" onpointerdown={(e) => startInteraction(e, 'e')}></div>
+							<div class="handle w" role="button" tabindex="-1" aria-label="Resize west" onpointerdown={(e) => startInteraction(e, 'w')}></div>
 						</div>
 						<div class="mask-right"></div>
 					</div>
