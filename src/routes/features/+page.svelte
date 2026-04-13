@@ -1,4 +1,5 @@
 <script lang="ts">
+	import backgroundImage from '$lib/assets/evi_bg.png';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import { goto } from '$app/navigation';
@@ -64,7 +65,7 @@
 	];
 </script>
 
-<div class="background" style="background-image: url(/evi_bg.png);"></div>
+<div class="background" style="background-image: url({backgroundImage});"></div>
 
 <div class="features-wrapper">
 	<section class="hero">
