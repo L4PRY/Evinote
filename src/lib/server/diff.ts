@@ -6,30 +6,58 @@ export function diffNotes(oldNotes: NotesRecord, newNotes: NotesRecord): NotesRe
 	// If old notes was an array (migration case)
 	if (Array.isArray(oldNotes)) {
 		const tempRecord: NotesRecord = {};
-		oldNotes.forEach(n => tempRecord[n.id] = n);
+		oldNotes.forEach(n => (tempRecord[n.id] = n));
 		oldNotes = tempRecord;
 	}
 
 	const differences = diff(oldNotes, newNotes);
 
-	saveLogger.info('Calculating differences between old and new notes record', differences);
+	console.log(
+		'Calculating differences between old and new notes record',
+		differences.map(d => ({
+			type: d.type,
+			path: d.path
+		}))
+	);
 
-	// With records, we can just return newNotes if we trust the client's state,
-	// but the current diffNotes logic seems to want to "merge" them carefully.
-	// Since keys (IDs) are stable, we can just iterate the newNotes.
-	
+	// For 3-way merges: start with oldNotes, then apply updates from newNotes
 	const mergedNotes: NotesRecord = {};
 
-	// In a key-value system, if the user sends a record, it usually represents 
-	// the desired state of ALL notes. 
-	// If we want to be safe and preserve things not mentioned (though unlikely in this app),
-	// we'd merge. But usually, missing key = deleted.
-	
-	// Let's stick to the principle of "newNotes is the source of truth" 
-	// but keeping the logging/diffing for visibility.
+	// First, preserve all notes from oldNotes
+	for (const id in oldNotes) {
+		mergedNotes[id] = JSON.parse(JSON.stringify(oldNotes[id]));
+	}
 
+	// Then, apply/override with updates from newNotes
 	for (const id in newNotes) {
-		mergedNotes[id] = JSON.parse(JSON.stringify(newNotes[id]));
+		if (oldNotes[id]) {
+			// If the note exists in both, we need to check if there are differences
+			const noteDiffs = differences.filter(d => d.path[0] === id);
+			if (noteDiffs.length > 0) {
+				// If there are differences, we need to apply them to the old note
+				mergedNotes[id] = JSON.parse(JSON.stringify(oldNotes[id])); // Start with old note
+				for (const diffItem of noteDiffs) {
+					const [_, ...path] = diffItem.path; // Remove the note ID from the path
+					let target: any = mergedNotes[id];
+					for (let i = 0; i < path.length - 1; i++) {
+						target = target[path[i]];
+					}
+					const lastKey = path[path.length - 1];
+					if (diffItem.type === 'CREATE' || diffItem.type === 'CHANGE') {
+						target[lastKey] = JSON.parse(JSON.stringify(diffItem.value));
+					} else if (diffItem.type === 'REMOVE') {
+						delete target[lastKey];
+					}
+				}
+			} else {
+				// If there are no differences, just keep the old note
+				mergedNotes[id] = JSON.parse(JSON.stringify(oldNotes[id]));
+			}
+		} else {
+			// If the note is new, add it directly
+			mergedNotes[id] = JSON.parse(JSON.stringify(newNotes[id]));
+		}
+		// mergedNotes[id] = JSON.parse(JSON.stringify(newNotes[id]));
 	}
 
 	saveLogger.info('Merged notes record after applying changes', {
