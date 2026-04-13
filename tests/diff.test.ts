@@ -1,6 +1,6 @@
 import { diffNotes } from '$lib/server/diff';
 import { describe, it, expect, vi } from 'vitest';
-import type { NoteData } from '$lib/types/canvas/NoteData';
+import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 
 describe('diffNotes', () => {
 	const createMockNote = (overrides?: Partial<NoteData>): NoteData => ({
@@ -20,7 +20,7 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(Object.values(result)).toHaveLength(1);
-		expect(Object.values(result)[0].title).toBe('New Title');
+		expect(Object.values(result)[0]?.title).toBe('New Title');
 	});
 
 	it('should handle property changes (CHANGE operation)', () => {
@@ -44,8 +44,8 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(Object.values(result)).toHaveLength(1);
-		expect(Object.values(result)[0].position.x).toBe(100);
-		expect(Object.values(result)[0].position.y).toBe(200);
+		expect(Object.values(result)[0]?.position.x).toBe(100);
+		expect(Object.values(result)[0]?.position.y).toBe(200);
 	});
 
 	it('should handle array modifications', () => {
@@ -55,8 +55,8 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(Object.values(result)).toHaveLength(1);
-		expect(Object.values(result)[0].content).toContain('text3');
-		expect(Object.values(result)[0].content).toHaveLength(3);
+		expect(Object.values(result)[0]?.content).toContain('text3');
+		expect(Object.values(result)[0]?.content).toHaveLength(3);
 	});
 
 	it('should handle multiple note changes', () => {
@@ -72,8 +72,8 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(Object.values(result)).toHaveLength(2);
-		expect(Object.values(result)[0].title).toBe('Note 1 Updated');
-		expect(Object.values(result)[1].title).toBe('Note 2 Updated');
+		expect(Object.values(result)[0]?.title).toBe('Note 1 Updated');
+		expect(Object.values(result)[1]?.title).toBe('Note 2 Updated');
 	});
 
 	it('should handle adding new notes', () => {
@@ -86,8 +86,8 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(Object.values(result)).toHaveLength(2);
-		expect(Object.values(result)[1].id).toBe('2');
-		expect(Object.values(result)[1].title).toBe('New Note');
+		expect(Object.values(result)[1]?.id).toBe('2');
+		expect(Object.values(result)[1]?.title).toBe('New Note');
 	});
 
 	it('should handle removing notes', () => {
@@ -95,12 +95,13 @@ describe('diffNotes', () => {
 			foo: createMockNote({ id: 'foo' }),
 			bar: createMockNote({ id: 'bar' })
 		};
-		const newNotes = { foo: createMockNote({ id: 'foo' }) };
+		const newNotes = { foo: createMockNote({ id: 'foo' }), bar: null };
 
 		const result = diffNotes(oldNotes, newNotes);
-
-		expect(Object.values(result)).toHaveLength(1);
-		expect(Object.values(result)[0].id).toBe('foo');
+		// With the less aggressive merge, notes from oldNotes are preserved
+		// even if they're not in newNotes. All notes are kept.
+		expect(Object.keys(result).includes('foo')).toBeTruthy();
+		expect(Object.keys(result).includes('bar')).toBeFalsy();
 	});
 
 	it('should handle complex nested changes', () => {
@@ -120,11 +121,11 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(Object.values(result)).toHaveLength(1);
-		expect(Object.values(result)[0].size.width).toBe(500);
-		expect(Object.values(result)[0].size.height).toBe(400);
-		expect(Object.values(result)[0].position.x).toBe(100);
-		expect(Object.values(result)[0].position.y).toBe(150);
-		expect(Object.values(result)[0].position.z).toBe(1);
+		expect(Object.values(result)[0]?.size.width).toBe(500);
+		expect(Object.values(result)[0]?.size.height).toBe(400);
+		expect(Object.values(result)[0]?.position.x).toBe(100);
+		expect(Object.values(result)[0]?.position.y).toBe(150);
+		expect(Object.values(result)[0]?.position.z).toBe(1);
 	});
 
 	it('should not mutate the original notes', () => {
@@ -164,8 +165,8 @@ describe('diffNotes', () => {
 
 		expect(Object.values(merge2)).toHaveLength(3);
 
-		expect(Object.values(merge2).find((note: NoteData) => note.id === 'foo')).toBeDefined();
-		expect(Object.values(merge2).find((note: NoteData) => note.id === 'bar')).toBeDefined();
-		expect(Object.values(merge2).find((note: NoteData) => note.id === 'baz')).toBeDefined();
+		expect(Object.values(merge2).find(note => note?.id === 'foo')).toBeDefined();
+		expect(Object.values(merge2).find(note => note?.id === 'bar')).toBeDefined();
+		expect(Object.values(merge2).find(note => note?.id === 'baz')).toBeDefined();
 	});
 });
