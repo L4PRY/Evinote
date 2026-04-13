@@ -113,7 +113,9 @@ export const GET = async ({ params, url, request }) => {
 							height: `${Math.max(4, noteHeight)}px`,
 							backgroundColor: parseColor(note.color),
 							borderRadius: '2px',
-							border: `1px solid ${parseColor(note.color)}`,
+							borderColor: parseColor(note.color),
+							borderWidth: '1px',
+							borderStyle: 'solid',
 							opacity: 0.8,
 							boxShadow:
 								'inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(0, 0, 0, 0.3), 0 0 2px rgba(0, 0, 0, 0.3)',

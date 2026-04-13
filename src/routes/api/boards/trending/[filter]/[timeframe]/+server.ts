@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db/index.js';
-import { Board, BoardLikes } from '$lib/server/db/schema.js';
+import { Board, BoardLikes, User } from '$lib/server/db/schema.js';
 import { type Filter, timeframes, filters } from '$lib/types/trending/Filter';
 import { error } from '@sveltejs/kit';
 import { count, desc, eq, sql, and, SQL, isNotNull } from 'drizzle-orm';
@@ -75,14 +75,16 @@ export const GET = async ({ params, url }) => {
 							id: Board.id,
 							title: Board.name,
 							updated: Board.updated,
+							username: User.username,
 							likes: count(BoardLikes.board),
 							liked: user ? sql`EXISTS (SELECT 1 FROM ${BoardLikes} WHERE ${BoardLikes.board} = ${Board.id} AND ${BoardLikes.user} = ${user.id})` : sql`FALSE`
 						})
 						.from(Board)
+						.leftJoin(User, eq(Board.owner, User.id))
 						.leftJoin(BoardLikes, eq(BoardLikes.board, Board.id))
 						.where(and(eq(Board.type, 'Public'), getLikesWithTimeframe(timeframe)))
 						.orderBy(desc(count(BoardLikes.board)))
-						.groupBy(Board.id)
+						.groupBy(Board.id, User.id)
 						.limit(upper)
 						.offset(lower)
 				: await db // last updated
@@ -90,14 +92,16 @@ export const GET = async ({ params, url }) => {
 							id: Board.id,
 							title: Board.name,
 							updated: Board.updated,
+							username: User.username,
 							likes: count(BoardLikes.board),
 							liked: user ? sql`EXISTS (SELECT 1 FROM ${BoardLikes} WHERE ${BoardLikes.board} = ${Board.id} AND ${BoardLikes.user} = ${user.id})` : sql`FALSE`
 						})
 						.from(Board)
+						.leftJoin(User, eq(Board.owner, User.id))
 						.where(and(eq(Board.type, 'Public'), getUpdatedWithTimeframe(timeframe)))
 						.leftJoin(BoardLikes, eq(BoardLikes.board, Board.id))
 						.orderBy(desc(Board.updated))
-						.groupBy(Board.id)
+						.groupBy(Board.id, User.id)
 						.limit(upper)
 						.offset(lower)
 		),

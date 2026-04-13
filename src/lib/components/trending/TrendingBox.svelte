@@ -7,6 +7,7 @@
 		type = 'board',
 		likes = 0,
 		liked = false,
+		username = '',
 		onclick
 	}: {
 		id?: number;
@@ -16,6 +17,7 @@
 		type?: 'createNew' | 'board';
 		likes?: number;
 		liked?: boolean;
+		username?: string;
 		onclick?: (e: MouseEvent) => void;
 	} = $props();
 
@@ -124,6 +126,10 @@
 				{likesCount}
 			</p>
 		</button>
+
+		<div class="author">
+			<p>By <b>{username}</b></p>
+		</div>
 	</a>
 {:else if type === 'createNew'}
 	<button class="dashboard-box create-new" class:mobile={isMobile} {onclick}>
@@ -301,6 +307,42 @@
 
 	.stats.interactive.is-liked {
 		color: #ff4d4d;
+	}
+
+	.author {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		background: var(--default-bg-color-transparent);
+		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
+		border-radius: 8px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		opacity: 0;
+		transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+		height: 32px;
+		padding: 0 0.75rem;
+		color: var(--default-text-color);
+		max-width: 150px;
+	}
+
+	.dashboard-box:hover .author,
+	.dashboard-box.mobile .author {
+		opacity: 1;
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.author p {
+		margin: 0;
+		font-size: 0.85rem;
+		font-weight: 500;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		opacity: 0.9;
 	}
 
 	.stats p {

@@ -5,4 +5,5 @@ export type Board = {
 	updated: string;
 	likes: number;
 	liked?: boolean;
+	username: string;
 };

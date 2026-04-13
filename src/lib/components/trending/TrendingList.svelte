@@ -47,6 +47,7 @@
 				name={board.title}
 				likes={board.likes}
 				liked={board.liked}
+				username={board.username}
 			></TrendingBox>
 		</li>
 	{/each}
