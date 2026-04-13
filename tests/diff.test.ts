@@ -155,7 +155,12 @@ describe('diffNotes', () => {
 		};
 
 		const merge1 = diffNotes(origin, user1);
+
+		console.log(merge1);
+
 		const merge2 = diffNotes(merge1, user2);
+
+		console.log(merge2);
 
 		expect(Object.values(merge2)).toHaveLength(3);
 
