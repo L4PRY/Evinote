@@ -73,52 +73,52 @@ Az alkalmazás így teljes körűen lehetővé teszi az adatbázisok kezelését
 
 ### 📁 Projekt struktúra
 
-Evinote/
-│
-├── Components/                 # Egyedi UI komponensek
-│   └── Theme.cs               # Megjelenés / téma kezelés
-│
-├── Properties/                # Projekt beállítások (auto-generált)
-│   ├── AssemblyInfo.cs
-│   ├── Resources.resx
-│   └── Settings.settings
-│
-├── Resources/                 # Erőforrások (képek, ikonok stb.)
-│
-├── App.config                 # Alkalmazás konfiguráció
-├── packages.config           # NuGet csomagok listája
-│
-├── Program.cs                # Alkalmazás belépési pontja
-│
-├── Form1.cs                  # Kezdő / login form logika
-├── Form1.Designer.cs         # UI definíció (auto-generált)
-├── Form1.resx                # Form erőforrásai
-│
-├── MainForm.cs               # Fő alkalmazás ablak
-│
-├── DashboardForm.cs          # Dashboard nézet
-├── DashboardForm.Designer.cs
-├── DashboardForm.resx
-│
-├── UserBoards.cs             # Felhasználói boardok kezelése
-├── UserBoards.Designer.cs
-├── UserBoards.resx
-│
-├── UserDocs.cs               # Dokumentumok kezelése
-│
-├── UserSessions.cs           # Session kezelés
-├── UserSessions.Designer.cs
-├── UserSessions.resx
-│
-├── BoardData.cs              # Board adatszerkezet
-├── SessionData.cs            # Session adatszerkezet
-│
-├── LoginRequest.cs           # Bejelentkezési kérés modell
-├── LoginResponse.cs          # Bejelentkezési válasz modell
-│
-├── HashPassword.cs           # Jelszó hash-elés
-│
-├── Evinote.csproj            # Projekt fájl
+- Evinote/
+- │
+- ├── Components/                 # Egyedi UI komponensek
+- │   └── Theme.cs               # Megjelenés / téma kezelés
+- │
+- ├── Properties/                # Projekt beállítások (auto-generált)
+- │   ├── AssemblyInfo.cs
+- │   ├── Resources.resx
+- │   └── Settings.settings
+- │
+- ├── Resources/                 # Erőforrások (képek, ikonok stb.)
+- │
+- ├── App.config                 # Alkalmazás konfiguráció
+- ├── packages.config           # NuGet csomagok listája
+- │
+- ├── Program.cs                # Alkalmazás belépési pontja
+- │
+- ├── Form1.cs                  # Kezdő / login form logika
+- ├── Form1.Designer.cs         # UI definíció (auto-generált)
+- ├── Form1.resx                # Form erőforrásai
+- │
+- ├── MainForm.cs               # Fő alkalmazás ablak
+- │
+- ├── DashboardForm.cs          # Dashboard nézet
+- ├── DashboardForm.Designer.cs
+- ├── DashboardForm.resx
+- │
+- ├── UserBoards.cs             # Felhasználói boardok kezelése
+- ├── UserBoards.Designer.cs
+- ├── UserBoards.resx
+- │
+- ├── UserDocs.cs               # Dokumentumok kezelése
+- │
+- ├── UserSessions.cs           # Session kezelés
+- ├── UserSessions.Designer.cs
+- ├── UserSessions.resx
+- │
+- ├── BoardData.cs              # Board adatszerkezet
+- ├── SessionData.cs            # Session adatszerkezet
+- │
+- ├── LoginRequest.cs           # Bejelentkezési kérés modell
+- ├── LoginResponse.cs          # Bejelentkezési válasz modell
+- │
+- ├── HashPassword.cs           # Jelszó hash-elés
+- │
+- ├── Evinote.csproj            # Projekt fájl
 
 ---
 
