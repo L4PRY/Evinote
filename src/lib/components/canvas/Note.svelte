@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { NoteData } from '$lib/types/canvas/NoteData';
+	import type { NoteData, ChecklistItem } from '$lib/types/canvas/NoteData';
 	import type { File } from '$lib/types/canvas/File';
 	import type { Color } from '$lib/types/canvas/Color';
 	import { bringToFront, initializeZIndex } from '$lib/stores/noteZIndex';
 	import { parseColor } from '$lib/parseColor';
 	import DOMPurify from 'isomorphic-dompurify';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { canvasSize } from '$lib/stores/viewport';
 	import { spring } from 'svelte/motion';
@@ -306,6 +306,17 @@
 	function addTextBlock() {
 		data.content = [...data.content, ''];
 		showAddMenu = false;
+	}
+
+	async function addCheckboxBlock() {
+		data.content = [...data.content, { type: 'checklist', value: [{ text: '', checked: false }] as ChecklistItem[] }];
+		showAddMenu = false;
+		await tick();
+		if (note) {
+			const containers = note.querySelectorAll('.entry-container');
+			const last = containers[containers.length - 1];
+			if (last) (last.querySelector('textarea') as HTMLTextAreaElement)?.focus();
+		}
 	}
 
 	async function uploadFile(fileOrBlob: globalThis.File | Blob) {
@@ -681,15 +692,36 @@
 						role="textbox"
 						tabindex="-1"
 						onclick={(e) => {
-							if (entryType === 'text' && e.target === e.currentTarget) {
+							if ((entryType === 'text' || entryType === 'checkbox' || entryType === 'checklist') && e.target === e.currentTarget) {
 								const target = e.currentTarget.querySelector('textarea');
 								if (target) target.focus();
 							}
 						}}
 						style:justify-content={entryVerticalAlign === 'middle' ? 'center' : (entryVerticalAlign === 'bottom' ? 'flex-end' : 'flex-start')}
 					>
-						{#if entryType === 'text'}
-							<textarea
+						{#if entryType === 'text' || entryType === 'checkbox'}
+							<div class="text-entry-wrapper" class:is-checkbox={entryType === 'checkbox'}>
+								{#if entryType === 'checkbox'}
+									<div class="checkbox-container">
+										<button
+											type="button"
+											class="checklist-toggle"
+											class:is-checked={isObjectEntry && (data.content[i] as any).checked}
+											onclick={() => {
+												if (isObjectEntry && !readonly) {
+													(data.content[i] as any).checked = !(data.content[i] as any).checked;
+													data.content = [...data.content];
+												}
+											}}
+											disabled={readonly}
+											aria-label="Toggle item"
+										>
+											<span class="toggle-icon icon-x"><LucideSymbol symbol="X" size={10} strokeWidth={2.5} /></span>
+											<span class="toggle-icon icon-check"><LucideSymbol symbol="Check" size={10} strokeWidth={2.5} /></span>
+										</button>
+									</div>
+								{/if}
+								<textarea
 									use:autoResize
 									readonly={readonly}
 									bind:value={entryRef.value}
@@ -714,12 +746,250 @@
 										if (e.key === 'Escape') {
 											editingIndex = null;
 										}
+										if (e.key === 'Enter' && entryType === 'checkbox') {
+											e.preventDefault();
+											const target = e.target as HTMLTextAreaElement;
+											const start = target.selectionStart;
+											
+											const currentValue = entryRef.value;
+											const before = currentValue.substring(0, start);
+											const after = currentValue.substring(target.selectionEnd);
+											
+											entryRef.value = before;
+											
+											const newEntry = { 
+												type: 'checkbox', 
+												value: after, 
+												checked: false,
+												textAlign: entryTextAlign,
+												fontSize: entryFontSize
+											};
+											
+											data.content = [
+												...data.content.slice(0, i + 1),
+												newEntry,
+												...data.content.slice(i + 1)
+											];
+											
+											setTimeout(() => {
+												const noteEl = target.closest('.note-content');
+												if (noteEl) {
+													const entries = noteEl.querySelectorAll('.entry-container');
+													if (entries[i + 1]) {
+														const nextTextarea = entries[i + 1].querySelector('textarea');
+														if (nextTextarea) nextTextarea.focus();
+													}
+												}
+											}, 0);
+										}
+										if (e.key === 'Backspace') {
+											const target = e.target as HTMLTextAreaElement;
+											if (target.selectionStart === 0 && target.selectionEnd === 0 && i > 0) {
+												const prevEntry = data.content[i - 1];
+												const prevIsObjectEntry = typeof prevEntry === 'object' && prevEntry !== null && 'type' in prevEntry;
+												const prevEntryType = prevIsObjectEntry ? (prevEntry as any).type : (typeof prevEntry === 'string' ? 'text' : 'file');
+												
+												if (prevEntryType === 'text' || prevEntryType === 'checkbox') {
+													e.preventDefault();
+													const currentValue = entryRef.value;
+													
+													const prevValue = prevIsObjectEntry ? (prevEntry as any).value : (prevEntry as string);
+													const cursorPosition = prevValue.length;
+													
+													if (prevIsObjectEntry) {
+														(data.content[i - 1] as any).value = prevValue + currentValue;
+													} else {
+														data.content[i - 1] = prevValue + currentValue;
+													}
+													
+													data.content = [
+														...data.content.slice(0, i),
+														...data.content.slice(i + 1)
+													];
+													
+													setTimeout(() => {
+														const noteEl = target.closest('.note-content');
+														if (noteEl) {
+															const entries = noteEl.querySelectorAll('.entry-container');
+															if (entries[i - 1]) {
+																const prevTextarea = entries[i - 1].querySelector('textarea');
+																if (prevTextarea) {
+																	prevTextarea.focus();
+																	prevTextarea.selectionStart = prevTextarea.selectionEnd = cursorPosition;
+																}
+															}
+														}
+													}, 0);
+												}
+											}
+										}
+									}}
+									onpaste={(e) => {
+										if (entryType === 'checkbox') {
+											const pastedText = e.clipboardData?.getData('text');
+											if (pastedText && pastedText.includes('\n')) {
+												e.preventDefault();
+												const target = e.target as HTMLTextAreaElement;
+												const start = target.selectionStart;
+												const end = target.selectionEnd;
+												
+												const currentValue = entryRef.value;
+												const before = currentValue.substring(0, start);
+												const after = currentValue.substring(end);
+												
+												const lines = pastedText.split(/\r?\n/);
+												
+												entryRef.value = before + lines[0];
+												
+												const newEntries = lines.slice(1).map((line, index) => {
+													const isLast = index === lines.length - 2;
+													return {
+														type: 'checkbox',
+														value: isLast ? line + after : line,
+														checked: false,
+														textAlign: entryTextAlign,
+														fontSize: entryFontSize
+													};
+												});
+												
+												data.content = [
+													...data.content.slice(0, i + 1),
+													...newEntries,
+													...data.content.slice(i + 1)
+												];
+												
+												setTimeout(() => {
+													const noteEl = target.closest('.note-content');
+													if (noteEl) {
+														const entries = noteEl.querySelectorAll('.entry-container');
+														const targetIndex = i + newEntries.length;
+														if (entries[targetIndex]) {
+															const newlyCreatedTextarea = entries[targetIndex].querySelector('textarea');
+															if (newlyCreatedTextarea) newlyCreatedTextarea.focus();
+														}
+													}
+												}, 0);
+											}
+										}
 									}}
 									class="entry-edit"
+									class:is-checked={entryType === 'checkbox' && isObjectEntry && (data.content[i] as any).checked}
 									style:text-align={entryTextAlign}
 									style:font-size={entryFontSize + 'px'}
 									style:max-height={entryHeight ? '100%' : 'none'}
 								></textarea>
+							</div>
+						{:else if entryType === 'checklist'}
+							{@const checklistItems = ((data.content[i] as any).value ?? []) as ChecklistItem[]}
+							<div class="checklist-entry" style:font-size={entryFontSize + 'px'}>
+								{#each checklistItems as clItem, clIdx}
+									{@const clItemRef = {
+										get value() { return ((data.content[i] as any).value as ChecklistItem[])[clIdx]?.text ?? ''; },
+										set value(v) { ((data.content[i] as any).value as ChecklistItem[])[clIdx].text = v; }
+									}}
+									<div class="checklist-row" class:cl-checked={clItem.checked}>
+										<div class="checkbox-container">
+											<button
+												type="button"
+												class="checklist-toggle"
+												class:is-checked={clItem.checked}
+												onclick={() => {
+													if (!readonly) {
+														const items = (data.content[i] as any).value as ChecklistItem[];
+														items[clIdx].checked = !items[clIdx].checked;
+														data.content = [...data.content];
+													}
+												}}
+												disabled={readonly}
+												aria-label="Toggle item"
+											>
+												<span class="toggle-icon icon-x"><LucideSymbol symbol="X" size={10} strokeWidth={2.5} /></span>
+												<span class="toggle-icon icon-check"><LucideSymbol symbol="Check" size={10} strokeWidth={2.5} /></span>
+											</button>
+										</div>
+										<textarea
+											use:autoResize
+											readonly={readonly}
+											bind:value={clItemRef.value}
+											class="entry-edit checklist-item-edit"
+											class:is-checked={clItem.checked}
+											style:text-align={entryTextAlign}
+											onkeydown={(e) => {
+												if (e.key === 'Enter') {
+													e.preventDefault();
+													const target = e.target as HTMLTextAreaElement;
+													const start = target.selectionStart;
+													const curText = ((data.content[i] as any).value as ChecklistItem[])[clIdx].text;
+													const before = curText.substring(0, start);
+													const after = curText.substring(target.selectionEnd);
+													const curItems = [...((data.content[i] as any).value as ChecklistItem[])];
+													curItems[clIdx] = { ...curItems[clIdx], text: before };
+													curItems.splice(clIdx + 1, 0, { text: after, checked: false });
+													(data.content[i] as any).value = curItems;
+													data.content = [...data.content];
+													setTimeout(() => {
+														const entryEl = target.closest('.entry-container');
+														if (entryEl) {
+															const rows = entryEl.querySelectorAll('.checklist-row');
+															(rows[clIdx + 1]?.querySelector('textarea') as HTMLTextAreaElement)?.focus();
+														}
+													}, 0);
+												}
+												if (e.key === 'Backspace') {
+													const target = e.target as HTMLTextAreaElement;
+													if (target.selectionStart === 0 && target.selectionEnd === 0) {
+														const curItems = (data.content[i] as any).value as ChecklistItem[];
+														if (clIdx > 0) {
+															e.preventDefault();
+															const prevText = curItems[clIdx - 1].text;
+															const cursorPos = prevText.length;
+															const newItems = [...curItems];
+															newItems[clIdx - 1] = { ...newItems[clIdx - 1], text: prevText + newItems[clIdx].text };
+															newItems.splice(clIdx, 1);
+															(data.content[i] as any).value = newItems;
+															data.content = [...data.content];
+															setTimeout(() => {
+																const entryEl = target.closest('.entry-container');
+																if (entryEl) {
+																	const rows = entryEl.querySelectorAll('.checklist-row');
+																	const prevTextarea = rows[clIdx - 1]?.querySelector('textarea') as HTMLTextAreaElement;
+																	if (prevTextarea) {
+																		prevTextarea.focus();
+																		prevTextarea.selectionStart = prevTextarea.selectionEnd = cursorPos;
+																	}
+																}
+															}, 0);
+														} else if (curItems.length === 1 && curItems[0].text === '') {
+															removeBlock(i);
+														}
+													}
+												}
+												if (e.key === 'Escape') editingIndex = null;
+											}}
+											onpaste={(e) => {
+												const pastedText = e.clipboardData?.getData('text');
+												if (pastedText && pastedText.includes('\n')) {
+													e.preventDefault();
+													const target = e.target as HTMLTextAreaElement;
+													const curText = ((data.content[i] as any).value as ChecklistItem[])[clIdx].text;
+													const before = curText.substring(0, target.selectionStart);
+													const after = curText.substring(target.selectionEnd);
+													const lines = pastedText.split(/\r?\n/);
+													const curItems = [...((data.content[i] as any).value as ChecklistItem[])];
+													curItems[clIdx] = { ...curItems[clIdx], text: before + lines[0] };
+													const newItems = lines.slice(1).map((line, li) => ({
+														text: li === lines.length - 2 ? line + after : line,
+														checked: false
+													}));
+													curItems.splice(clIdx + 1, 0, ...newItems);
+													(data.content[i] as any).value = curItems;
+													data.content = [...data.content];
+												}
+											}}
+										></textarea>
+									</div>
+								{/each}
+							</div>
 						{:else}
 							{@const file = entryValue as File}
 							{@const mimeType = file.mime?.toString() ?? ''}
@@ -762,7 +1032,7 @@
 							<button class="remove-entry-btn" onclick={() => removeBlock(i)} title="Remove block">
 								<LucideSymbol symbol="X" size={12} strokeWidth={2} />
 							</button>
-							{#if entryType === 'text'}
+							{#if entryType === 'text' || entryType === 'checkbox' || entryType === 'checklist'}
 								<button 
 									class="edit-entry-btn" 
 									class:active={editingSettingsIndex === i}
@@ -772,7 +1042,9 @@
 									<LucideSymbol symbol="Settings2" size={12} strokeWidth={2} />
 								</button>
 							{/if}
-							<div class="entry-resize-handle"></div>
+							{#if entryType !== 'checkbox' && entryType !== 'checklist'}
+								<div class="entry-resize-handle"></div>
+							{/if}
 						{/if}
 					</div>
 				</div>
@@ -835,6 +1107,10 @@
 								<button onclick={addTextBlock}>
 									<LucideSymbol symbol="Type" size={14} strokeWidth={2} />
 									<span>Text</span>
+								</button>
+								<button onclick={addCheckboxBlock}>
+									<LucideSymbol symbol="ListTodo" size={14} strokeWidth={2} />
+									<span>To-do</span>
 								</button>
 								<button onclick={() => addingMedia = true}>
 									<LucideSymbol symbol="Image" size={14} strokeWidth={2} />
@@ -1175,6 +1451,125 @@
         }
 	}
 
+	.text-entry-wrapper {
+		display: flex;
+		width: 100%;
+		height: 100%;
+	}
+
+	.text-entry-wrapper.is-checkbox {
+		gap: 8px;
+		flex-direction: row;
+		align-items: flex-start;
+	}
+
+	.checkbox-container {
+		display: flex;
+		padding-top: 3px; /* Align checkbox with first line of text */
+		flex-shrink: 0;
+		align-self: flex-start;
+	}
+
+	.checklist-entry {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		width: 100%;
+	}
+
+	.checklist-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		width: 100%;
+		min-height: 22px;
+	}
+
+	.checklist-row .checkbox-container {
+		padding-top: 3px;
+		align-self: flex-start;
+	}
+
+	.checklist-item-edit {
+		flex: 1;
+		min-height: 1.2em;
+	}
+
+	.checklist-toggle {
+		appearance: none;
+		-webkit-appearance: none;
+		width: 18px;
+		height: 18px;
+		flex-shrink: 0;
+		padding: 0;
+		margin: 0;
+		border: 1.5px solid var(--note-fg-o3);
+		border-radius: 50%;
+		background: transparent;
+		cursor: pointer;
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.14s ease;
+	}
+
+	.checklist-toggle:hover {
+		border-color: var(--note-fg-o6);
+		box-shadow: 0 0 0 3px var(--note-fg-o1);
+	}
+
+	.checklist-toggle.is-checked {
+		border-color: var(--note-fg);
+		background: var(--note-fg);
+		box-shadow: 0 1px 4px var(--note-fg-o3);
+		transform: scale(1.05);
+	}
+
+	.checklist-toggle:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+
+	.toggle-icon {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: opacity 0.15s ease, transform 0.15s ease;
+	}
+
+	.icon-x {
+		opacity: 0.35;
+		color: var(--note-fg);
+		transform: scale(1) rotate(0deg);
+	}
+
+	.checklist-toggle:hover .icon-x {
+		opacity: 0.75;
+	}
+
+	.icon-check {
+		opacity: 0;
+		color: var(--note-check-icon-color);
+		transform: scale(0.5) rotate(-45deg);
+	}
+
+	.checklist-toggle.is-checked .icon-x {
+		opacity: 0;
+		transform: scale(0.5) rotate(45deg);
+	}
+
+	.checklist-toggle.is-checked .icon-check {
+		opacity: 1;
+		transform: scale(1) rotate(0deg);
+	}
+
+	.entry-edit.is-checked {
+		text-decoration: line-through;
+		opacity: 0.6;
+	}
+	
 	.note.readonly .entry:hover {
 		border: 2px dashed transparent;
 	}
@@ -1211,6 +1606,7 @@
 		--note-fg-o2: rgba(255, 255, 255, 0.2);
 		--note-fg-o1: rgba(255, 255, 255, 0.08);
 		--note-fg-o05: rgba(255, 255, 255, 0.05);
+		--note-check-icon-color: #111;
 
 		background-color: var(--default-bg-color);
 		margin-bottom: 16px;
@@ -1255,6 +1651,7 @@
 			--note-fg-o2: rgba(0, 0, 0, 0.2);
 			--note-fg-o1: rgba(0, 0, 0, 0.08);
 			--note-fg-o05: rgba(0, 0, 0, 0.05);
+			--note-check-icon-color: #f0f0f0;
 
 			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 		}

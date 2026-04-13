@@ -1,9 +1,15 @@
 import type { Color } from './Color';
 import type { File } from './File';
 
+export type ChecklistItem = {
+	text: string;
+	checked: boolean;
+};
+
 export type NoteContent = {
-	type: 'text' | 'file';
-	value: string | File;
+	type: 'text' | 'file' | 'checkbox' | 'checklist';
+	value: string | File | ChecklistItem[];
+	checked?: boolean;
 	height?: number;
 	textAlign?: 'left' | 'center' | 'right' | 'justify';
 	fontSize?: number;
