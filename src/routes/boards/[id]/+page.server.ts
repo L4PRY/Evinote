@@ -19,7 +19,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 	const contributors = user
 		? await db
-				.select({ username: table.User.username, id: table.User.id, permission: table.Permissions.perm })
+				.select({
+					username: table.User.username,
+					id: table.User.id,
+					permission: table.Permissions.perm
+				})
 				.from(table.User)
 				.leftJoin(table.Permissions, eq(table.User.id, table.Permissions.uid))
 				.where(eq(table.Permissions.bid, parseInt(id)))
@@ -31,7 +35,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, params }) => {
+	save: async ({ request, params }) => {
 		const sessionUser = requireLogin();
 		const formData = await request.formData();
 		const notes = JSON.parse(formData.get('notes') as string) as NotesRecord;
