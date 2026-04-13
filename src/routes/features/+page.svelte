@@ -33,13 +33,15 @@
 	const features = [
 		{
 			title: 'Canvas With No Limits',
-			description: 'Organize your thoughts spatially on an infinite canvas that grows with your ideas.',
+			description:
+				'Organize your thoughts spatially on an infinite canvas that grows with your ideas.',
 			icon: 'Layout',
 			delay: '0.1s'
 		},
 		{
 			title: 'Share Anything',
-			description: 'Embed images, audio, and video directly into your notes. Create interactive boards that bring your projects to life.',
+			description:
+				'Embed images, audio, and video directly into your notes. Create interactive boards that bring your projects to life.',
 			icon: 'Image',
 			delay: '0.2s'
 		},
@@ -57,7 +59,8 @@
 		},
 		{
 			title: 'Fully Responsive',
-			description: 'Access and edit your boards from any device. Evinote provides a way to share your ideas on both desktop and mobile.',
+			description:
+				'Access and edit your boards from any device. Evinote provides a way to share your ideas on both desktop and mobile.',
 			icon: 'Smartphone',
 			delay: '0.6s'
 		}
@@ -70,7 +73,8 @@
 	<section class="hero">
 		<h1 class="gradient-text">Features of Evinote</h1>
 		<p class="hero-subtitle">
-			Evinote is a free and open-source note-taking application that allows you to organize your thoughts on boards.
+			Evinote is a free and open-source note-taking application that allows you to organize your
+			thoughts on boards.
 		</p>
 	</section>
 
@@ -92,8 +96,8 @@
 
 	<section class="cta">
 		<h2>Ready to start?</h2>
-		<FancyButton1 
-			style="margin-top: 1.5rem; font-size: 1.1rem; padding: 0.8rem 2.5rem;" 
+		<FancyButton1
+			style="margin-top: 1.5rem; font-size: 1.1rem; padding: 0.8rem 2.5rem;"
 			onclick={() => goto(resolve('/auth/register'))}
 		>
 			Create your first board
@@ -226,10 +230,12 @@
 		opacity: 0.45;
 		z-index: 1;
 		pointer-events: none;
-		transition: transform 0.1s linear, opacity 0.4s ease, filter 0.4s ease;
+		transition:
+			transform 0.1s linear,
+			opacity 0.4s ease,
+			filter 0.4s ease;
 		filter: blur(calc(1px - var(--scroll-progress) * 2px));
-		transform: 
-			rotate(calc(var(--scroll-progress) * 20deg - 10deg)) 
+		transform: rotate(calc(var(--scroll-progress) * 20deg - 10deg))
 			scale(calc(0.85 + var(--scroll-progress) * 0.3))
 			translateY(calc(var(--scroll-progress) * -20px + 10px));
 	}
@@ -291,7 +297,7 @@
 		.features-wrapper {
 			padding: 7rem 1.5rem 4rem 1.5rem;
 		}
-		
+
 		h1 {
 			font-size: 2.5rem;
 		}
@@ -300,7 +306,8 @@
 			gap: 2rem;
 		}
 
-		.feature-section, .feature-section:nth-child(even) {
+		.feature-section,
+		.feature-section:nth-child(even) {
 			flex-direction: column;
 			text-align: center;
 			min-height: auto;
