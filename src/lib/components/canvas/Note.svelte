@@ -14,15 +14,17 @@
 	import { resolve } from '$app/paths';
 	import ImageCropper from './ImageCropper.svelte';
 
-	let { data = $bindable(), remove, gridSnap = 5, readonly = false }: { data: NoteData; remove: () => void; gridSnap?: number; readonly?: boolean } = $props();
-	
+	let {
+		data = $bindable(),
+		remove,
+		gridSnap = 5,
+		readonly = false
+	}: { data: NoteData; remove: () => void; gridSnap?: number; readonly?: boolean } = $props();
+
 	const MIN_WIDTH = 150;
 	const MIN_HEIGHT = 100;
 
 	let note: HTMLDivElement;
-
-	// Capture initial position as static value for position plugin (non-reactive)
-	const initialPosition = { x: data.position?.x ?? 0, y: data.position?.y ?? 0 };
 
 	let notePosition = $state(data.position ?? { x: 0, y: 0, z: 1 });
 	let noteSize = $state(data.size ?? { width: 200, height: 200 });
@@ -44,14 +46,12 @@
 	);
 
 	let displayScale = spring(1, {
-		stiffness: 0.2, damping: 0.4
+		stiffness: 0.2,
+		damping: 0.4
 	});
 
 	$effect(() => {
-		displayPos.set(
-			{ x: notePosition.x, y: notePosition.y },
-			{ hard: isCurrentlyResizing }
-		);
+		displayPos.set({ x: notePosition.x, y: notePosition.y }, { hard: isCurrentlyResizing });
 	});
 
 	$effect(() => {
@@ -273,7 +273,11 @@
 	let isEditingMetadata = $state(false);
 	let editingSettingsIndex = $state<number | null>(null);
 
-	function updateEntrySetting(index: number, key: 'textAlign' | 'fontSize' | 'verticalAlign', value: any) {
+	function updateEntrySetting(
+		index: number,
+		key: 'textAlign' | 'fontSize' | 'verticalAlign',
+		value: any
+	) {
 		const entry = data.content[index];
 		if (typeof entry === 'object' && entry !== null && 'type' in entry) {
 			(entry as any)[key] = value;
@@ -309,7 +313,10 @@
 	}
 
 	async function addCheckboxBlock() {
-		data.content = [...data.content, { type: 'checklist', value: [{ text: '', checked: false }] as ChecklistItem[] }];
+		data.content = [
+			...data.content,
+			{ type: 'checklist', value: [{ text: '', checked: false }] as ChecklistItem[] }
+		];
 		showAddMenu = false;
 		await tick();
 		if (note) {
@@ -321,40 +328,49 @@
 
 	async function uploadFile(fileOrBlob: globalThis.File | Blob) {
 		const form = new FormData();
-		form.append('file', fileOrBlob, fileOrBlob instanceof File ? fileOrBlob.name : 'cropped-image.png');
-		
+		form.append(
+			'file',
+			fileOrBlob,
+			fileOrBlob instanceof File ? fileOrBlob.name : 'cropped-image.png'
+		);
+
 		const req = await fetch(resolve('/api/files/upload'), {
 			method: 'POST',
 			body: form
 		});
-		
+
 		const result = await req.json();
-		data.content = [...data.content, { 
-			mime: result.mime || result.mimetype, 
-			location: result.url 
-		}];
+		data.content = [
+			...data.content,
+			{
+				mime: result.mime || result.mimetype,
+				location: result.url
+			}
+		];
 	}
 
 	async function addMedia() {
 		if (fileInput?.files && fileInput.files.length > 0) {
 			const file = fileInput.files[0];
-			
+
 			if (file.type.startsWith('image/')) {
 				const reader = new FileReader();
-				reader.onload = (e) => {
+				reader.onload = e => {
 					pendingImageSrc = e.target?.result as string;
 				};
 				reader.readAsDataURL(file);
 				return;
 			}
-			
+
 			await uploadFile(file);
 		} else if (newImageUrl.trim()) {
 			const url = newImageUrl.trim();
 			let mime = 'image/png';
-			
+
 			try {
-				const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`, { method: 'HEAD' });
+				const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`, {
+					method: 'HEAD'
+				});
 				if (response.ok) {
 					mime = response.headers.get('Content-Type') ?? 'image/png';
 				}
@@ -393,7 +409,7 @@
 			if (!isResizing || readonly) return;
 			const dy = (e.clientY - startY) / $zoomLevel;
 			let newHeight = Math.max(20, startHeight + dy);
-			
+
 			const entry = data.content[index];
 			if (typeof entry === 'object' && entry !== null && 'type' in entry) {
 				(entry as any).height = newHeight;
@@ -419,7 +435,7 @@
 			startY = e.clientY;
 			// Get current height of the entry div
 			startHeight = node.getBoundingClientRect().height / $zoomLevel;
-			
+
 			window.addEventListener('pointermove', onPointerMove);
 			window.addEventListener('pointerup', onPointerUp);
 			e.stopPropagation();
@@ -457,7 +473,7 @@
 			const g = parseInt(rgbMatch[2]);
 			const b = parseInt(rgbMatch[3]);
 			const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
-			return hsp > 165; 
+			return hsp > 165;
 		}
 
 		// Parse HEX
@@ -499,7 +515,7 @@
 	class:manual-size={manuallyResized}
 	class:resizing={isCurrentlyResizing}
 	class:resizing-entry={isCurrentlyResizingEntry}
-	class:readonly={readonly}
+	class:readonly
 	title={data.title}
 	id={data.id ?? data.title}
 	class:bright-bg={isBright}
@@ -520,11 +536,11 @@
 		{#if !readonly}
 			<div class:dragging={isCurrentlyDragging} class="handle" unselectable="on"></div>
 			<div class="header-section right">
-				<button 
-					class="config-btn" 
+				<button
+					class="config-btn"
 					class:active={isEditingMetadata}
-					onclick={() => (isEditingMetadata = !isEditingMetadata)} 
-					aria-label="Configure note" 
+					onclick={() => (isEditingMetadata = !isEditingMetadata)}
+					aria-label="Configure note"
 					title="Configure note"
 					><LucideSymbol symbol={'Sliders'} size={16} strokeWidth={2} /></button
 				>
@@ -540,23 +556,23 @@
 					<input
 						type="text"
 						bind:value={data.title}
-						onkeydown={(e) => e.key === 'Enter' && (isEditingMetadata = false)}
+						onkeydown={e => e.key === 'Enter' && (isEditingMetadata = false)}
 						class="title-input"
 						placeholder="Note title..."
 						autofocus={true}
 					/>
 					<div class="color-controls">
 						<label class="custom-color-btn" title="Choose custom color">
-							<input 
-								type="color" 
-								value={parseColor(data.color)} 
-								oninput={(e) => selectColor((e.target as HTMLInputElement).value)} 
+							<input
+								type="color"
+								value={parseColor(data.color)}
+								oninput={e => selectColor((e.target as HTMLInputElement).value)}
 							/>
 							<div class="color-swatch" style:background-color={parseColor(data.color)}></div>
 							<span>Custom Color</span>
 						</label>
-						<button 
-							class="reset-color-btn" 
+						<button
+							class="reset-color-btn"
 							onclick={resetColor}
 							aria-label="Reset to default color"
 						>
@@ -565,13 +581,14 @@
 						</button>
 					</div>
 				</div>
-                <div class="popup-arrow"></div>
+				<div class="popup-arrow"></div>
 			</div>
 		{/if}
 
 		{#if editingSettingsIndex !== null && !readonly}
 			{@const currentEntry = data.content[editingSettingsIndex]}
-			{@const isObject = typeof currentEntry === 'object' && currentEntry !== null && 'type' in currentEntry}
+			{@const isObject =
+				typeof currentEntry === 'object' && currentEntry !== null && 'type' in currentEntry}
 			{@const currentTextAlign = isObject ? ((currentEntry as any).textAlign ?? 'left') : 'left'}
 			{@const currentFontSize = isObject ? ((currentEntry as any).fontSize ?? 16) : 16}
 
@@ -579,29 +596,33 @@
 				<div class="toolbar-section">
 					<span class="toolbar-label">Align</span>
 					<div class="toolbar-buttons">
-						<button 
-							class:active={currentTextAlign === 'left'} 
+						<button
+							class:active={currentTextAlign === 'left'}
+							class="tooltop-btn"
 							onclick={() => updateEntrySetting(editingSettingsIndex!, 'textAlign', 'left')}
 							title="Align left"
 						>
 							<LucideSymbol symbol="AlignLeft" size={14} strokeWidth={2} />
 						</button>
-						<button 
-							class:active={currentTextAlign === 'center'} 
+						<button
+							class:active={currentTextAlign === 'center'}
+							class="tooltop-btn"
 							onclick={() => updateEntrySetting(editingSettingsIndex!, 'textAlign', 'center')}
 							title="Align center"
 						>
 							<LucideSymbol symbol="AlignCenter" size={14} strokeWidth={2} />
 						</button>
-						<button 
-							class:active={currentTextAlign === 'right'} 
+						<button
+							class:active={currentTextAlign === 'right'}
+							class="tooltop-btn"
 							onclick={() => updateEntrySetting(editingSettingsIndex!, 'textAlign', 'right')}
 							title="Align right"
 						>
 							<LucideSymbol symbol="AlignRight" size={14} strokeWidth={2} />
 						</button>
-						<button 
-							class:active={currentTextAlign === 'justify'} 
+						<button
+							class:active={currentTextAlign === 'justify'}
+							class="tooltop-btn"
 							onclick={() => updateEntrySetting(editingSettingsIndex!, 'textAlign', 'justify')}
 							title="Justify"
 						>
@@ -613,22 +634,24 @@
 				<div class="toolbar-section">
 					<span class="toolbar-label">V-Align</span>
 					<div class="toolbar-buttons">
-						<button 
-							class:active={isObject ? ((currentEntry as any).verticalAlign ?? 'top') === 'top' : true} 
+						<button
+							class:active={isObject
+								? ((currentEntry as any).verticalAlign ?? 'top') === 'top'
+								: true}
 							onclick={() => updateEntrySetting(editingSettingsIndex!, 'verticalAlign', 'top')}
 							title="Align top"
 						>
 							<LucideSymbol symbol="AlignStartHorizontal" size={14} strokeWidth={2} />
 						</button>
-						<button 
-							class:active={isObject && (currentEntry as any).verticalAlign === 'middle'} 
+						<button
+							class:active={isObject && (currentEntry as any).verticalAlign === 'middle'}
 							onclick={() => updateEntrySetting(editingSettingsIndex!, 'verticalAlign', 'middle')}
 							title="Align middle"
 						>
 							<LucideSymbol symbol="AlignCenterHorizontal" size={14} strokeWidth={2} />
 						</button>
-						<button 
-							class:active={isObject && (currentEntry as any).verticalAlign === 'bottom'} 
+						<button
+							class:active={isObject && (currentEntry as any).verticalAlign === 'bottom'}
 							onclick={() => updateEntrySetting(editingSettingsIndex!, 'verticalAlign', 'bottom')}
 							title="Align bottom"
 						>
@@ -640,16 +663,30 @@
 				<div class="toolbar-section">
 					<span class="toolbar-label">Size</span>
 					<div class="toolbar-buttons">
-						<button onclick={() => updateEntrySetting(editingSettingsIndex!, 'fontSize', Math.max(8, currentFontSize - 1))}>
+						<button
+							onclick={() =>
+								updateEntrySetting(
+									editingSettingsIndex!,
+									'fontSize',
+									Math.max(8, currentFontSize - 1)
+								)}
+						>
 							<LucideSymbol symbol="Minus" size={14} strokeWidth={2} />
 						</button>
 						<span class="toolbar-value">{currentFontSize}px</span>
-						<button onclick={() => updateEntrySetting(editingSettingsIndex!, 'fontSize', Math.min(72, currentFontSize + 1))}>
+						<button
+							onclick={() =>
+								updateEntrySetting(
+									editingSettingsIndex!,
+									'fontSize',
+									Math.min(72, currentFontSize + 1)
+								)}
+						>
 							<LucideSymbol symbol="Plus" size={14} strokeWidth={2} />
 						</button>
 					</div>
 				</div>
-				<button class="toolbar-close" onclick={() => editingSettingsIndex = null}>
+				<button class="toolbar-close" onclick={() => (editingSettingsIndex = null)}>
 					<LucideSymbol symbol="X" size={14} strokeWidth={2} />
 				</button>
 			</div>
@@ -666,38 +703,54 @@
 		<div class="note-content">
 			{#each data.content as entry, i}
 				{@const isObjectEntry = typeof entry === 'object' && entry !== null && 'type' in entry}
-				{@const entryType = isObjectEntry ? (entry as any).type : (typeof entry === 'string' ? 'text' : 'file')}
+				{@const entryType = isObjectEntry
+					? (entry as any).type
+					: typeof entry === 'string'
+						? 'text'
+						: 'file'}
 				{@const entryValue = isObjectEntry ? (entry as any).value : entry}
 				{@const entryHeight = isObjectEntry ? (entry as any).height : undefined}
 				{@const entryTextAlign = isObjectEntry ? ((entry as any).textAlign ?? 'left') : 'left'}
 				{@const entryFontSize = isObjectEntry ? ((entry as any).fontSize ?? 16) : 16}
-				{@const entryVerticalAlign = isObjectEntry ? ((entry as any).verticalAlign ?? 'top') : 'top'}
+				{@const entryVerticalAlign = isObjectEntry
+					? ((entry as any).verticalAlign ?? 'top')
+					: 'top'}
 
 				{@const entryRef = {
-					get value() { return isObjectEntry ? (data.content[i] as any).value : (data.content[i] as string) },
-					set value(v) { 
-						if (isObjectEntry) (data.content[i] as any).value = v; 
+					get value() {
+						return isObjectEntry ? (data.content[i] as any).value : (data.content[i] as string);
+					},
+					set value(v) {
+						if (isObjectEntry) (data.content[i] as any).value = v;
 						else data.content[i] = v;
 					}
 				}}
 
-				<div 
-					class="entry-container" 
+				<div
+					class="entry-container"
 					class:is-only-entry={data.content.length === 1}
-					use:resizeEntry={i} 
+					use:resizeEntry={i}
 					style:height={entryHeight ? entryHeight + 'px' : 'auto'}
 				>
-					<div 
-						class="entry" 
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<div
+						class="entry"
 						role="textbox"
 						tabindex="-1"
-						onclick={(e) => {
-							if ((entryType === 'text' || entryType === 'checkbox' || entryType === 'checklist') && e.target === e.currentTarget) {
+						onclick={e => {
+							if (
+								(entryType === 'text' || entryType === 'checkbox' || entryType === 'checklist') &&
+								e.target === e.currentTarget
+							) {
 								const target = e.currentTarget.querySelector('textarea');
 								if (target) target.focus();
 							}
 						}}
-						style:justify-content={entryVerticalAlign === 'middle' ? 'center' : (entryVerticalAlign === 'bottom' ? 'flex-end' : 'flex-start')}
+						style:justify-content={entryVerticalAlign === 'middle'
+							? 'center'
+							: entryVerticalAlign === 'bottom'
+								? 'flex-end'
+								: 'flex-start'}
 					>
 						{#if entryType === 'text' || entryType === 'checkbox'}
 							<div class="text-entry-wrapper" class:is-checkbox={entryType === 'checkbox'}>
@@ -716,17 +769,21 @@
 											disabled={readonly}
 											aria-label="Toggle item"
 										>
-											<span class="toggle-icon icon-x"><LucideSymbol symbol="X" size={10} strokeWidth={2.5} /></span>
-											<span class="toggle-icon icon-check"><LucideSymbol symbol="Check" size={10} strokeWidth={2.5} /></span>
+											<span class="toggle-icon icon-x"
+												><LucideSymbol symbol="X" size={10} strokeWidth={2.5} /></span
+											>
+											<span class="toggle-icon icon-check"
+												><LucideSymbol symbol="Check" size={10} strokeWidth={2.5} /></span
+											>
 										</button>
 									</div>
 								{/if}
 								<textarea
 									use:autoResize
-									readonly={readonly}
+									{readonly}
 									bind:value={entryRef.value}
 									onblur={() => (editingIndex = null)}
-									onkeydown={(e) => {
+									onkeydown={e => {
 										if (e.key === 'Tab') {
 											e.preventDefault();
 											const target = e.target as HTMLTextAreaElement;
@@ -734,10 +791,11 @@
 											const end = target.selectionEnd;
 
 											const currentValue = entryRef.value;
-											const newValue = currentValue.substring(0, start) + '    ' + currentValue.substring(end);
-											
+											const newValue =
+												currentValue.substring(0, start) + '    ' + currentValue.substring(end);
+
 											entryRef.value = newValue;
-											
+
 											// Need to wait for Svelte to update the DOM value before setting selection
 											setTimeout(() => {
 												target.selectionStart = target.selectionEnd = start + 4;
@@ -750,27 +808,27 @@
 											e.preventDefault();
 											const target = e.target as HTMLTextAreaElement;
 											const start = target.selectionStart;
-											
+
 											const currentValue = entryRef.value;
 											const before = currentValue.substring(0, start);
 											const after = currentValue.substring(target.selectionEnd);
-											
+
 											entryRef.value = before;
-											
-											const newEntry = { 
-												type: 'checkbox', 
-												value: after, 
+
+											const newEntry = {
+												type: 'checkbox' as const,
+												value: after,
 												checked: false,
 												textAlign: entryTextAlign,
 												fontSize: entryFontSize
 											};
-											
+
 											data.content = [
 												...data.content.slice(0, i + 1),
-												newEntry,
+												newEntry as any,
 												...data.content.slice(i + 1)
 											];
-											
+
 											setTimeout(() => {
 												const noteEl = target.closest('.note-content');
 												if (noteEl) {
@@ -786,27 +844,36 @@
 											const target = e.target as HTMLTextAreaElement;
 											if (target.selectionStart === 0 && target.selectionEnd === 0 && i > 0) {
 												const prevEntry = data.content[i - 1];
-												const prevIsObjectEntry = typeof prevEntry === 'object' && prevEntry !== null && 'type' in prevEntry;
-												const prevEntryType = prevIsObjectEntry ? (prevEntry as any).type : (typeof prevEntry === 'string' ? 'text' : 'file');
-												
+												const prevIsObjectEntry =
+													typeof prevEntry === 'object' &&
+													prevEntry !== null &&
+													'type' in prevEntry;
+												const prevEntryType = prevIsObjectEntry
+													? (prevEntry as any).type
+													: typeof prevEntry === 'string'
+														? 'text'
+														: 'file';
+
 												if (prevEntryType === 'text' || prevEntryType === 'checkbox') {
 													e.preventDefault();
 													const currentValue = entryRef.value;
-													
-													const prevValue = prevIsObjectEntry ? (prevEntry as any).value : (prevEntry as string);
+
+													const prevValue = prevIsObjectEntry
+														? (prevEntry as any).value
+														: (prevEntry as string);
 													const cursorPosition = prevValue.length;
-													
+
 													if (prevIsObjectEntry) {
 														(data.content[i - 1] as any).value = prevValue + currentValue;
 													} else {
 														data.content[i - 1] = prevValue + currentValue;
 													}
-													
+
 													data.content = [
 														...data.content.slice(0, i),
 														...data.content.slice(i + 1)
 													];
-													
+
 													setTimeout(() => {
 														const noteEl = target.closest('.note-content');
 														if (noteEl) {
@@ -815,7 +882,8 @@
 																const prevTextarea = entries[i - 1].querySelector('textarea');
 																if (prevTextarea) {
 																	prevTextarea.focus();
-																	prevTextarea.selectionStart = prevTextarea.selectionEnd = cursorPosition;
+																	prevTextarea.selectionStart = prevTextarea.selectionEnd =
+																		cursorPosition;
 																}
 															}
 														}
@@ -824,7 +892,7 @@
 											}
 										}
 									}}
-									onpaste={(e) => {
+									onpaste={e => {
 										if (entryType === 'checkbox') {
 											const pastedText = e.clipboardData?.getData('text');
 											if (pastedText && pastedText.includes('\n')) {
@@ -832,39 +900,40 @@
 												const target = e.target as HTMLTextAreaElement;
 												const start = target.selectionStart;
 												const end = target.selectionEnd;
-												
+
 												const currentValue = entryRef.value;
 												const before = currentValue.substring(0, start);
 												const after = currentValue.substring(end);
-												
+
 												const lines = pastedText.split(/\r?\n/);
-												
+
 												entryRef.value = before + lines[0];
-												
+
 												const newEntries = lines.slice(1).map((line, index) => {
 													const isLast = index === lines.length - 2;
 													return {
-														type: 'checkbox',
+														type: 'checkbox' as const,
 														value: isLast ? line + after : line,
 														checked: false,
 														textAlign: entryTextAlign,
 														fontSize: entryFontSize
 													};
 												});
-												
+
 												data.content = [
 													...data.content.slice(0, i + 1),
-													...newEntries,
+													...(newEntries as any),
 													...data.content.slice(i + 1)
 												];
-												
+
 												setTimeout(() => {
 													const noteEl = target.closest('.note-content');
 													if (noteEl) {
 														const entries = noteEl.querySelectorAll('.entry-container');
 														const targetIndex = i + newEntries.length;
 														if (entries[targetIndex]) {
-															const newlyCreatedTextarea = entries[targetIndex].querySelector('textarea');
+															const newlyCreatedTextarea =
+																entries[targetIndex].querySelector('textarea');
 															if (newlyCreatedTextarea) newlyCreatedTextarea.focus();
 														}
 													}
@@ -873,7 +942,9 @@
 										}
 									}}
 									class="entry-edit"
-									class:is-checked={entryType === 'checkbox' && isObjectEntry && (data.content[i] as any).checked}
+									class:is-checked={entryType === 'checkbox' &&
+										isObjectEntry &&
+										(data.content[i] as any).checked}
 									style:text-align={entryTextAlign}
 									style:font-size={entryFontSize + 'px'}
 									style:max-height={entryHeight ? entryHeight + 'px' : 'none'}
@@ -884,8 +955,12 @@
 							<div class="checklist-entry" style:font-size={entryFontSize + 'px'}>
 								{#each checklistItems as clItem, clIdx}
 									{@const clItemRef = {
-										get value() { return ((data.content[i] as any).value as ChecklistItem[])[clIdx]?.text ?? ''; },
-										set value(v) { ((data.content[i] as any).value as ChecklistItem[])[clIdx].text = v; }
+										get value() {
+											return ((data.content[i] as any).value as ChecklistItem[])[clIdx]?.text ?? '';
+										},
+										set value(v) {
+											((data.content[i] as any).value as ChecklistItem[])[clIdx].text = v;
+										}
 									}}
 									<div class="checklist-row" class:cl-checked={clItem.checked}>
 										<div class="checkbox-container">
@@ -903,23 +978,28 @@
 												disabled={readonly}
 												aria-label="Toggle item"
 											>
-												<span class="toggle-icon icon-x"><LucideSymbol symbol="X" size={10} strokeWidth={2.5} /></span>
-												<span class="toggle-icon icon-check"><LucideSymbol symbol="Check" size={10} strokeWidth={2.5} /></span>
+												<span class="toggle-icon icon-x"
+													><LucideSymbol symbol="X" size={10} strokeWidth={2.5} /></span
+												>
+												<span class="toggle-icon icon-check"
+													><LucideSymbol symbol="Check" size={10} strokeWidth={2.5} /></span
+												>
 											</button>
 										</div>
 										<textarea
 											use:autoResize
-											readonly={readonly}
+											{readonly}
 											bind:value={clItemRef.value}
 											class="entry-edit checklist-item-edit"
 											class:is-checked={clItem.checked}
 											style:text-align={entryTextAlign}
-											onkeydown={(e) => {
+											onkeydown={e => {
 												if (e.key === 'Enter') {
 													e.preventDefault();
 													const target = e.target as HTMLTextAreaElement;
 													const start = target.selectionStart;
-													const curText = ((data.content[i] as any).value as ChecklistItem[])[clIdx].text;
+													const curText = ((data.content[i] as any).value as ChecklistItem[])[clIdx]
+														.text;
 													const before = curText.substring(0, start);
 													const after = curText.substring(target.selectionEnd);
 													const curItems = [...((data.content[i] as any).value as ChecklistItem[])];
@@ -931,7 +1011,9 @@
 														const entryEl = target.closest('.entry-container');
 														if (entryEl) {
 															const rows = entryEl.querySelectorAll('.checklist-row');
-															(rows[clIdx + 1]?.querySelector('textarea') as HTMLTextAreaElement)?.focus();
+															(
+																rows[clIdx + 1]?.querySelector('textarea') as HTMLTextAreaElement
+															)?.focus();
 														}
 													}, 0);
 												}
@@ -944,7 +1026,10 @@
 															const prevText = curItems[clIdx - 1].text;
 															const cursorPos = prevText.length;
 															const newItems = [...curItems];
-															newItems[clIdx - 1] = { ...newItems[clIdx - 1], text: prevText + newItems[clIdx].text };
+															newItems[clIdx - 1] = {
+																...newItems[clIdx - 1],
+																text: prevText + newItems[clIdx].text
+															};
 															newItems.splice(clIdx, 1);
 															(data.content[i] as any).value = newItems;
 															data.content = [...data.content];
@@ -952,10 +1037,13 @@
 																const entryEl = target.closest('.entry-container');
 																if (entryEl) {
 																	const rows = entryEl.querySelectorAll('.checklist-row');
-																	const prevTextarea = rows[clIdx - 1]?.querySelector('textarea') as HTMLTextAreaElement;
+																	const prevTextarea = rows[clIdx - 1]?.querySelector(
+																		'textarea'
+																	) as HTMLTextAreaElement;
 																	if (prevTextarea) {
 																		prevTextarea.focus();
-																		prevTextarea.selectionStart = prevTextarea.selectionEnd = cursorPos;
+																		prevTextarea.selectionStart = prevTextarea.selectionEnd =
+																			cursorPos;
 																	}
 																}
 															}, 0);
@@ -966,12 +1054,13 @@
 												}
 												if (e.key === 'Escape') editingIndex = null;
 											}}
-											onpaste={(e) => {
+											onpaste={e => {
 												const pastedText = e.clipboardData?.getData('text');
 												if (pastedText && pastedText.includes('\n')) {
 													e.preventDefault();
 													const target = e.target as HTMLTextAreaElement;
-													const curText = ((data.content[i] as any).value as ChecklistItem[])[clIdx].text;
+													const curText = ((data.content[i] as any).value as ChecklistItem[])[clIdx]
+														.text;
 													const before = curText.substring(0, target.selectionStart);
 													const after = curText.substring(target.selectionEnd);
 													const lines = pastedText.split(/\r?\n/);
@@ -1025,7 +1114,9 @@
 							{:else if mimeType.startsWith('text/')}
 								<iframe src={url} title="Text content" sandbox="allow-same-origin"></iframe>
 							{:else}
-								<button onclick={() => window.open(url, '_blank')}>Download file ({mimeType})</button>
+								<button onclick={() => window.open(url, '_blank')}
+									>Download file ({mimeType})</button
+								>
 							{/if}
 						{/if}
 						{#if !readonly}
@@ -1033,10 +1124,10 @@
 								<LucideSymbol symbol="X" size={12} strokeWidth={2} />
 							</button>
 							{#if entryType === 'text' || entryType === 'checkbox' || entryType === 'checklist'}
-								<button 
-									class="edit-entry-btn" 
+								<button
+									class="edit-entry-btn"
 									class:active={editingSettingsIndex === i}
-									onclick={() => editingSettingsIndex = editingSettingsIndex === i ? null : i} 
+									onclick={() => (editingSettingsIndex = editingSettingsIndex === i ? null : i)}
 									title="Entry settings"
 								>
 									<LucideSymbol symbol="Settings2" size={12} strokeWidth={2} />
@@ -1051,8 +1142,8 @@
 			{/each}
 
 			{#if !readonly}
-				<div 
-					class="add-content-container" 
+				<div
+					class="add-content-container"
 					class:always-visible={showAddMenu || addingMedia}
 					class:is-small={isSmallNote}
 					class:is-tiny={isTinyNote}
@@ -1061,27 +1152,31 @@
 						{#if addingMedia}
 							<div class="image-input-popup">
 								<div class="media-input-wrapper">
-									<input 
-										type="text" 
-										bind:value={newImageUrl} 
-										placeholder="Paste image URL here..." 
-										onkeydown={(e) => {
+									<input
+										type="text"
+										bind:value={newImageUrl}
+										placeholder="Paste image URL here..."
+										onkeydown={e => {
 											if (e.key === 'Enter') addMedia();
 											if (e.key === 'Escape') addingMedia = false;
 										}}
 										autofocus={true}
 									/>
-									<button 
-										class="browse-btn" 
-										onclick={() => fileInput.click()} 
+									<button
+										class="browse-btn"
+										onclick={() => fileInput.click()}
 										title="Upload local file"
 										class:has-file={!!selectedFile}
 									>
-										<LucideSymbol symbol={selectedFile ? 'Check' : 'Upload'} size={16} strokeWidth={2} />
+										<LucideSymbol
+											symbol={selectedFile ? 'Check' : 'Upload'}
+											size={16}
+											strokeWidth={2}
+										/>
 									</button>
-									<input 
-										type="file" 
-										bind:this={fileInput} 
+									<input
+										type="file"
+										bind:this={fileInput}
 										style:display="none"
 										onchange={() => (selectedFile = fileInput.files?.[0] || null)}
 									/>
@@ -1091,14 +1186,27 @@
 									<div class="selected-file-info" transition:fly={{ y: -5, duration: 200 }}>
 										<LucideSymbol symbol="File" size={12} />
 										<span>{selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)</span>
-										<button class="clear-file" onclick={() => { selectedFile = null; fileInput.value = ''; }}>
+										<button
+											class="clear-file"
+											onclick={() => {
+												selectedFile = null;
+												fileInput.value = '';
+											}}
+										>
 											<LucideSymbol symbol="X" size={12} />
 										</button>
 									</div>
 								{/if}
 
 								<div class="image-input-actions">
-									<button class="cancel-btn" onclick={() => { addingMedia = false; selectedFile = null; newImageUrl = ''; }}>Cancel</button>
+									<button
+										class="cancel-btn"
+										onclick={() => {
+											addingMedia = false;
+											selectedFile = null;
+											newImageUrl = '';
+										}}>Cancel</button
+									>
 									<button class="confirm-btn" onclick={addMedia}>Add Content</button>
 								</div>
 							</div>
@@ -1112,18 +1220,18 @@
 									<LucideSymbol symbol="ListTodo" size={14} strokeWidth={2} />
 									<span>To-do</span>
 								</button>
-								<button onclick={() => addingMedia = true}>
+								<button onclick={() => (addingMedia = true)}>
 									<LucideSymbol symbol="Image" size={14} strokeWidth={2} />
 									<span>Media</span>
 								</button>
-								<button class="close-menu-btn" onclick={() => showAddMenu = false}>
+								<button class="close-menu-btn" onclick={() => (showAddMenu = false)}>
 									<LucideSymbol symbol="X" size={14} strokeWidth={2} />
 								</button>
 							</div>
 						{:else}
-							<button 
-								class="add-placeholder" 
-								onclick={() => showAddMenu = true}
+							<button
+								class="add-placeholder"
+								onclick={() => (showAddMenu = true)}
 								transition:fly={{ y: 2, duration: 100 }}
 							>
 								<LucideSymbol symbol="Plus" size={16} strokeWidth={2} />
@@ -1151,9 +1259,9 @@
 	{/if}
 
 	{#if pendingImageSrc}
-		<ImageCropper 
+		<ImageCropper
 			src={pendingImageSrc}
-			onCrop={async (blob) => {
+			onCrop={async blob => {
 				await uploadFile(blob);
 				pendingImageSrc = null;
 				// Final cleanup
@@ -1217,7 +1325,9 @@
 		background-color: var(--note-fg-o2);
 		border-radius: 999px;
 		cursor: grab;
-		transition: background-color 0.2s, opacity 0.3s;
+		transition:
+			background-color 0.2s,
+			opacity 0.3s;
 		z-index: 100;
 		opacity: 0;
 		pointer-events: none;
@@ -1233,7 +1343,8 @@
 		}
 	}
 
-	.note:hover .handle, .note.dragging .handle {
+	.note:hover .handle,
+	.note.dragging .handle {
 		opacity: 1;
 		pointer-events: auto;
 	}
@@ -1355,7 +1466,7 @@
 			background: rgba(255, 255, 255, 0.1);
 		}
 
-		input[type="color"] {
+		input[type='color'] {
 			position: absolute;
 			opacity: 0;
 			width: 0;
@@ -1391,7 +1502,8 @@
 		}
 	}
 
-	.config-btn, .delete-btn {
+	.config-btn,
+	.delete-btn {
 		border: none;
 		cursor: pointer;
 		border-radius: 50%;
@@ -1436,19 +1548,18 @@
 		height: 100%;
 		padding: 0;
 		cursor: text;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-
+		position: relative;
+		display: flex;
+		flex-direction: column;
 
 		&:hover {
 			border: 2px dashed var(--note-fg-o1);
 		}
-        & > .entry-edit {
-            margin: 0;
-            padding: 0;
-            line-height: normal;
-        }
+		& > .entry-edit {
+			margin: 0;
+			padding: 0;
+			line-height: normal;
+		}
 	}
 
 	.text-entry-wrapper {
@@ -1510,7 +1621,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.14s ease;
+		transition:
+			border-color 0.18s ease,
+			background 0.18s ease,
+			box-shadow 0.18s ease,
+			transform 0.14s ease;
 	}
 
 	.checklist-toggle:hover {
@@ -1535,7 +1650,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: opacity 0.15s ease, transform 0.15s ease;
+		transition:
+			opacity 0.15s ease,
+			transform 0.15s ease;
 	}
 
 	.icon-x {
@@ -1568,7 +1685,7 @@
 		text-decoration: line-through;
 		opacity: 0.6;
 	}
-	
+
 	.note.readonly .entry:hover {
 		border: 2px dashed transparent;
 	}
@@ -1626,7 +1743,9 @@
 
 		&.dragging {
 			z-index: 1000 !important;
-			box-shadow: 0 10px 20px 5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+			box-shadow:
+				0 10px 20px 5px rgba(0, 0, 0, 0.3),
+				0 0 0 1px rgba(255, 255, 255, 0.1);
 			opacity: 0.95;
 			cursor: grabbing !important;
 		}
@@ -1661,8 +1780,8 @@
 		overflow: visible;
 		overscroll-behavior: none;
 		flex-grow: 1;
-        display: flex;
-        flex-direction: column;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.note.manual-size .note-content-wrapper {
@@ -1676,49 +1795,50 @@
 		display: none;
 	}
 
-    .entry-resize-handle {
-        position: absolute;
-        bottom: 0px;
-        left: 0;
-        right: 0;
-        height: 6px;
-        background: transparent;
-        cursor: ns-resize;
-        z-index: 5;
-        transition: background 0.2s;
-    }
+	.entry-resize-handle {
+		position: absolute;
+		bottom: 0px;
+		left: 0;
+		right: 0;
+		height: 6px;
+		background: transparent;
+		cursor: ns-resize;
+		z-index: 5;
+		transition: background 0.2s;
+	}
 
-    .entry:hover .entry-resize-handle {
-        background: var(--note-fg-o05);
-    }
+	.entry:hover .entry-resize-handle {
+		background: var(--note-fg-o05);
+	}
 
-    .entry-resize-handle:hover {
-        background: var(--note-fg-o15) !important;
-    }
+	.entry-resize-handle:hover {
+		background: var(--note-fg-o15) !important;
+	}
 
-    .entry-container {
-        position: relative;
-        min-height: 20px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
+	.entry-container {
+		position: relative;
+		min-height: 20px;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
 
-    .note.manual-size .entry-container.is-only-entry {
-        flex-grow: 1;
-    }
+	.note.manual-size .entry-container.is-only-entry {
+		flex-grow: 1;
+	}
 
-    .entry {
-        height: 100%;
-    }
+	.entry {
+		height: 100%;
+	}
 
-    .entry img, .entry video {
-        width: 100%;
-        height: auto;
-        max-height: 100%;
-        object-fit: contain;
-        border-radius: inherit;
-    }
+	.entry img,
+	.entry video {
+		width: 100%;
+		height: auto;
+		max-height: 100%;
+		object-fit: contain;
+		border-radius: inherit;
+	}
 
 	.resize-handle {
 		position: absolute;
@@ -1726,51 +1846,98 @@
 	}
 
 	/* Edge handles */
-	.resize-handle.n { top: 0; left: 8px; right: 8px; height: 6px; cursor: ns-resize; }
-	.resize-handle.s { bottom: 0; left: 8px; right: 8px; height: 6px; cursor: ns-resize; }
-	.resize-handle.e { top: 8px; bottom: 8px; right: 0; width: 6px; cursor: ew-resize; }
-	.resize-handle.w { top: 8px; bottom: 8px; left: 0; width: 6px; cursor: ew-resize; }
+	.resize-handle.n {
+		top: 0;
+		left: 8px;
+		right: 8px;
+		height: 6px;
+		cursor: ns-resize;
+	}
+	.resize-handle.s {
+		bottom: 0;
+		left: 8px;
+		right: 8px;
+		height: 6px;
+		cursor: ns-resize;
+	}
+	.resize-handle.e {
+		top: 8px;
+		bottom: 8px;
+		right: 0;
+		width: 6px;
+		cursor: ew-resize;
+	}
+	.resize-handle.w {
+		top: 8px;
+		bottom: 8px;
+		left: 0;
+		width: 6px;
+		cursor: ew-resize;
+	}
 
 	/* Corner handles */
-	.resize-handle.nw { top: 0; left: 0; width: 10px; height: 10px; cursor: nwse-resize; }
-	.resize-handle.ne { top: 0; right: 0; width: 10px; height: 10px; cursor: nesw-resize; }
-	.resize-handle.sw { bottom: 0; left: 0; width: 10px; height: 10px; cursor: nesw-resize; }
-	.resize-handle.se { bottom: 0; right: 0; width: 10px; height: 10px; cursor: nwse-resize; }		
+	.resize-handle.nw {
+		top: 0;
+		left: 0;
+		width: 10px;
+		height: 10px;
+		cursor: nwse-resize;
+	}
+	.resize-handle.ne {
+		top: 0;
+		right: 0;
+		width: 10px;
+		height: 10px;
+		cursor: nesw-resize;
+	}
+	.resize-handle.sw {
+		bottom: 0;
+		left: 0;
+		width: 10px;
+		height: 10px;
+		cursor: nesw-resize;
+	}
+	.resize-handle.se {
+		bottom: 0;
+		right: 0;
+		width: 10px;
+		height: 10px;
+		cursor: nwse-resize;
+	}
 
 	.note > * {
 		/*color: var(--default-text-color);*/
 		color: var(--note-fg);
 	}
 
+	.entry-container {
+		position: relative;
+	}
 
-    .entry-container {
-        position: relative;
-    }
+	.remove-entry-btn {
+		position: absolute;
+		top: 4px;
+		right: 4px;
+		width: 18px;
+		height: 18px;
+		border-radius: 4px;
+		background: var(--note-fg-o1);
+		border: 1px solid var(--note-fg-o2);
+		color: var(--note-fg-o8);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		opacity: 0;
+		transition: all 0.2s;
+		z-index: 10;
+	}
 
-    .remove-entry-btn {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 18px;
-        height: 18px;
-        border-radius: 4px;
-        background: var(--note-fg-o1);
-        border: 1px solid var(--note-fg-o2);
-        color: var(--note-fg-o8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        opacity: 0;
-        transition: all 0.2s;
-        z-index: 10;
-    }
-
-    .remove-entry-btn:hover {
-        background: rgba(255, 60, 60, 0.9);
-        color: white;
-        border-color: rgba(255, 60, 60, 0.4);
-    }
+	.remove-entry-btn:hover {
+		background: rgba(255, 60, 60, 0.9);
+		color: white;
+		border-color: rgba(255, 60, 60, 0.4);
+	}
 	.entry:hover .remove-entry-btn,
 	.entry:hover .edit-entry-btn {
 		opacity: 1;
@@ -1795,7 +1962,8 @@
 		z-index: 10;
 	}
 
-	.edit-entry-btn:hover, .edit-entry-btn.active {
+	.edit-entry-btn:hover,
+	.edit-entry-btn.active {
 		background: var(--note-fg-o1);
 		color: var(--note-fg);
 		border-color: var(--note-fg-o4);
@@ -1863,7 +2031,7 @@
 		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 4px;
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--default-text-color);
 		cursor: pointer;
 		transition: all 0.2s;
 	}
@@ -1900,7 +2068,9 @@
 		cursor: pointer;
 		padding: 4px;
 		display: flex;
-		&:hover { color: var(--note-fg); }
+		&:hover {
+			color: var(--note-fg);
+		}
 	}
 
 	.add-content-container {
@@ -2003,7 +2173,7 @@
 		.close-menu-btn {
 			flex: 0 0 30px;
 			color: var(--note-fg-o3);
-			&:hover { 
+			&:hover {
 				color: #ff5555;
 				background: rgba(255, 85, 85, 0.1);
 			}
@@ -2112,7 +2282,9 @@
 				cursor: pointer;
 				padding: 2px;
 				display: flex;
-				&:hover { color: #ff5555; }
+				&:hover {
+					color: #ff5555;
+				}
 			}
 		}
 	}
@@ -2137,20 +2309,28 @@
 			color: var(--default-text-color-o5);
 			border: var(--default-border-visible);
 			transition: all 0.2s;
-			&:hover {color: var(--default-text-color); transform: translateY(-1px); }
+			&:hover {
+				color: var(--default-text-color);
+				transform: translateY(-1px);
+			}
 		}
 
 		.confirm-btn {
 			background: #4da6ff;
 			color: white;
-			&:hover { background: #3d86cc; transform: translateY(-1px); }
-			&:active { transform: translateY(0); }
+			&:hover {
+				background: #3d86cc;
+				transform: translateY(-1px);
+			}
+			&:active {
+				transform: translateY(0);
+			}
 		}
 	}
 
 	.add-content-container.is-small .image-input-actions {
 		flex-direction: column-reverse;
-		
+
 		button {
 			width: 100%;
 		}
