@@ -2,13 +2,39 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import backgroundImage from '$lib/assets/evi_bg.png';
-	import mockupImage from '$lib/assets/mockup.png';
+	import showcaseImage from '$lib/assets/screenshot.png';
 	import FancyButton1 from '$lib/components/buttons/FancyButton1.svelte';
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { onMount } from 'svelte';
 
+	let showcaseEl: HTMLElement;
+	let tiltX = 15;
+	let isHovered = false;
+	let isClicked = false;
+
+	function onScroll() {
+		if (!showcaseEl) return;
+		const rect = showcaseEl.getBoundingClientRect();
+		const vh = window.innerHeight;
+		const elementCenter = rect.top + rect.height / 2;
+		const viewportCenter = vh / 2;
+		
+		const distanceFromCenter = elementCenter - viewportCenter;
+		const maxDistance = vh / 2 + rect.height / 2;
+		const progress = Math.min(Math.max(distanceFromCenter / maxDistance, -1), 1);
+		
+		tiltX = 10 * progress;
+	}
+
 	onMount(() => {
 		document.title = 'Evinote • Redefining Notes';
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', onScroll, { passive: true });
+		onScroll();
+		return () => {
+			window.removeEventListener('scroll', onScroll);
+			window.removeEventListener('resize', onScroll);
+		};
 	});
 </script>
 
@@ -34,9 +60,22 @@
 			</div>
 		</div>
 		
-		<div class="hero-mockup-container">
-			<div class="mockup-glow"></div>
-			<img src={mockupImage} alt="Evinote Interface Mockup" class="hero-mockup" />
+		<div 
+			class="hero-showcase-container" 
+			bind:this={showcaseEl}
+			onmouseenter={() => isHovered = true}
+			onmouseleave={() => { isHovered = false; isClicked = false; }}
+			onclick={() => isClicked = !isClicked}
+		>
+			<div class="showcase-glow" class:is-clicked={isClicked}></div>
+			<img
+				src={showcaseImage}
+				alt="Evinote Editor Showcase"
+				class="hero-showcase"
+				class:is-active={isHovered || isClicked}
+				class:is-clicked={isClicked}
+				style="transform: perspective(800px) rotateX({isClicked ? 0 : tiltX}deg) scale({isClicked ? 1.5 : (isHovered ? 1.05 : 1)}); "
+			/>
 		</div>
 	</section>
 
@@ -49,8 +88,10 @@
 			</div>
 			<div class="divider"></div>
 			<div class="trust-item">
-				<span class="stat">∞</span>
-				<span class="label">Infinite Space</span>
+				<span class="stat">
+					<LucideSymbol symbol="WandSparkles" size={44} />
+				</span>
+				<span class="label">well designed and animated</span>
 			</div>
 			<div class="divider"></div>
 			<div class="trust-item">
@@ -63,9 +104,17 @@
 	<!-- Call to Action -->
 	<section class="final-cta">
 		<div class="cta-card">
-			<h2>Ready to declutter your mind?</h2>
-			<p>Join thousands of users organizing their thoughts on Evinote.</p>
+			<h2>Ready to create your first board?</h2>
+			<p>Join Evinote today and check out all that it has to offer!</p>
 		</div>
+	</section>
+
+	<!-- Back to Top -->
+	<section class="back-to-top-section">
+		<button class="back-to-top-btn" onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+			<LucideSymbol symbol="ArrowUp" size={20} />
+			Back to top
+		</button>
 	</section>
 </div>
 
@@ -97,24 +146,9 @@
 		flex-direction: column;
 		align-items: center;
 		text-align: center;
-		padding: 10rem 0 5rem 0;
+		padding: 10rem 0 0rem 0;
 		max-width: 1000px;
 		width: 100%;
-	}
-
-	.badge {
-		background: rgba(255, 255, 255, 0.05);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		padding: 0.5rem 1.25rem;
-		border-radius: 100px;
-		font-size: 0.9rem;
-		font-weight: 600;
-		margin-bottom: 2rem;
-		color: var(--fancycolor-2);
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		animation: fadeInDown 0.8s ease-out;
 	}
 
 	h1 {
@@ -169,8 +203,8 @@
 		border-color: rgba(255, 255, 255, 0.2);
 	}
 
-	/* Hero Mockup */
-	.hero-mockup-container {
+	/* Hero showcase */
+	.hero-showcase-container {
 		margin-top: 6rem;
 		position: relative;
 		width: 100%;
@@ -178,7 +212,16 @@
 		animation: fadeInUp 1s ease-out 0.4s backwards;
 	}
 
-	.mockup-glow {
+	.hero-showcase.is-active {
+		box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
+	}
+
+	.hero-showcase.is-clicked {
+		box-shadow: 0 50px 150px rgba(0, 0, 0, 0.9);
+		cursor: zoom-out;
+	}
+
+	.showcase-glow {
 		position: absolute;
 		top: 50%;
 		left: 50%;
@@ -189,20 +232,31 @@
 		opacity: 0.2;
 		filter: blur(80px);
 		z-index: -1;
+		transition: all 0.6s ease;
 	}
 
-	.hero-mockup {
+	.showcase-glow.is-clicked {
+		opacity: 0.5;
+		width: 120%;
+		height: 100%;
+	}
+
+	.hero-showcase {
 		width: 100%;
 		height: auto;
 		border-radius: 24px;
 		box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
 		border: 1px solid rgba(255, 255, 255, 0.1);
-		transform: perspective(1000px) rotateX(5deg);
-		transition: transform 0.5s ease;
+		transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+		will-change: transform;
+		cursor: zoom-in;
+		position: relative;
+		z-index: 5;
 	}
 
-	.hero-mockup:hover {
-		transform: perspective(1000px) rotateX(0deg) scale(1.01);
+	.hero-showcase.is-hovered {
+		z-index: 100;
+		box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
 	}
 
 	/* Features Grid */
@@ -271,6 +325,7 @@
 		background: rgba(255, 255, 255, 0.02);
 		border-radius: 24px;
 		border: 1px solid rgba(255, 255, 255, 0.05);
+		backdrop-filter: blur(6px);
 	}
 
 	.trust-item {
@@ -286,6 +341,23 @@
 		background: var(--fancygradient);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 3.5rem;
+	}
+
+	.stat :global(svg) {
+		stroke: var(--fancycolor-1);
+		filter: drop-shadow(0 0 15px rgba(251, 53, 112, 0.4));
+		animation: stat-pulse 2s infinite ease-in-out;
+		/* Reset the text-clip for the icon so it shows up */
+		-webkit-text-fill-color: initial;
+	}
+
+	@keyframes stat-pulse {
+		0%, 100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 10px rgba(251, 53, 112, 0.2)); }
+		50% { transform: scale(1.1); filter: brightness(1.2) drop-shadow(0 0 20px rgba(251, 53, 112, 0.5)); }
 	}
 
 	.label {
@@ -304,7 +376,7 @@
 
 	/* Final CTA */
 	.final-cta {
-		padding: 10rem 0;
+		padding: 8rem 0 1rem;
 		width: 100%;
 		max-width: 1100px;
 	}
@@ -342,6 +414,39 @@
 		opacity: 0.9;
 		max-width: 500px;
 		margin: 0 auto;
+	}
+
+	/* Back to Top */
+	.back-to-top-section {
+		padding: 4rem 0 2rem 0;
+		display: flex;
+		justify-content: center;
+		animation: fadeInUp 1s ease-out;
+	}
+
+	.back-to-top-btn {
+		background: rgba(255, 255, 255, 0.03);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		color: var(--default-text-color-o7);
+		padding: 0.8rem 2rem;
+		border-radius: 100px;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.back-to-top-btn:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: var(--default-text-color);
+		transform: translateY(-5px);
+		border-color: var(--fancycolor-2);
+		box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
 	}
 
 	/* Animations */
