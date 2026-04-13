@@ -16,11 +16,11 @@
 		const vh = window.innerHeight;
 		const elementCenter = rect.top + rect.height / 2;
 		const viewportCenter = vh / 2;
-
+		
 		const distanceFromCenter = elementCenter - viewportCenter;
 		const maxDistance = vh / 2 + rect.height / 2;
 		const progress = Math.min(Math.max(distanceFromCenter / maxDistance, -1), 1);
-
+		
 		tiltX = 10 * progress;
 	}
 
@@ -45,8 +45,8 @@
 			<!-- <div class="badge">Open Source & Free</div> -->
 			<h1 class="gradient-text">Welcome to Evinote</h1>
 			<p class="hero-subtitle">
-				Evinote is the spatial note-taking workspace where your thoughts can take shape. Organize,
-				visualize, and collaborate on Boards.
+				Evinote is the spatial note-taking workspace where your thoughts can take shape. 
+				Organize, visualize, and collaborate on Boards.
 			</p>
 			<div class="hero-actions">
 				<FancyButton1
@@ -57,16 +57,13 @@
 				</FancyButton1>
 			</div>
 		</div>
-
-		<div
-			class="hero-showcase-container"
+		
+		<div 
+			class="hero-showcase-container" 
 			bind:this={showcaseEl}
-			onmouseenter={() => (isHovered = true)}
-			onmouseleave={() => {
-				isHovered = false;
-				isClicked = false;
-			}}
-			onclick={() => (isClicked = !isClicked)}
+			onmouseenter={() => isHovered = true}
+			onmouseleave={() => { isHovered = false; isClicked = false; }}
+			onclick={() => isClicked = !isClicked}
 		>
 			<div class="showcase-glow" class:is-clicked={isClicked}></div>
 			<img
@@ -75,11 +72,7 @@
 				class="hero-showcase"
 				class:is-active={isHovered || isClicked}
 				class:is-clicked={isClicked}
-				style="transform: perspective(800px) rotateX({isClicked ? 0 : tiltX}deg) scale({isClicked
-					? 1.5
-					: isHovered
-						? 1.05
-						: 1}); "
+				style="transform: perspective(800px) rotateX({isClicked ? 0 : tiltX}deg) scale({isClicked ? 1.5 : (isHovered ? 1.05 : 1)}); "
 			/>
 		</div>
 	</section>
@@ -361,15 +354,8 @@
 	}
 
 	@keyframes stat-pulse {
-		0%,
-		100% {
-			transform: scale(1);
-			filter: brightness(1) drop-shadow(0 0 10px rgba(251, 53, 112, 0.2));
-		}
-		50% {
-			transform: scale(1.1);
-			filter: brightness(1.2) drop-shadow(0 0 20px rgba(251, 53, 112, 0.5));
-		}
+		0%, 100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 10px rgba(251, 53, 112, 0.2)); }
+		50% { transform: scale(1.1); filter: brightness(1.2) drop-shadow(0 0 20px rgba(251, 53, 112, 0.5)); }
 	}
 
 	.label {
@@ -405,7 +391,7 @@
 	}
 
 	.cta-card::before {
-		content: '';
+		content: "";
 		position: absolute;
 		top: -50%;
 		left: -50%;
@@ -463,71 +449,33 @@
 
 	/* Animations */
 	@keyframes fadeInUp {
-		from {
-			opacity: 0;
-			transform: translateY(30px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+		from { opacity: 0; transform: translateY(30px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 
 	@keyframes fadeInDown {
-		from {
-			opacity: 0;
-			transform: translateY(-20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+		from { opacity: 0; transform: translateY(-20px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 
 	@keyframes rotate {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
 	}
 
 	@media (max-width: 1024px) {
-		h1 {
-			font-size: 3.5rem;
-		}
-		.features-grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
+		h1 { font-size: 3.5rem; }
+		.features-grid { grid-template-columns: repeat(2, 1fr); }
 	}
 
 	@media (max-width: 768px) {
-		.hero {
-			padding: 7rem 0 3rem 0;
-		}
-		h1 {
-			font-size: 2.75rem;
-		}
-		.hero-actions {
-			flex-direction: column;
-			width: 100%;
-		}
-		.secondary-btn {
-			width: 100%;
-		}
-		.features-grid {
-			grid-template-columns: 1fr;
-		}
-		.trust-grid {
-			flex-direction: column;
-			gap: 3rem;
-		}
-		.divider {
-			display: none;
-		}
-		.cta-card h2 {
-			font-size: 2.25rem;
-		}
+		.hero { padding: 7rem 0 3rem 0; }
+		h1 { font-size: 2.75rem; }
+		.hero-actions { flex-direction: column; width: 100%; }
+		.secondary-btn { width: 100%; }
+		.features-grid { grid-template-columns: 1fr; }
+		.trust-grid { flex-direction: column; gap: 3rem; }
+		.divider { display: none; }
+		.cta-card h2 { font-size: 2.25rem; }
 	}
 </style>
