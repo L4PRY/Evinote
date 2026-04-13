@@ -2,7 +2,9 @@ import type { Color } from './types/canvas/Color';
 
 export function parseColor(color: Color | string | null | undefined): string {
 	if (!color) return '#000000';
-	if (typeof color === 'string') return color;
+	if (typeof color === 'string') {
+		return color === 'initial' ? '#000000' : color;
+	}
 
 	if (!color.value) return '#000000';
 

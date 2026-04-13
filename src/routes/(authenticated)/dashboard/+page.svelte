@@ -55,7 +55,7 @@
 			<li>
 				<DashboardBox
 					href={resolve(`/boards/${board.id}`)}
-					src={`/api/boards/${board.id}/thumb?theme=${theme}&zoom=0.2`}
+					src={`/api/boards/${board.id}/thumb?theme=${theme}&zoom=0.2&v=${board.updated ? new Date(board.updated).getTime() : Date.now()}`}
 					name={board.name}
 					likes={board.likes}
 				></DashboardBox>

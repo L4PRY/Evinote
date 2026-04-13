@@ -93,7 +93,7 @@
 	<a {href} class="dashboard-box" class:mobile={isMobile}>
 		<div class="preview-container">
 			<div class="placeholder">
-				<img {src} alt="" />
+				<img class="thumb" {src} alt="" />
 			</div>
 		</div>
 		<div class="info">
@@ -150,6 +150,10 @@
 		transition: transform 0.3s ease;
 		top: 0;
 		left: 0;
+	}
+
+	.thumb {
+		transform: scale(1.05);
 	}
 
 	.dashboard-box {

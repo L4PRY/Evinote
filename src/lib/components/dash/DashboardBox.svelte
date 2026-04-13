@@ -61,7 +61,7 @@
 	<a {href} class="dashboard-box" class:mobile={isMobile} onmouseleave={handleMouseLeave}>
 		<div class="preview-container">
 			<div class="placeholder">
-				<img {src} alt="" />
+				<img class="thumb" {src} alt="" />
 			</div>
 		</div>
 		<div class="info">
@@ -304,6 +304,10 @@
 		color: var(--default-text-color, white);
 		transition: all 0.2s ease;
 		flex-shrink: 0;
+	}
+
+	.thumb {
+		transform: scale(1.05);
 	}
 
 	.icon-btn:hover {

@@ -50,7 +50,7 @@ export const GET = async ({ params, url, request }) => {
 			status: 304,
 			headers: {
 				ETag: etag,
-				'Cache-Control': 'public, max-age=3600'
+				'Cache-Control': 'public, no-cache, must-revalidate'
 			}
 		});
 	}
@@ -224,8 +224,8 @@ export const GET = async ({ params, url, request }) => {
 	return new Response(svg, {
 		headers: {
 			'Content-Type': 'image/svg+xml',
-			'Cache-Control': 'public, max-age=3600',
-			'Last-Modified': board.updated?.toUTCString()!,
+			'Cache-Control': 'public, no-cache, must-revalidate',
+			'Last-Modified': board.updated?.toUTCString() ?? new Date().toUTCString(),
 			ETag: etag
 		}
 	});
