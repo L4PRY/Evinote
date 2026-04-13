@@ -25,4 +25,4 @@ export type NoteData = {
 	content: (string | File | NoteContent)[];
 };
 
-export type NotesRecord = Record<string, NoteData>;
+export type NotesRecord = Record<string, NoteData | null>;
