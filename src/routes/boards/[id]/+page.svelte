@@ -200,7 +200,7 @@
 		const notesArray = Object.values(notes);
 		if (notesArray.length > 0)
 			initializeZIndex(notesArray.filter(n => typeof n === 'object' && n !== null));
-		$inspect(notes);
+		// $inspect(notes);
 	});
 
 	async function saveNotes() {
@@ -275,9 +275,7 @@
 
 	<Canvas data={validateCanvasData(data.board?.canvas)} contextmenu={handleCanvasContextMenu}>
 		{@const gridSnap = 5}
-		{console.log('rendering canvas with notes', validNotes)}
 		{#each Object.values(validNotes) as note (note?.id)}
-			{console.log('added note', note)}
 			<Note
 				bind:data={notes[note!.id]!}
 				{gridSnap}
