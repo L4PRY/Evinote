@@ -12,7 +12,7 @@ export async function load({ params }) {
 
 	routeLogger.info(`Loading board with id ${id}`);
 
-	const board = await db
+	let board = await db
 		.select()
 		.from(table.Board)
 		.where(eq(table.Board.id, parseInt(id)))
@@ -44,6 +44,16 @@ export async function load({ params }) {
 
 	if (!checkAccessPerms(board, user, perms)) {
 		return { id, error: 'Access denied: You do not have permission to view this board' };
+	}
+
+	// remove all entries from notes where value is null
+	if (board.notes) {
+		Object.keys(board.notes).forEach(key => {
+			if (board.notes![key] === null) {
+				delete board.notes![key];
+			}
+		});
+		console.log('Cleaned notes:', board.notes);
 	}
 
 	return { id, user, board, perms };
