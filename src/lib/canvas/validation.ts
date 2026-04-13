@@ -1,5 +1,5 @@
 import type { CanvasData } from '../types/canvas/CanvasData';
-import type { NoteData } from '../types/canvas/NoteData';
+import type { NoteData, NotesRecord } from '../types/canvas/NoteData';
 import type { Color } from '../types/canvas/Color';
 import type { Grid } from '../types/canvas/Grid';
 
@@ -142,4 +142,27 @@ export function validateNoteData(note: any): NoteData {
 	}
 
 	return validated as NoteData;
+}
+
+/**
+ * Validates a record of notes and returns a safe fallback if malformed.
+ * Supports legacy array format by converting it to a record.
+ */
+export function validateNotesRecord(data: any): NotesRecord {
+	const record: NotesRecord = {};
+
+	if (Array.isArray(data)) {
+		// Convert legacy array to record
+		data.forEach((note: any) => {
+			const validated = validateNoteData(note);
+			record[validated.id] = validated;
+		});
+	} else if (data && typeof data === 'object') {
+		// Validate existing record
+		Object.entries(data).forEach(([id, note]) => {
+			record[id] = validateNoteData(note);
+		});
+	}
+
+	return record;
 }

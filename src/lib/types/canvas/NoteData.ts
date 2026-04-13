@@ -24,3 +24,5 @@ export type NoteData = {
 	color: Color | 'var(--default-bg-color)';
 	content: (string | File | NoteContent)[];
 };
+
+export type NotesRecord = Record<string, NoteData>;

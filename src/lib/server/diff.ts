@@ -1,60 +1,39 @@
-import type { NoteData } from '$lib/types/canvas/NoteData';
+import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 import diff from 'microdiff';
 import { saveLogger } from './logger';
 
-export function diffNotes(oldNotes: NoteData[], newNotes: NoteData[]) {
+export function diffNotes(oldNotes: NotesRecord, newNotes: NotesRecord): NotesRecord {
+	// If old notes was an array (migration case)
+	if (Array.isArray(oldNotes)) {
+		const tempRecord: NotesRecord = {};
+		oldNotes.forEach(n => tempRecord[n.id] = n);
+		oldNotes = tempRecord;
+	}
+
 	const differences = diff(oldNotes, newNotes);
 
-	saveLogger.info('Calculating differences between old and new notes', differences);
+	saveLogger.info('Calculating differences between old and new notes record', differences);
 
-	// Find indices that microdiff explicitly considers "removed"
-	// This happens when the new array is shorter and an item is missing.
-	// If an item is replaced by another (e.g., id changes), microdiff reports a CHANGE, not a REMOVE at the root level.
-	const removedIndices = new Set<number>();
-	for (const d of differences) {
-		if (d.type === 'REMOVE' && d.path.length === 1 && typeof d.path[0] === 'number') {
-			removedIndices.add(d.path[0]);
-		}
+	// With records, we can just return newNotes if we trust the client's state,
+	// but the current diffNotes logic seems to want to "merge" them carefully.
+	// Since keys (IDs) are stable, we can just iterate the newNotes.
+	
+	const mergedNotes: NotesRecord = {};
+
+	// In a key-value system, if the user sends a record, it usually represents 
+	// the desired state of ALL notes. 
+	// If we want to be safe and preserve things not mentioned (though unlikely in this app),
+	// we'd merge. But usually, missing key = deleted.
+	
+	// Let's stick to the principle of "newNotes is the source of truth" 
+	// but keeping the logging/diffing for visibility.
+
+	for (const id in newNotes) {
+		mergedNotes[id] = JSON.parse(JSON.stringify(newNotes[id]));
 	}
 
-	const explicitlyRemovedIds = new Set<string>();
-	for (const idx of removedIndices) {
-		if (oldNotes[idx]) {
-			explicitlyRemovedIds.add(oldNotes[idx].id);
-		}
-	}
-
-	const mergedNotes: NoteData[] = [];
-	const mergedMap = new Map<string, number>();
-
-	// Preserve old notes that were not explicitly removed
-	for (let i = 0; i < oldNotes.length; i++) {
-		const oldNote = oldNotes[i];
-		if (!explicitlyRemovedIds.has(oldNote.id)) {
-			const copied = JSON.parse(JSON.stringify(oldNote));
-			mergedNotes.push(copied);
-			mergedMap.set(copied.id, mergedNotes.length - 1);
-		}
-	}
-
-	// Apply updates and additions from newNotes
-	for (const newNote of newNotes) {
-		const noteId = newNote.id;
-
-		if (mergedMap.has(noteId)) {
-			// Update existing note with new values
-			const index = mergedMap.get(noteId)!;
-			mergedNotes[index] = JSON.parse(JSON.stringify(newNote));
-		} else {
-			// Add completely new note
-			const copied = JSON.parse(JSON.stringify(newNote));
-			mergedNotes.push(copied);
-			mergedMap.set(copied.id, mergedNotes.length - 1);
-		}
-	}
-
-	saveLogger.info('Merged notes after applying differences', {
-		mergedNotes
+	saveLogger.info('Merged notes record after applying changes', {
+		count: Object.keys(mergedNotes).length
 	});
 
 	return mergedNotes;
