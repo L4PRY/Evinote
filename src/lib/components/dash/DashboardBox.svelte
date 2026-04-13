@@ -99,11 +99,8 @@
 			</div>
 
 			<div class="expanded-menu">
-				<div class="dropdown-item" onclick={e => handleAction('configure', e)}>
-					<LucideSymbol symbol="SlidersHorizontal" size={18} strokeWidth={2} />
-				</div>
 				<div class="dropdown-item share" onclick={e => handleAction('share', e)}>
-					<LucideSymbol symbol="Share" size={18} strokeWidth={2} />
+					<LucideSymbol symbol="Link2" size={18} strokeWidth={2} />
 				</div>
 			</div>
 		</div>
