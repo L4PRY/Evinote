@@ -1,8 +1,6 @@
 <script lang="ts">
 	import DashboardTab from '$lib/components/dash/DashboardTab.svelte';
 	import DashboardBox from '$lib/components/dash/DashboardBox.svelte';
-	import CreateBoardPopup from '$lib/components/dash/CreateBoardPopup.svelte';
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
@@ -11,12 +9,11 @@
 	// svelte-ignore state_referenced_locally
 	const { boards, user }: PageData = data;
 
-	let createPopup: CreateBoardPopup;
 	let theme: 'light' | 'dark' = $state('dark');
 	let viewports = $state<Record<string, { left: number; top: number; zoom: number }>>({});
 
 	onMount(async () => {
-		document.title = 'Evinote • Dashboard';
+		document.title = 'Evinote • Shared with me';
 
 		for (const board of boards) {
 			const vwp = localStorage.getItem(`board-${board.id}-viewport`);
@@ -40,29 +37,27 @@
 	});
 </script>
 
-<CreateBoardPopup bind:this={createPopup} />
-
 <div class="site-content">
-	<DashboardTab>Your boards</DashboardTab>
-	<!-- {#if boards.length === 0}
-		<p>You have no boards yet.</p>
-		<button class="create-link" onclick={() => createPopup.show()} aria-label="create a new board"
-			>create one?</button
-		>
-	{/if} -->
-	<ul class="boards-grid">
-		{#each boards as board (board.id)}
-			<li>
-				<DashboardBox
-					href={resolve(`/boards/${board.id}`)}
-					src={`/api/boards/${board.id}/thumb?theme=${theme}&zoom=0.2&v=${board.updated ? new Date(board.updated).getTime() : Date.now()}`}
-					name={board.name}
-					likes={board.likes}
-				></DashboardBox>
-			</li>
-		{/each}
-		<DashboardBox type="createNew" onclick={() => createPopup.show()}></DashboardBox>
-	</ul>
+	<DashboardTab>Shared with me</DashboardTab>
+	
+	{#if boards.length === 0}
+		<div class="empty-state">
+			<p>No boards have been shared with you yet.</p>
+		</div>
+	{:else}
+		<ul class="boards-grid">
+			{#each boards as board (board.id)}
+				<li>
+					<DashboardBox
+						href={resolve(`/boards/${board.id}`)}
+						src={`/api/boards/${board.id}/thumb?theme=${theme}&zoom=0.2`}
+						name={board.name}
+						likes={board.likes}
+					></DashboardBox>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </div>
 
 <style>
@@ -84,19 +79,14 @@
 		display: block;
 	}
 
-	.create-link {
-		background: none;
-		border: none;
-		color: #3182ce;
-		text-decoration: underline;
-		cursor: pointer;
-		padding: 0;
-		font-family: inherit;
-		font-size: 1rem;
-	}
-
-	.create-link:hover {
-		color: #2b6cb0;
+	.empty-state {
+		text-align: center;
+		padding: 4rem 2rem;
+		background: rgba(255, 255, 255, 0.05);
+		border-radius: var(--border-radius);
+		border: 1px dashed var(--default-stroke-color);
+		color: var(--default-text-color);
+		opacity: 0.7;
 	}
 
 	@media (max-width: 600px) {

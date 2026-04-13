@@ -14,10 +14,13 @@ export const GET = async ({ params }) => {
 			id: Board.id,
 			name: Board.name,
 			type: Board.type,
-			updated: Board.updated,
-			// get number of notes in jsonb array
-			// notesCount: count(Board.notes)
-			notesCount: sql`jsonb_array_length(${Board.notes})`.as('notesCount')
+			notesCount: sql`
+				CASE 
+					WHEN jsonb_typeof(${Board.notes}) = 'array' THEN jsonb_array_length(${Board.notes})
+					WHEN jsonb_typeof(${Board.notes}) = 'object' THEN (SELECT count(*) FROM jsonb_object_keys(${Board.notes}))
+					ELSE 0 
+				END
+			`.as('notesCount')
 		})
 		.from(Board)
 		.where(

@@ -4,7 +4,7 @@ import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { requireLogin } from '$lib/server/auth';
 import type { Actions, PageServerLoad } from './$types';
-import type { NoteData } from '$lib/types/canvas/NoteData';
+import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 import { checkUserCanModify } from '$lib/server/perms';
 import { diffNotes } from '$lib/server/diff';
 
@@ -34,7 +34,7 @@ export const actions: Actions = {
 	default: async ({ request, params }) => {
 		const sessionUser = requireLogin();
 		const formData = await request.formData();
-		const notes = JSON.parse(formData.get('notes') as string) as NoteData[];
+		const notes = JSON.parse(formData.get('notes') as string) as NotesRecord;
 		routeLogger.info(`User requested to update board no. ${params.id}`);
 		// routeLogger.info(`notes is ${JSON.stringify(notes)}`);
 
@@ -64,7 +64,7 @@ export const actions: Actions = {
 			try {
 				await db
 					.update(table.Board)
-					.set({ notes: diffNotes(board.notes as NoteData[], notes) })
+					.set({ notes: diffNotes(board.notes as NotesRecord, notes) })
 					.where(eq(table.Board.id, parseInt(params.id)));
 				return { success: true };
 			} catch (err) {

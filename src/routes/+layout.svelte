@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import Navbar from '$lib/components/navigation/Navbar.svelte';
+	import Footer from '$lib/components/footer/Footer.svelte';
 	import ToastModal from '$lib/components/frontend/ToastModal.svelte';
 	import { onNavigate, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
@@ -8,10 +9,13 @@
 	let { children } = $props();
 
 
-	const disallowedPaths = ['/dashboard', '/boards'];
+	const disallowedPaths = ['/dashboard', '/boards', '/auth'];
 
 	// Optional: Derived state for better readability
-	const isDisallowed = $derived(disallowedPaths.some(path => page.url.pathname.startsWith(path)));
+	const isDisallowed = $derived(
+		disallowedPaths.some(path => page.url.pathname.startsWith(path)) &&
+		!(page.url.pathname === '/boards/trending' && !page.data.user)
+	);
 	
 	onNavigate(navigation => {
 		if (!document.startViewTransition) return;
@@ -35,6 +39,11 @@
 		const forcedDarkPaths = (window as any).__forceDark || [];
 		const forcedLightPaths = (window as any).__forceLight || [];
 		
+		if (!page.data.user) {
+			document.documentElement.style.colorScheme = 'dark';
+			return;
+		}
+
 		if (forcedDarkPaths.includes(path)) {
 			document.documentElement.style.colorScheme = 'dark';
 			return;
@@ -74,10 +83,31 @@
 <svelte:head></svelte:head>
 
 {#if !isDisallowed && page.status != 404}
-	<Navbar />
-	<!-- <Footer /> -->
+	<div class="public-layout">
+		<Navbar />
+		<main class="main-content">
+			{@render children()}
+		</main>
+		<Footer />
+	</div>
+{:else}
+	{@render children()}
 {/if}
 
 <ToastModal />
 
-{@render children()}
+<style>
+	.public-layout {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+
+	.main-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+</style>
+

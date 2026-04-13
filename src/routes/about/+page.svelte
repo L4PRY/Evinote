@@ -37,6 +37,19 @@
 	];
 </script>
 
+<svelte:head>
+	<link rel="preload" href={backgroundImage} as="image" fetchpriority="high" />
+	{#each team as member}
+		<link rel="preload" href="https://github.com/{member.githubUsername}.png?s=150" as="image" />
+	{/each}
+	<link
+		rel="preload"
+		href="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+		as="image"
+	/>
+</svelte:head>
+
+
 <div class="background" style="background-image: url({backgroundImage});"></div>
 
 <section class="about-wrapper">
@@ -142,8 +155,6 @@
 
 		/* árnyék */
 		box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-
-		margin-bottom: 500px;
 	}
 
 	.about-content {

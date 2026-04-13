@@ -6,12 +6,12 @@
 		position as dragPosition,
 		events
 	} from '@neodrag/svelte';
-	import type { NoteData } from '$lib/types/canvas/NoteData';
+	import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
 	import { bounds, position, canvasSize, clampScrollPosition, isMiniViewportDragging } from '$lib/stores/viewport';
 
-	let { notes = [] as NoteData[], size = 200, viewport = $bindable() } = $props();
+	let { notes = {} as NotesRecord, size = 200, viewport = $bindable() } = $props();
 
 	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
 	let isMiniDragging = $state(false);
@@ -59,7 +59,8 @@
 			top: $position.top,
 			zoom: $zoomLevel
 		};
-		noteBounds = notes.map(note => {
+		const notesArray = Array.isArray(notes) ? notes : Object.values(notes);
+		noteBounds = notesArray.map(note => {
 			const x = note?.position?.x ?? 0;
 			const y = note?.position?.y ?? 0;
 			const width = note?.size?.width ?? 100;
@@ -87,7 +88,7 @@
 		style:width="{effectiveCanvasWidth * zoomedScale}px"
 		style:height="{effectiveCanvasHeight * zoomedScale}px"
 	>
-		{#each notes as note, i (note.id ?? note.title)}
+		{#each Array.isArray(notes) ? notes : Object.values(notes) as note, i (note.id ?? note.title)}
 			{@const x = note?.position?.x ?? 0}
 			{@const y = note?.position?.y ?? 0}
 			{@const pos = { left: x * scale, top: y * scale }}

@@ -1,64 +1,96 @@
 <script lang="ts">
-	const {
+	let {
+		id,
 		href = '',
 		name = '',
 		src = '',
 		type = 'board',
 		likes = 0,
+		liked = false,
+		username = '',
 		onclick
 	}: {
+		id?: number;
 		href?: any;
 		name?: string;
 		src?: string;
 		type?: 'createNew' | 'board';
 		likes?: number;
+		liked?: boolean;
+		username?: string;
 		onclick?: (e: MouseEvent) => void;
 	} = $props();
 
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { notifications } from '$lib/stores/notifications';
 
-	let menuOpen = $state(false);
+	let isLiked = $state(liked);
+	let likesCount = $state(likes);
+	let lastSyncedLiked = liked;
+
+	let isHovered = $state(false);
 	let windowWidth = $state(0);
 	const isMobile = $derived(windowWidth > 0 && windowWidth <= 600);
 
-	function toggleMenu(e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
-		menuOpen = !menuOpen;
-	}
+	async function syncLike() {
+		if (isLiked === lastSyncedLiked || !id) return;
 
-	function handleAction(action: string, e: MouseEvent) {
-		e.preventDefault();
-		e.stopPropagation();
-		menuOpen = false;
-		if (action === 'share') {
-			navigator.clipboard.writeText(`${window.location.origin}${href}`);
+		const targetLiked = isLiked;
+		const previousSyncedLiked = lastSyncedLiked;
+		const method = targetLiked ? 'POST' : 'DELETE';
+		lastSyncedLiked = targetLiked;
+
+		try {
+			const res = await fetch(`/api/boards/${id}/like`, { method });
+
+			if (res.status === 401) {
+				throw new Error('Please log in to like boards');
+			}
+
+			if (!res.ok) {
+				throw new Error('Failed to update like');
+			}
+
+			const data = await res.json();
+			if (data && data.likes !== undefined) {
+				likesCount = data.likes;
+			}
+		} catch (err) {
+			console.error(err);
+			// Rollback state on error
+			isLiked = previousSyncedLiked;
+			lastSyncedLiked = previousSyncedLiked;
+			likesCount += isLiked ? 1 : -1;
+
 			notifications.add({
-				title: 'Link Copied',
-				message: 'Board link successfully copied to your clipboard.',
-				type: 'success',
-				duration: 3000
+				title: 'Error',
+				message: (err as Error).message || 'Could not update like. Please try again.',
+				type: 'error'
 			});
-		} else if (action === 'configure') {
-			// settings
 		}
 	}
 
-	function handleMouseLeave() {
-		menuOpen = false;
+	function toggleLike(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+
+		if (!id) return;
+
+		// Optimistic update
+		isLiked = !isLiked;
+		likesCount += isLiked ? 1 : -1;
+
+		// Immediate sync
+		syncLike();
 	}
 </script>
 
 <svelte:window
 	bind:innerWidth={windowWidth}
-	onclick={() => {
-		menuOpen = false;
-	}}
 />
 
 {#if type === 'board'}
-	<a {href} class="dashboard-box" class:mobile={isMobile} onmouseleave={handleMouseLeave}>
+	<a {href} class="dashboard-box" class:mobile={isMobile}>
 		<div class="preview-container">
 			<div class="placeholder">
 				<img class="thumb" {src} alt="" />
@@ -74,38 +106,29 @@
 			</div>
 		</div>
 
-		<div class="stats">
-			<p>
-				<LucideSymbol symbol="Heart" size={20} strokeWidth={2} />
-				{likes}
-			</p>
-		</div>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div
-			class="actions-menu"
-			class:is-open={menuOpen}
-			onclick={e => {
-				e.preventDefault();
-				e.stopPropagation();
-			}}
+		<button
+			class="stats interactive"
+			class:is-liked={isLiked}
+			onclick={toggleLike}
+			onmouseenter={() => (isHovered = true)}
+			onmouseleave={() => (isHovered = false)}
+			aria-label={isLiked ? 'Unlike board' : 'Like board'}
 		>
-			<div class="icon-btn" onclick={toggleMenu} aria-label="Options" aria-expanded={menuOpen}>
-				{#if menuOpen}
-					<LucideSymbol symbol="X" size={18} strokeWidth={2} />
-				{:else}
-					<LucideSymbol symbol="MoreVertical" size={20} strokeWidth={2} />
-				{/if}
-			</div>
+			<p>
+				<LucideSymbol
+					symbol="Heart"
+					size={20}
+					strokeWidth={2}
+					fill={isLiked ? '#ff4d4d' : (isHovered ? '#ff4d4d33' : 'none')}
+				/>
+				{likesCount}
+			</p>
+		</button>
 
-			<div class="expanded-menu">
-				<div class="dropdown-item" onclick={e => handleAction('configure', e)}>
-					<LucideSymbol symbol="SlidersHorizontal" size={18} strokeWidth={2} />
-				</div>
-				<div class="dropdown-item share" onclick={e => handleAction('share', e)}>
-					<LucideSymbol symbol="Share" size={18} strokeWidth={2} />
-				</div>
-			</div>
+		<div class="author">
+			<p>By <b>{username}</b></p>
 		</div>
 	</a>
 {:else if type === 'createNew'}
@@ -127,6 +150,10 @@
 		transition: transform 0.3s ease;
 		top: 0;
 		left: 0;
+	}
+
+	.thumb {
+		transform: scale(1.05);
 	}
 
 	.dashboard-box {
@@ -237,36 +264,7 @@
 		font-size: 0.95rem;
 	}
 
-	.actions-menu {
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		z-index: 20;
-		display: flex;
-		flex-direction: row-reverse;
-		align-items: center;
-		background: var(--default-bg-color-transparent);
-		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
-		border-radius: 8px;
-		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
-		opacity: 0;
-		transition: all 0.2s ease;
-		overflow: hidden;
-	}
-
-	.dashboard-box:not(.mobile):hover .actions-menu,
-	.dashboard-box.mobile .actions-menu {
-		opacity: 1;
-		border-color: rgba(255, 255, 255, 0.2);
-	}
-
-	.actions-menu.is-open {
-		background: var(--default-bg-color);
-		border: 1px solid transparent;
-	}
-
-	.stats{
+	.stats {
 		position: absolute;
 		top: 10px;
 		left: 10px;
@@ -281,75 +279,83 @@
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
 		opacity: 0;
-		transition: all 0.2s ease;
+		transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 		overflow: hidden;
-		width: 50px;
+		min-width: 50px;
 		height: 32px;
-		padding: 0.2rem;
+		padding: 0 0.5rem;
+		color: var(--default-text-color);
 	}
 
-	.dashboard-box:not(.mobile):hover .stats,
+	.dashboard-box:hover .stats,
 	.dashboard-box.mobile .stats {
 		opacity: 1;
 		border-color: rgba(255, 255, 255, 0.2);
 	}
 
-	.icon-btn {
-		width: 32px;
-		height: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	.stats.interactive {
 		cursor: pointer;
-		color: var(--default-text-color, white);
-		transition: all 0.2s ease;
-		flex-shrink: 0;
+		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
 	}
 
-	.thumb {
+	.stats.interactive:hover {
+		background: rgba(255, 0, 0, 0.15);
+		border-color: rgba(255, 0, 0, 0.3);
+		color: #ff4d4d;
 		transform: scale(1.05);
 	}
 
-	.icon-btn:hover {
-		background: var(--default-blur-hover-color, rgba(255, 255, 255, 0.1));
+	.stats.interactive:active {
+		transform: scale(0.95);
 	}
 
-	.expanded-menu {
+	.stats.interactive.is-liked {
+		color: #ff4d4d;
+	}
+
+	.author {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		z-index: 20;
 		display: flex;
-		flex-direction: row;
 		align-items: center;
-		max-width: 0;
+		background: var(--default-bg-color-transparent);
+		border: 1px solid var(--default-stroke-color, rgba(255, 255, 255, 0.1));
+		border-radius: 8px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
 		opacity: 0;
-		overflow: hidden;
-		transition:
-			max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
-			opacity 0.2s ease;
-		white-space: nowrap;
+		transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+		height: 32px;
+		padding: 0 0.75rem;
+		color: var(--default-text-color);
+		max-width: 150px;
 	}
 
-	.actions-menu.is-open .expanded-menu {
-		max-width: 110px;
+	.dashboard-box:hover .author,
+	.dashboard-box.mobile .author {
 		opacity: 1;
+		border-color: rgba(255, 255, 255, 0.2);
 	}
 
-	.dropdown-item {
+	.author p {
+		margin: 0;
+		font-size: 0.85rem;
+		font-weight: 500;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		opacity: 0.9;
+	}
+
+	.stats p {
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		padding: 0 8px;
-		height: 32px;
-		background: transparent;
-		border: none;
-		color: var(--default-text-color);
-		font-size: 0.9rem;
-		text-align: left;
-		cursor: pointer;
-		transition: background 0.15s ease;
-		box-sizing: border-box;
-	}
-
-	.dropdown-item:hover {
-		background: rgba(255, 255, 255, 0.1);
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 500;
 	}
 
 	@media (max-width: 600px) {

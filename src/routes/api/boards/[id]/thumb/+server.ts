@@ -1,10 +1,11 @@
 import { generateETag } from '$lib/cache/generateETag';
 import { parseBackground } from '$lib/parseBackground.js';
 import { parseColor } from '$lib/parseColor.js';
+import { checkLogin } from '$lib/server/auth.js';
 import { db } from '$lib/server/db/index.js';
 import * as table from '$lib/server/db/schema.js';
 import { routeLogger } from '$lib/server/logger.js';
-import { getBoard } from '$lib/server/perms.js';
+import { checkBoardPerms, getBoard } from '$lib/server/perms.js';
 import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
@@ -30,6 +31,12 @@ export const GET = async ({ params, url, request }) => {
 
 	const { board, likes } = await getBoard(id);
 
+	if (!board) {
+		throw error(404, 'Board not found');
+	}
+
+	checkBoardPerms(board);
+
 	// Generate ETag from board data BEFORE rendering
 	const etag = await generateETag(board, theme);
 
@@ -43,7 +50,7 @@ export const GET = async ({ params, url, request }) => {
 			status: 304,
 			headers: {
 				ETag: etag,
-				'Cache-Control': 'public, max-age=3600'
+				'Cache-Control': 'public, no-cache, must-revalidate'
 			}
 		});
 	}
@@ -63,7 +70,7 @@ export const GET = async ({ params, url, request }) => {
 	const zoomedCanvasHeight = canvasHeight * zoom;
 
 	// Create note elements for the zoomed viewport
-	const noteElements = (notes || [])
+	const noteElements = Object.values(notes || {})
 		.map(note => {
 			const noteLeft = note.position.x * zoom - viewportLeft * zoom;
 			const noteTop = note.position.y * zoom - viewportTop * zoom;
@@ -106,7 +113,9 @@ export const GET = async ({ params, url, request }) => {
 							height: `${Math.max(4, noteHeight)}px`,
 							backgroundColor: parseColor(note.color),
 							borderRadius: '2px',
-							border: `1px solid ${parseColor(note.color)}`,
+							borderColor: parseColor(note.color),
+							borderWidth: '1px',
+							borderStyle: 'solid',
 							opacity: 0.8,
 							boxShadow:
 								'inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(0, 0, 0, 0.3), 0 0 2px rgba(0, 0, 0, 0.3)',
@@ -215,8 +224,8 @@ export const GET = async ({ params, url, request }) => {
 	return new Response(svg, {
 		headers: {
 			'Content-Type': 'image/svg+xml',
-			'Cache-Control': 'public, max-age=3600',
-			'Last-Modified': board.updated?.toUTCString()!,
+			'Cache-Control': 'public, no-cache, must-revalidate',
+			'Last-Modified': board.updated?.toUTCString() ?? new Date().toUTCString(),
 			ETag: etag
 		}
 	});

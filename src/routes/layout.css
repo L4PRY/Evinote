@@ -11,9 +11,15 @@
 	--default-blur-color: light-dark(#efefec5d, #0907155d);
 
 	--default-text-color: light-dark(#333b3c, #efefec);
-	--default-text-color-o5: light-dark(#333b3c84, #efefec84);
+	--default-text-color-o8: light-dark(#333b3ccc, #efeefeccc);
 	--default-text-color-o7: light-dark(#333b3cbb, #efefecbb);
-	--default-text-color-o8: light-dark(#333b3ccc, #efefeccc);
+	--default-text-color-o6: light-dark(#333b3ca1, #efefeca1);
+	--default-text-color-o5: light-dark(#333b3c84, #efefec84);
+	--default-text-color-o4: light-dark(#333b3c66, #efefec66);
+	--default-text-color-o3: light-dark(#333b3c4d, #efefec4d);
+	--default-text-color-o2: light-dark(#333b3c33, #efefec33);
+	--default-text-color-o1: light-dark(#333b3c14, #efefec14);
+	--default-text-color-o05: light-dark(#333b3c0d, #efefec0d);
 
 	--default-stroke-color: light-dark(rgba(59, 50, 100, 0.2), rgba(100, 100, 160, 0.2));
 	--button-stroke-color: light-dark(#cccccc7e, #17141f);

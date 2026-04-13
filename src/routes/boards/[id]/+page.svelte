@@ -10,7 +10,7 @@
 
 
 	// types and utils
-	import type { NoteData } from '$lib/types/canvas/NoteData';
+	import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 	import type { Color } from '$lib/types/canvas/Color';
 	import { initializeZIndex } from '$lib/stores/noteZIndex';
 	import { position, getViewportPosition, getViewportCenter, getScrollFromCenter } from '$lib/stores/viewport';
@@ -18,7 +18,7 @@
 	import { get } from 'svelte/store';
 	import { validateUrl } from '$lib/parseInput';
 	import { generateSecureRandomString } from '$lib/randomString';
-	import { validateCanvasData, validateNoteData } from '$lib/canvas/validation';
+	import { validateCanvasData, validateNoteData, validateNotesRecord } from '$lib/canvas/validation';
 	import { notifications } from '$lib/stores/notifications';
 
 	import type { PageProps } from './$types';
@@ -91,20 +91,21 @@
 		const title = newNoteTitle.trim() || null;
 		const color: Color = { type: 'hex', value: newNoteColor };
 		
-		notes.push({
-			id: generateSecureRandomString(),
+		const id = generateSecureRandomString();
+		notes[id] = {
+			id,
 			title,
 			position: { x: contextMenuData.canvasX, y: contextMenuData.canvasY, z: 0 },
 			size: { width: 200, height: 200 },
 			color,
 			content: ['']
-		});
+		};
 		
 		contextMenuData.show = false;
 	}
 
 	// svelte-ignore state_referenced_locally
-	let notes = $state((data.board?.notes ?? []).map(validateNoteData));
+	let notes = $state<NotesRecord>(validateNotesRecord(data.board?.notes));
 
 	function addNote() {
 		const titleInput = document.getElementById('note-title-input') as HTMLInputElement;
@@ -169,20 +170,20 @@
 			return processedContent;
 		};
 
-		// Call the async function and wait for the content to be processed
 		(async () => {
 			const content = await parseContent(contentStr);
 
 			// Prepend an empty text entry if the parsed content has no text entries
 			const contentWithDefault = content.length === 0 ? [''] : content;
-			notes.push({
-				id: generateSecureRandomString(),
+			const id = generateSecureRandomString();
+			notes[id] = {
+				id,
 				title,
 				position: { x: 0, y: 0, z: 0 },
 				size: { width: 200, height: 200 },
 				color,
 				content: contentWithDefault
-			});
+			};
 		})();
 
 		// Clear inputs after adding
@@ -283,7 +284,8 @@
 	// }
 
 	$effect(() => {
-		if (notes.length > 0) initializeZIndex(notes);
+		const notesArray = Object.values(notes);
+		if (notesArray.length > 0) initializeZIndex(notesArray);
 		$inspect(notes);
 	});
 	function handleKeydown(e: KeyboardEvent) {
@@ -362,9 +364,14 @@
 	contextmenu={handleCanvasContextMenu}
 >
 	{@const gridSnap = 5}
-	{#each notes as _, i}
+	{#each Object.values(notes) as note (note.id)}
 		{console.log('added note')}
-		<Note bind:data={notes[i]} {gridSnap} remove={() => notes.splice(i, 1)} readonly={!hasWritePermission} />
+		<Note
+			bind:data={notes[note.id]}
+			{gridSnap}
+			remove={() => delete notes[note.id]}
+			readonly={!hasWritePermission}
+		/>
 	{/each}
 
 	{#if contextMenuData.show}
@@ -492,6 +499,12 @@
 		right: 360px;
 	}
 
+	@media (max-width: 600px) {
+		.canvas-viewport.sidebar-open {
+			right: 100%;
+		}
+	}
+
 	/* Settings toggle button — fixed top-right */
 	.settings-toggle {
 		position: fixed;
@@ -521,6 +534,13 @@
 		right: 380px;
 	}
 
+	@media (max-width: 600px) {
+		:global(.canvas-viewport.sidebar-open) ~ .settings-toggle {
+			opacity: 0;
+			pointer-events: none;
+		}
+	}
+
 	.settings-toggle:hover {
 		background: var(--editor-interface-background, rgba(30, 30, 45, 0.95));
 		border-color: var(--editor-interface-border, rgba(255, 255, 255, 0.25));
@@ -534,6 +554,7 @@
 	.settings-toggle.active {
 		background: var(--fancygradient, linear-gradient(135deg, rgba(108, 99, 255, 0.3), rgba(168, 85, 247, 0.3)));
 		border: 1px solid transparent;
+		color:white;
 	}
 
 	.canvas-context-menu {
@@ -612,6 +633,13 @@
 		background: rgba(255, 255, 255, 0.1);
 	}
 
+	@media (max-width: 600px) {
+		.sidebar-open .note-creator {
+			opacity: 0;
+			pointer-events: none;
+		}
+	}
+
 	.ctx-color-picker {
 		position: absolute;
 		opacity: 0;
@@ -682,7 +710,6 @@
 		font-size: 0.9rem;
 		font-weight: 600;
 		letter-spacing: 0.01em;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 		pointer-events: auto;
 		max-width: 300px;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -698,6 +725,12 @@
 	@media (max-width: 768px) {
 		.board-title-container {
 			display: none; /* Hide on small screens to avoid overlap */
+		}
+	}
+
+	@media (max-width: 600px) {
+		.sidebar-open .board-title-container {
+			display: none;
 		}
 	}
 

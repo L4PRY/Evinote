@@ -12,7 +12,7 @@ import {
 	uniqueIndex
 } from 'drizzle-orm/pg-core';
 import type { CanvasData } from '$lib/types/canvas/CanvasData';
-import type { NoteData } from '$lib/types/canvas/NoteData';
+import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 
 export const role = pgEnum('role', ['User', 'Admin']);
 export const permission = pgEnum('permission', ['Read', 'Write']);
@@ -73,7 +73,7 @@ export const Board = pgTable(
 		created: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 		version: serial('version'),
 		canvas: jsonb('canvas').$type<CanvasData>(),
-		notes: jsonb('notes').$type<NoteData[]>()
+		notes: jsonb('notes').$type<NotesRecord>()
 	},
 	table => [index('table_owner').on(table.owner), index('table_name').on(table.id, table.name)]
 );
