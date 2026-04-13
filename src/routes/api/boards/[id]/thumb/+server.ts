@@ -70,7 +70,7 @@ export const GET = async ({ params, url, request }) => {
 	const zoomedCanvasHeight = canvasHeight * zoom;
 
 	// Create note elements for the zoomed viewport
-	const noteElements = (notes || [])
+	const noteElements = Object.values(notes || {})
 		.map(note => {
 			const noteLeft = note.position.x * zoom - viewportLeft * zoom;
 			const noteTop = note.position.y * zoom - viewportTop * zoom;
