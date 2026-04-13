@@ -34,7 +34,7 @@ describe('diffNotes', () => {
 		const result = diffNotes(oldNotes, newNotes);
 
 		expect(Object.values(result)).toHaveLength(1);
-		expect(Object.values(result)[0].title).toBe('Updated Title');
+		expect(Object.values(result)[0]?.title).toBe('Updated Title');
 	});
 
 	it('should handle nested property changes', () => {
