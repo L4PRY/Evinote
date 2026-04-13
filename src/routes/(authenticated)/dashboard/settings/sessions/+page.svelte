@@ -110,8 +110,8 @@
 	}
 
 	.session-icon :global(svg) {
-		width: 150px !important;
-		height: 150px !important;
+		width: 130px !important;
+		height: 130px !important;
 	}
 
 	.session-details {
