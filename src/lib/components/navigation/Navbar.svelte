@@ -153,6 +153,8 @@
 		}
 		nav {
 			width: 50vw;
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
 		}
 
 		nav.expanded {
@@ -167,11 +169,11 @@
 
 		.float-left {
 			font-size: 1.5rem;
-			justify-self: flex-start;
+			justify-self: start;
 			margin-left: 5px;
 		}
 		.float-right {
-			justify-self: flex-end;
+			justify-self: end;
 			margin-right: 10px;
 		}
 		.float-right .hamburger {
@@ -181,6 +183,7 @@
 			display: flex;
 			gap: 0;
 			text-align: center;
+			justify-self: center;
 		}
 		.nav-island-divider {
 			width: 2px;
@@ -300,6 +303,9 @@
 			text-align: center;
 			top: 52px;
 			width: 90vw;
+			left: 0;
+			right: 0;
+			margin: auto;
 			background: linear-gradient(
 				180deg,
 				light-dark(rgba(0, 100, 0.05), transparent),
