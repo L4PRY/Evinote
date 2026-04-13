@@ -8,6 +8,7 @@ node_modules
 /.svelte-kit
 /build
 /drizzle
+/dist
 
 .pnpm-lock.*
 pnpm-lock.*
@@ -33,3 +34,5 @@ package-lock.json
 
 # copilot
 .github/copilot-instructions.md
+
+uploads/

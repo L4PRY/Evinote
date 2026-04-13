@@ -25,10 +25,11 @@ export const actions: Actions = {
 				owner: event.locals.user!.id,
 				updated: new Date(Date.now()),
 				canvas: {
-					size: { width: 3200, height: 3200, zoom: 1 },
-					background: { type: 'Solid', value: { type: 'rgb', value: [255, 255, 255, 1] } }
+					size: { width: 3200, height: 3200 },
+					background: { type: 'Solid', value: { type: 'rgb', value: [255, 255, 255, 1] } },
+					thumbnail: undefined
 				},
-				notes: []
+				notes: {}
 			})
 			.returning();
 

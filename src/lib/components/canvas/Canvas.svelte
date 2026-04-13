@@ -1,26 +1,36 @@
 <script lang="ts">
 	import type { CanvasData } from '$lib/types/canvas/CanvasData';
+	import { validateCanvasData } from '$lib/canvas/validation';
 	import { parseColor } from '$lib/parseColor';
-	import { zoomLevel, MIN_ZOOM, MAX_ZOOM } from '$lib/stores/zoomLevel';
-	import { bounds, canvasSize, position } from '$lib/stores/viewport';
-	import type { Snippet } from 'svelte';
+	import { zoomLevel, minZoom, MAX_ZOOM } from '$lib/stores/zoomLevel';
+	import { bounds, canvasSize, position, isMiniViewportDragging } from '$lib/stores/viewport';
+	import { onMount, type Snippet } from 'svelte';
+	import { parseBackground, parseBackgroundCss } from '$lib/parseBackground';
 
 	const {
 		children,
-		data
+		data,
+		contextmenu
 	}: {
 		children: Snippet;
 		data: CanvasData;
+		contextmenu?: (e: MouseEvent, canvasX: number, canvasY: number) => void;
 	} = $props();
 
 	// add a way for the current visible viewport and canvas to be movable indirectly
 	// needs a bindable for the current viewport size, scroll position and zoom level
 
 	// svelte-ignore state_referenced_locally
-	let canvasData = $state<CanvasData>(data);
+	let canvasData = $state<CanvasData>(validateCanvasData(data));
+
+	// Sync internal state with props
+	$effect(() => {
+		canvasData = validateCanvasData(data);
+	});
 
 	// Track if canvas is being dragged (to prevent feedback loops with MiniViewport)
 	let isCanvasDragging = $state(false);
+	let shiftHeld = $state(false);
 
 	// Drag state
 	let isDragging = $state(false);
@@ -30,69 +40,8 @@
 	let scrollStartY = $state(0);
 
 	// Compute background CSS based on background type
-	let backgroundStyle = $derived.by(() => {
-		const bg = canvasData.background;
-		switch (bg.type) {
-			case 'Image':
-				return {
-					backgroundImage: `url(${bg.value.toString()})`,
-					backgroundSize: 'cover',
-					backgroundPosition: 'center',
-					backgroundRepeat: 'no-repeat'
-				};
-			case 'Solid':
-				return {
-					backgroundColor: parseColor(bg.value)
-				};
-			case 'Grid': {
-				const grid = bg.value;
-				const gridColor = parseColor(grid.color);
-				const backgroundColor = parseColor(grid.background);
-				if (grid.type === 'Dot') {
-					// Create a dotted grid pattern using radial gradients
-					const size = grid.size;
-					const spacing = size * 10; // spacing between dots
-					return {
-						backgroundImage: `radial-gradient(circle, ${gridColor} ${size}px, transparent ${size}px)`,
-						backgroundSize: `${spacing}px ${spacing}px`,
-						backgroundPosition: '0 0',
-						backgroundColor
-					};
-				} else {
-					// Line grid pattern using linear gradients
-					const width = grid.width;
-					const spacing = width * 20; // spacing between lines
-					return {
-						backgroundImage: `
-							linear-gradient(to right, ${gridColor} ${width}px, transparent ${width}px),
-							linear-gradient(to bottom, ${gridColor} ${width}px, transparent ${width}px)
-						`,
-						backgroundSize: `${spacing}px ${spacing}px`,
-						backgroundPosition: '0 0',
-						backgroundColor
-					};
-				}
-			}
-			case 'Custom':
-				// Custom CSS background - parse as raw CSS value
-				return {
-					background: bg.value
-				};
-			default:
-				return {};
-		}
-	});
-
 	// Convert style object to CSS string
-	let backgroundCss = $derived(
-		Object.entries(backgroundStyle)
-			.map(([key, value]) => {
-				// Convert camelCase to kebab-case
-				const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-				return `${cssKey}: ${value}`;
-			})
-			.join('; ')
-	);
+	let backgroundCss = $derived(parseBackgroundCss(parseBackground(canvasData)));
 
 	// Reference to the canvas and content elements
 	let canvasElement: HTMLDivElement;
@@ -108,6 +57,8 @@
 
 		isDragging = true;
 		isCanvasDragging = true;
+
+		// add gliding logic to this, later
 		dragStartX = e.clientX;
 		dragStartY = e.clientY;
 		scrollStartX = canvasElement.scrollLeft;
@@ -137,36 +88,112 @@
 		canvasElement.releasePointerCapture(e.pointerId);
 	}
 
+	function handleContextMenu(e: MouseEvent) {
+		if (contextmenu) {
+			e.preventDefault();
+			const rect = canvasElement.getBoundingClientRect();
+			const cursorX = e.clientX - rect.left;
+			const cursorY = e.clientY - rect.top;
+			const canvasX = (canvasElement.scrollLeft + cursorX) / $zoomLevel;
+			const canvasY = (canvasElement.scrollTop + cursorY) / $zoomLevel;
+			contextmenu(e, canvasX, canvasY);
+		}
+	}
+
+	// Smooth zoom state
+	let targetZoom = $state($zoomLevel);
+	let zoomAnimationId: number | null = null;
+	let lastCursorX = $state(0);
+	let lastCursorY = $state(0);
+	const ZOOM_LERP_SPEED = 0.15; // How fast zoom interpolates (0-1, higher = faster)
+	const ZOOM_EPSILON = 0.001; // Stop animating when close enough
+
+	// Sync targetZoom when zoom is changed externally (slider, buttons)
+	$effect(() => {
+		if (zoomAnimationId === null) {
+			targetZoom = $zoomLevel;
+		}
+	});
+
+	// Check if an element or its ancestors are scrollable
+	function isScrollableAction(target: HTMLElement | null, deltaY: number): boolean {
+		let current = target;
+		while (current && current !== canvasElement) {
+			const style = window.getComputedStyle(current);
+			const isScrollable = style.overflowY === 'auto' || style.overflowY === 'scroll';
+			const canScroll =
+				deltaY > 0
+					? current.scrollHeight > current.scrollTop + current.clientHeight
+					: current.scrollTop > 0;
+
+			if (isScrollable && canScroll) return true;
+			current = current.parentElement;
+		}
+		return false;
+	}
+
 	// Zoom with scroll wheel, zooming toward cursor position
 	function handleWheel(e: WheelEvent) {
+		if (shiftHeld) return; // Stop zooming when shift is held (allow horizontal scroll)
+
+		// If cursor is over a scrollable box, don't zoom
+		if (isScrollableAction(e.target as HTMLElement, e.deltaY)) return;
+
 		e.preventDefault();
 
 		if (document.querySelector('.note')?.getAttribute('data-neodrag-state') === 'dragging') return;
 
-		const oldZoom = $zoomLevel;
 		const zoomChange = -e.deltaY * 0.001; // Adjust zoom sensitivity
-		const newZoom = Math.min(Math.max(oldZoom + zoomChange, MIN_ZOOM), MAX_ZOOM);
+		targetZoom = Math.min(Math.max(targetZoom + zoomChange, $minZoom), MAX_ZOOM);
 
-		// Get cursor position relative to the canvas viewport
+		// Track cursor position for zoom origin
 		const rect = canvasElement.getBoundingClientRect();
-		const cursorX = e.clientX - rect.left;
-		const cursorY = e.clientY - rect.top;
+		lastCursorX = e.clientX - rect.left;
+		lastCursorY = e.clientY - rect.top;
+
+		// Start smooth zoom animation if not already running
+		if (zoomAnimationId === null) {
+			zoomAnimationId = requestAnimationFrame(animateZoom);
+		}
+	}
+
+	function animateZoom() {
+		const currentZoom = $zoomLevel;
+		const diff = targetZoom - currentZoom;
+
+		if (Math.abs(diff) < ZOOM_EPSILON) {
+			// Close enough — snap to target and stop
+			applyZoomAtCursor(targetZoom);
+			zoomAnimationId = null;
+			return;
+		}
+
+		// Lerp toward target
+		const nextZoom = currentZoom + diff * ZOOM_LERP_SPEED;
+		applyZoomAtCursor(nextZoom);
+
+		// Continue animation
+		zoomAnimationId = requestAnimationFrame(animateZoom);
+	}
+
+	function applyZoomAtCursor(newZoom: number) {
+		const oldZoom = $zoomLevel;
+		if (oldZoom === newZoom) return;
 
 		// Calculate the content position under the cursor before zoom
-		// (scroll position + cursor position in viewport) / old zoom = content position
-		const contentX = (canvasElement.scrollLeft + cursorX) / oldZoom;
-		const contentY = (canvasElement.scrollTop + cursorY) / oldZoom;
+		const contentX = (canvasElement.scrollLeft + lastCursorX) / oldZoom;
+		const contentY = (canvasElement.scrollTop + lastCursorY) / oldZoom;
 
-		// Apply the new zoom via the store
+		// Apply the new zoom
 		zoomLevel.set(newZoom);
 
-		// After zoom, adjust scroll so the same content point stays under cursor
-		// content position * new zoom - cursor position in viewport = new scroll position
-		// Use requestAnimationFrame to ensure zoom is applied before adjusting scroll
-		requestAnimationFrame(() => {
-			canvasElement.scrollLeft = contentX * newZoom - cursorX;
-			canvasElement.scrollTop = contentY * newZoom - cursorY;
-		});
+		// Adjust scroll so the same content point stays under cursor
+		canvasElement.scrollLeft = contentX * newZoom - lastCursorX;
+		canvasElement.scrollTop = contentY * newZoom - lastCursorY;
+	}
+
+	function handleScroll(e: Event) {
+		updateViewportStores();
 	}
 
 	// Function to update canvas data programmatically
@@ -179,7 +206,7 @@
 	}
 
 	export function setData(newData: CanvasData) {
-		canvasData = newData;
+		canvasData = validateCanvasData(newData);
 	}
 
 	export function scrollTo(x: number, y: number) {
@@ -217,12 +244,15 @@
 		if (!canvasElement) return;
 
 		bounds.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
-		position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+		if (!$isMiniViewportDragging) {
+			position.setPosition(canvasElement.scrollLeft, canvasElement.scrollTop);
+		}
 		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
 	}
 
 	// Initialize viewport stores on mount and observe resize
 	$effect(() => {
+		$inspect(shiftHeld);
 		if (!canvasElement) return;
 
 		// Initial update
@@ -258,6 +288,12 @@
 	$effect(() => {
 		canvasSize.setSize(canvasData.size.width, canvasData.size.height);
 	});
+
+	onMount(() => {
+		window.addEventListener('keydown', e => e.key === 'Shift' && (shiftHeld = true));
+
+		window.addEventListener('keyup', e => e.key === 'Shift' && (shiftHeld = false));
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -268,8 +304,9 @@
 	onpointermove={handlePointerMove}
 	onpointerup={handlePointerUp}
 	onpointercancel={handlePointerUp}
+	oncontextmenu={handleContextMenu}
 	onwheel={handleWheel}
-	onscroll={updateViewportStores}
+	onscroll={handleScroll}
 	class:dragging={isDragging}
 	role="application"
 	aria-label="Draggable canvas"
@@ -298,10 +335,9 @@
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
-		border: var(--default-border);
 		/* Enable scrolling with subtle scrollbars */
 		overflow: scroll;
-		scrollbar-width: thin;
+		scrollbar-width: none;
 		scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
 		/* Prevent text selection while dragging */
 		user-select: none;
@@ -310,6 +346,7 @@
 		touch-action: none;
 		/* Cursor feedback */
 		cursor: grab;
+		overscroll-behavior: auto;
 	}
 
 	#canvas::-webkit-scrollbar {
@@ -345,5 +382,8 @@
 		position: relative;
 		min-width: 100%;
 		min-height: 100%;
+		box-sizing: border-box;
+		box-shadow:inset 0px 0px 0px 10px var(--default-bg-color);
+		border-radius: 20px;
 	}
 </style>

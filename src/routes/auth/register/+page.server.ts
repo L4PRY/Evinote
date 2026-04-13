@@ -1,12 +1,9 @@
-import { hash } from '@node-rs/argon2';
-import { scryptSync } from 'node:crypto';
 import { fail, redirect } from '@sveltejs/kit';
 import * as auth from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import type { Actions } from './$types';
 import { validateEmail, validatePassword, validateUsername } from '$lib/parseInput';
-import { env } from '$env/dynamic/private';
 
 export const actions: Actions = {
 	register: async event => {
@@ -25,16 +22,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Invalid password' });
 		}
 
-		const passhash: string =
-			env.USE_LEGACY_HASH == '1'
-				? scryptSync(password, 'dev-use-do-not-use-in-prod', 32).toString('hex')
-				: await hash(password, {
-						// recommended minimum parameters
-						memoryCost: 19456,
-						timeCost: 2,
-						outputLen: 32,
-						parallelism: 1
-					});
+		const passhash = await auth.hashPassword(password);
 
 		console.log(passhash);
 
@@ -51,7 +39,7 @@ export const actions: Actions = {
 
 			const userAgent = event.request.headers.get('user-agent') ?? 'unknown';
 
-			const sessionResult = await auth.createSession(userId, userAgent);
+			const sessionResult = await auth.createSession(userId, userAgent, undefined);
 
 			if (!sessionResult || sessionResult.length === 0) {
 				return fail(500, { message: 'Failed to create session' });

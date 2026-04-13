@@ -1,15 +1,31 @@
 <script lang="ts">
-	const { children, href, symbol }: { children: any; href?: string; symbol?: string } = $props();
+	const {
+		children,
+		href,
+		symbol,
+		fullwidth = false
+	}: { children: any; href?: string; symbol?: string; fullwidth?: boolean } = $props();
 	import { page } from '$app/state';
-	import LucideSymbol from '../frontend/LucideSymbol.svelte';
+	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 
 	function isActive(path: string) {
-		return page.url.pathname === path;
+		let targetPath = path;
+		try {
+			targetPath = new URL(path, page.url.href).pathname;
+		} catch (e) {
+		}
+
+		if (page.url.pathname === targetPath) return true;
+
+		if (targetPath === '/' || targetPath === '/dashboard') return false;
+
+		const targetWithSlash = targetPath.endsWith('/') ? targetPath : targetPath + '/';
+		return page.url.pathname.startsWith(targetWithSlash);
 	}
 </script>
 
 <a {href}>
-	<div class:active={isActive(href || 'inactive')}>
+	<div class:active={isActive(href || 'inactive')} class:fullwidth>
 		{#if symbol}
 			<LucideSymbol {symbol} size={42} strokeWidth={1.5} />
 		{/if}
@@ -35,33 +51,60 @@
 		margin-left: 7.5px;
 		margin-right: 7.5px;
 		border-radius: 30px;
+		transform-origin: 15px;
 
-		transform: scale(0.5);
+		transform: scale(0.5) translateX(7px);
 		font-size: 2rem;
-		transform-origin: 20px;
 	}
 
-	div:not(.active):hover {
+	div:not(.active):not(.fullwidth):hover {
 		background-color: var(--default-blur-hover-color);
 		box-sizing: content-box;
 		border-radius: 15px;
-		transform: scale(0.53);
+		transform: scale(0.52) translateX(2.5px);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		transform-origin: 15px;
 	}
 
 	div:not(.active):active {
-		transform: scale(0.48);
+		transition:
+			all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+		transform: scale(0.48) translateX(10px);
 	}
 
 	.active {
 		transition:
-			all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+			all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
 			color 0s;
 		background-color: var(--default-bar-active);
 		color: var(--default-bar-color);
-		transform-origin: 0;
 		transform: scale(0.6);
+		transform-origin: 0px;
 		box-shadow: 0 5px 6px 3px rgba(0, 0, 0, 0.2);
+	}
+
+	@media (max-width: 600px) {
+		.fullwidth {
+			width: 100%;
+			height: 50px;
+			transform: none !important;
+			font-size: 1.2rem;
+			box-sizing: border-box;
+			margin: 0;
+			border-radius: 0;
+			justify-content: flex-start;
+			padding-left: 20px;
+		}
+
+		.fullwidth.active {
+			background-color: var(--default-bar-active);
+			color: var(--default-bar-color);
+			border-radius: 0;
+			box-shadow: none;
+		}
+
+		.fullwidth :global(svg) {
+			width: 24px;
+			height: 24px;
+		}
 	}
 </style>

@@ -10,15 +10,15 @@ services:
       POSTGRES_DB: ${DB}
     volumes:
       - pgdata:/var/lib/postgresql
-  web:
-    build: .
-    restart: always
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      NODE_ENV: ${NODE_ENV}
-    ports:
-      - 3000:3000
-    depends_on:
-      - db
+  # web:
+  #   build: .
+  #   restart: always
+  #   environment:
+  #     DATABASE_URL: ${DATABASE_URL}
+  #     NODE_ENV: ${NODE_ENV}
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - db
 volumes:
   pgdata:

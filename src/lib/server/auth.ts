@@ -1,5 +1,5 @@
-import { type RequestEvent, error, redirect } from '@sveltejs/kit';
-import { eq, and } from 'drizzle-orm';
+import { type RequestEvent, redirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { getRequestEvent } from '$app/server';
@@ -7,16 +7,28 @@ import type { PostgresError } from 'postgres';
 import { authLogger } from './logger';
 import type { AuthenticatedUser } from '../types/auth/AuthenticatedUser';
 import { generateSecureRandomString } from '$lib/randomString';
+import { hash, verify } from '@node-rs/argon2';
 
 //                sec    min  hr   day
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 const RENEW_THRESHOLD = DAY_IN_MS * 15;
 const EXPIRE_THRESHOLD = DAY_IN_MS * 60;
 
+export const argon2Props = {
+	memoryCost: 19456,
+	timeCost: 2,
+	outputLen: 32,
+	parallelism: 1
+} as const;
+
 export const sessionCookieName = '.EVISECURITY';
 
+export const hashPassword = (password: string) => hash(password, argon2Props);
+export const verifyPassword = (hash: string, password: string) =>
+	verify(hash, password, argon2Props);
+
 export function requireLogin(): AuthenticatedUser {
-	const { locals } = getRequestEvent();
+	const { locals, route } = getRequestEvent();
 
 	if (!locals.user) {
 		return redirect(302, '/auth');
@@ -32,21 +44,25 @@ export function checkLogin(): AuthenticatedUser | null {
 }
 
 let layer = 0;
-export async function createSession(userId: number, description: string) {
+export async function createSession(
+	user: number,
+	description: string,
+	eat?: Date,
+	location?: string
+) {
 	try {
 		layer++;
-		const result = await db.transaction(async tx =>
-			tx
-				.insert(table.Session)
-				.values({
-					token: generateSecureRandomString(),
-					userId,
-					description,
-					iat: new Date(),
-					eat: new Date(Date.now() + DAY_IN_MS * 30)
-				})
-				.returning()
-		);
+		const result = await db
+			.insert(table.Session)
+			.values({
+				token: generateSecureRandomString(),
+				user,
+				description,
+				iat: new Date(Date.now()),
+				eat: eat ?? new Date(Date.now() + DAY_IN_MS * 30),
+				location: location ?? 'Unknown'
+			})
+			.returning();
 
 		layer = 0;
 		return result;
@@ -57,8 +73,8 @@ export async function createSession(userId: number, description: string) {
 				layer = 0;
 				throw new Error('Failed to create unique session token after multiple attempts');
 			}
-			createSession(userId, description);
-		}
+			return await createSession(user, description, eat, location);
+		} else throw new Error('Failed to create session', { cause: error });
 	}
 }
 export async function validateSessionToken(token: string) {
@@ -74,7 +90,7 @@ export async function validateSessionToken(token: string) {
 			session: table.Session
 		})
 		.from(table.Session)
-		.innerJoin(table.User, eq(table.Session.userId, table.User.id))
+		.innerJoin(table.User, eq(table.Session.user, table.User.id))
 		.where(eq(table.Session.token, token));
 
 	if (!result) {
@@ -120,41 +136,4 @@ export function deleteSessionTokenCookie(event: RequestEvent) {
 	event.cookies.delete(sessionCookieName, {
 		path: '/'
 	});
-}
-
-export function checkBoardPerms(board: typeof table.Board.$inferSelect) {
-	const { locals } = getRequestEvent();
-
-	const user = locals.user as AuthenticatedUser | null;
-
-	const perms = user
-		? db
-				.select()
-				.from(table.Permissions)
-				.where(and(eq(table.Permissions.bid, board.id), eq(table.Permissions.uid, user.id)))
-		: null;
-
-	if (user && user.role !== 'Admin') {
-		switch (board.type) {
-			case 'Public':
-				// anyone can read, only owner and users with write perms can write
-				break;
-			case 'Unlisted':
-				// anybody can read, only owner and users with perms can write, is not searchable, only accessible through the link
-				if (!perms) {
-					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
-					error(403, 'forbidden');
-				}
-				break;
-			case 'Private':
-				// only owner and users with perms can read or write
-				if (board.owner !== user?.id || !perms) {
-					authLogger.warn(`User ${user?.id} does not have permissions to view board ${board.id}`);
-					error(403, 'forbidden');
-				}
-				break;
-		}
-	}
-
-	return perms;
 }

@@ -2,7 +2,7 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { requireLogin } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 
 /* =====================================================
    GET
@@ -22,7 +22,7 @@ export async function GET(event: RequestEvent) {
 		.select()
 		.from(table.User)
 		.where(eq(table.User.id, userId))
-		.then((res) => res[0]);
+		.then(res => res[0]);
 
 	if (!user) {
 		return json({ message: 'User not found' }, { status: 404 });
@@ -34,12 +34,31 @@ export async function GET(event: RequestEvent) {
 		conditions.push(eq(table.Board.type, 'Public'));
 	}
 
+	const userPfp = await db
+		.select()
+		.from(table.Files)
+		.leftJoin(table.UserPfp, eq(table.UserPfp.file, table.Files.id))
+		.where(eq(table.UserPfp.user, userId))
+		.orderBy(desc(table.UserPfp.updated))
+		.limit(1)
+		.then(res => res[0]);
+
 	const boards = await db
 		.select()
 		.from(table.Board)
 		.where(and(...conditions));
 
-	return json({ user, boards });
+	return json(
+		{
+			id: user.id,
+			email: requestingUser?.role === 'Admin' ? user.email : null,
+			username: user.username,
+			role: requestingUser?.role === 'Admin' ? user.role : null,
+			created: user.created,
+			pfp: userPfp ? `/api/files/${userPfp.files.hash}` : null
+		},
+		{ status: 200, headers: { 'Content-Type': 'application/json' } }
+	);
 }
 
 /* =====================================================
@@ -64,7 +83,7 @@ export async function PUT(event: RequestEvent) {
 		.select()
 		.from(table.User)
 		.where(eq(table.User.id, userId))
-		.then((res) => res[0]);
+		.then(res => res[0]);
 
 	if (!user) {
 		return json({ message: 'User not found' }, { status: 404 });
@@ -85,7 +104,7 @@ export async function PUT(event: RequestEvent) {
 		})
 		.where(eq(table.User.id, userId));
 
-	return new Response(null, { status: 204 });
+	return new Response(null, { status: 204, headers: { 'Content-Type': 'application/json' } });
 }
 
 export async function DELETE(event: RequestEvent) {
@@ -103,13 +122,13 @@ export async function DELETE(event: RequestEvent) {
 		.select()
 		.from(table.User)
 		.where(eq(table.User.id, userId))
-		.then((res) => res[0]);
+		.then(res => res[0]);
 
 	if (!existing) {
 		return json({ error: 'User not found' }, { status: 404 });
 	}
 
-	await db.delete(table.Session).where(eq(table.Session.userId, userId));
+	await db.delete(table.Session).where(eq(table.Session.user, userId));
 
 	await db.delete(table.Board).where(eq(table.Board.owner, userId));
 

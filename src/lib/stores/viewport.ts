@@ -56,6 +56,7 @@ const createCanvasSizeStore = () => {
 export const bounds = createViewportBoundsStore();
 export const position = createViewportPositionStore();
 export const canvasSize = createCanvasSizeStore();
+export const isMiniViewportDragging = writable(false);
 
 // Derived store that combines viewport info for the mini viewport
 export const viewportInfo = derived(
@@ -112,4 +113,29 @@ export function getViewportBounds() {
 
 export function getCanvasSize() {
 	return get(canvasSize);
+}
+
+/**
+ * Calculates the center point of the current viewport in canvas coordinates (unzoomed pixels)
+ */
+export function getViewportCenter(zoom: number) {
+	const currentPosition = get(position);
+	const currentBounds = get(bounds);
+	
+	return {
+		centerX: (currentPosition.left + currentBounds.width / 2) / zoom,
+		centerY: (currentPosition.top + currentBounds.height / 2) / zoom
+	};
+}
+
+/**
+ * Calculates the scroll position required to center the viewport on a specific canvas point
+ */
+export function getScrollFromCenter(centerX: number, centerY: number, zoom: number) {
+	const currentBounds = get(bounds);
+	
+	return {
+		left: centerX * zoom - currentBounds.width / 2,
+		top: centerY * zoom - currentBounds.height / 2
+	};
 }

@@ -4,14 +4,14 @@
 		bounds as dragBounds,
 		BoundsFrom,
 		position as dragPosition,
-		disabled
+		events
 	} from '@neodrag/svelte';
-	import type { NoteData } from '$lib/types/canvas/NoteData';
+	import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
-	import { bounds, position, canvasSize, clampScrollPosition } from '$lib/stores/viewport';
+	import { bounds, position, canvasSize, isMiniViewportDragging } from '$lib/stores/viewport';
 
-	let { notes = [] as NoteData[], size = 200 } = $props();
+	let { notes = {} as NotesRecord, size = 200, viewport = $bindable() } = $props();
 
 	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
 
@@ -40,27 +40,34 @@
 	let viewportIndicatorLeft = $derived($position.left * zoomedScale);
 	let viewportIndicatorTop = $derived($position.top * zoomedScale);
 
-	let currentPosition = $derived.by(() => ({
-		x: viewportIndicatorLeft,
-		y: viewportIndicatorTop
-	}));
+	let dragCoords = $state({ x: 0, y: 0 });
 
 	$effect(() => {
-		noteBounds = notes.map(note => {
-			const element = document.getElementById(note.id ?? note.title);
-			if (element) {
-				const rect = element.getBoundingClientRect();
-				return {
-					noteId: note.id ?? note.title,
-					rect: new DOMRect(
-						rect.left / $zoomLevel,
-						rect.top / $zoomLevel,
-						rect.width / $zoomLevel,
-						rect.height / $zoomLevel
-					)
-				};
-			}
-			return { noteId: note.id ?? note.title, rect: new DOMRect(0, 0, 0, 0) };
+		if (!$isMiniViewportDragging) {
+			dragCoords = {
+				x: viewportIndicatorLeft,
+				y: viewportIndicatorTop
+			};
+		}
+	});
+
+	$effect(() => {
+		$inspect('notebounds update ran');
+		viewport = {
+			left: $position.left,
+			top: $position.top,
+			zoom: $zoomLevel
+		};
+		const notesArray = Array.isArray(notes) ? notes : Object.values(notes);
+		noteBounds = notesArray.map(note => {
+			const x = note?.position?.x ?? 0;
+			const y = note?.position?.y ?? 0;
+			const width = note?.size?.width ?? 100;
+			const height = note?.size?.height ?? 100;
+			return {
+				noteId: note.id ?? note.title,
+				rect: new DOMRect(x, y, width, height)
+			};
 		});
 	});
 
@@ -80,8 +87,10 @@
 		style:width="{effectiveCanvasWidth * zoomedScale}px"
 		style:height="{effectiveCanvasHeight * zoomedScale}px"
 	>
-		{#each notes as note, i (note.id ?? note.title)}
-			{@const pos = { left: note.position.x * scale, top: note.position.y * scale }}
+		{#each Array.isArray(notes) ? notes : Object.values(notes) as note, i (note.id ?? note.title)}
+			{@const x = note?.position?.x ?? 0}
+			{@const y = note?.position?.y ?? 0}
+			{@const pos = { left: x * scale, top: y * scale }}
 			{@const color = parseColor(note.color)}
 			{@const noteBound = noteBounds[i]}
 			{@const noteIndicatorWidth =
@@ -98,6 +107,7 @@
 				style:top="{pos.top}px"
 				style:width="{noteIndicatorWidth}px"
 				style:height="{noteIndicatorHeight}px"
+				style:z-index={note.position.z}
 				style:background-color={color}
 				title={note.title ?? 'Note'}
 			></div>
@@ -105,13 +115,26 @@
 
 		<div
 			{@attach draggable([
-				disabled(),
-				dragPosition({ current: currentPosition }),
-				dragBounds(BoundsFrom.parent())
+				dragPosition({ current: dragCoords }),
+				dragBounds(BoundsFrom.parent()),
+				events({
+					onDragStart: () => {
+						$isMiniViewportDragging = true;
+					},
+					onDrag: dragData => {
+						const newX = dragData.offset?.x ?? (dragData as any).offsetX;
+						const newY = dragData.offset?.y ?? (dragData as any).offsetY;
+
+						position.setPosition(newX / zoomedScale, newY / zoomedScale);
+					},
+					onDragEnd: () => {
+						$isMiniViewportDragging = false;
+					}
+				})
 			])}
 			class={'viewport-indicator'}
-			style:width="{Math.max(viewportIndicatorWidth, 10)}px"
-			style:height="{Math.max(viewportIndicatorHeight, 10)}px"
+			style:width="{Math.max(viewportIndicatorWidth, 10) - 2}px"
+			style:height="{Math.max(viewportIndicatorHeight, 10) - 2}px"
 			style:opacity={viewportIndicatorWidth > 100 && viewportIndicatorHeight > 100 ? 0.8 : 0.5}
 			role="button"
 			aria-label="Drag to move viewport position"
@@ -122,25 +145,28 @@
 
 <style>
 	.mini-viewport-container {
-		position: fixed;
-		bottom: 20px;
-		right: 20px;
-		background-color: rgba(30, 30, 35, 0.9);
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		position: relative;
+		float: right;
 		overflow: hidden;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 		z-index: 1000;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		transition: opacity 0.15s ease;
+		border-radius: 10px;
+		background-color: transparent;
+		top: 100%;
+		transform: translateY(-100%) translateY(-20px) translateX(-20px);
 	}
 
 	.mini-canvas {
 		position: relative;
-		background-color: rgba(50, 50, 60, 0.5);
-		border-radius: 4px;
+		border-radius: 10px;
 		overflow: hidden;
+		backdrop-filter: blur(10px);
+		border: 1px solid var(--editor-interface-border);
+		background: var(--editor-interface-background);
+		box-sizing: border-box;
 	}
 
 	.note-indicator {
@@ -154,24 +180,25 @@
 	.viewport-indicator {
 		position: absolute;
 		border: 2px solid rgba(100, 150, 255, 0.8);
-		background-color: rgba(100, 150, 255, 0.15);
-		/*cursor: grab;*/
-		margin-top: 1px;
-		/*margin-bottom: 1px;*/
+		background-color: rgba(100, 150, 255, 0.25);
+		cursor: grab;
 		transition:
 			border-color 0.15s ease,
 			background-color 0.15s ease;
+		border-radius: 10px;
+		max-width: 100%;
+		box-sizing: border-box;
 	}
 
-	/*.viewport-indicator:hover {*/
-	/*border-color: rgba(130, 180, 255, 1);
-		background-color: rgba(100, 150, 255, 0.25);*/
-	/*cursor: not-allowed;*/
-	/*}*/
+	.viewport-indicator:hover {
+		border-color: rgba(130, 180, 255, 1);
+		background-color: rgba(100, 150, 255, 0.5);
+		filter: opacity(1);
+	}
 
-	/*.viewport-indicator:active {
+	.viewport-indicator:active {
 		cursor: grabbing;
 		border-color: rgba(150, 200, 255, 1);
 		background-color: rgba(100, 150, 255, 0.35);
-	}*/
+	}
 </style>

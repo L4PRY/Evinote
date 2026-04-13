@@ -1,8 +1,10 @@
 //! NOT FINAL VERSION!!!
 import type { Color } from './Color';
+import type { File } from './File';
 import type { Grid } from './Grid';
 
 export type CanvasData = {
+	thumbnail: File | undefined;
 	background:
 		| { type: 'Image'; value: URL } // background imageuh
 		| { type: 'Solid'; value: Color } // solid color

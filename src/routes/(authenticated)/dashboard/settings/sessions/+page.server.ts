@@ -9,7 +9,7 @@ export const load: PageServerLoad = async event => {
 	const result = await db
 		.select()
 		.from(table.Session)
-		.where(eq(table.Session.userId, event.locals.user!.id))
+		.where(eq(table.Session.user, event.locals.user!.id))
 		.orderBy(table.Session.iat);
 
 	return { sessions: result };
@@ -31,7 +31,7 @@ export const actions: Actions = {
 			.limit(1)
 			.then(res => res[0]);
 
-		if (!session || session.userId !== event.locals.user!.id) {
+		if (!session || session.user !== event.locals.user!.id) {
 			return fail(400, 'Session not found or unauthorized');
 		}
 

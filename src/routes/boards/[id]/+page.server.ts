@@ -3,66 +3,44 @@ import { db } from '$lib/server/db/index';
 import * as table from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { requireLogin } from '$lib/server/auth';
-import { error } from '@sveltejs/kit';
-import type { Actions } from './$types';
-import type { NoteData } from '$lib/types/canvas/NoteData';
-import { checkLogin } from '$lib/server/auth';
-import type { CanvasData } from '$lib/types/canvas/CanvasData.js';
-import { checkAccessPerms, checkUserCanModify } from '$lib/server/perms';
+import type { Actions, PageServerLoad } from './$types';
+import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
+import { checkUserCanModify } from '$lib/server/perms';
+import { diffNotes } from '$lib/server/diff';
 
-export async function load({ params }) {
+export const load: PageServerLoad = async ({ params, parent }) => {
+	const parentData = await parent();
+	const { user, perms, board } = parentData;
 	const { id } = params;
-	const sessionUser = checkLogin();
-
-	routeLogger.info(`Loading board with id ${id}`);
-
-	const board = await db
-		.select()
-		.from(table.Board)
-		.where(eq(table.Board.id, parseInt(id)))
-		.then(res => res[0]);
 
 	if (!board) {
-		routeLogger.warn(`Board with id ${id} not found`);
-		error(404, 'board not found');
+		return { contributors: [], canModify: false };
 	}
 
-	// get the full user record if logged in
-	const user = sessionUser
+	const contributors = user
 		? await db
-				.select()
+				.select({
+					username: table.User.username,
+					id: table.User.id,
+					permission: table.Permissions.perm
+				})
 				.from(table.User)
-				.where(eq(table.User.id, sessionUser.id))
-				.then(res => res[0])
-		: null;
+				.leftJoin(table.Permissions, eq(table.User.id, table.Permissions.uid))
+				.where(eq(table.Permissions.bid, parseInt(id)))
+		: [];
 
-	// get perms for current user and board if any
+	const canModify = checkUserCanModify(board, user ?? undefined, perms ?? undefined);
 
-	const perms = user
-		? await db
-				.select()
-				.from(table.Permissions)
-				.where(and(eq(table.Permissions.bid, parseInt(id)), eq(table.Permissions.uid, user.id)))
-				.then(res => res[0])
-		: null;
-
-	checkAccessPerms(board, user, perms);
-
-	return {
-		id,
-		user,
-		board, //returning board data to page to use for displaying name etc
-		perms
-	};
-}
+	return { contributors, canModify };
+};
 
 export const actions: Actions = {
-	default: async ({ request, params }) => {
+	save: async ({ request, params }) => {
 		const sessionUser = requireLogin();
 		const formData = await request.formData();
-		const notes = JSON.parse(formData.get('notes') as string) as NoteData[];
+		const notes = JSON.parse(formData.get('notes') as string) as NotesRecord;
 		routeLogger.info(`User requested to update board no. ${params.id}`);
-		routeLogger.info(`notes is ${JSON.stringify(notes)}`);
+		// routeLogger.info(`notes is ${JSON.stringify(notes)}`);
 
 		const user = await db
 			.select()
@@ -84,10 +62,21 @@ export const actions: Actions = {
 			.where(eq(table.Board.id, parseInt(params.id)))
 			.then(res => res[0]);
 
-		if (checkUserCanModify(board, user, perms))
-			await db
-				.update(table.Board)
-				.set({ notes }) // update board data with new notes, later
-				.where(eq(table.Board.id, parseInt(params.id)));
+		// diff notes on server and sent by client here
+
+		if (checkUserCanModify(board, user, perms)) {
+			try {
+				await db
+					.update(table.Board)
+					.set({ notes: diffNotes(board.notes as NotesRecord, notes) })
+					.where(eq(table.Board.id, parseInt(params.id)));
+				return { success: true };
+			} catch (err) {
+				routeLogger.error(`Failed to update board ${params.id}: ${err}`);
+				return { error: 'Failed to save changes to the database' };
+			}
+		}
+
+		return { error: 'You do not have permission to modify this board' };
 	}
 };

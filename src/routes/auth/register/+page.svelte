@@ -5,6 +5,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
+	import { ArrowLeft } from '@lucide/svelte';
+
 	onMount(() => {
 		document.title = 'Evinote • Register';
 	});
@@ -15,6 +17,10 @@
 <div class="background" style="background-image: url({backgroundImage});"></div>
 
 <section class="register-wrapper">
+	<a href="/" class="back-link">
+		<ArrowLeft size={20} />
+		<span>Back to Home</span>
+	</a>
 	<h1>Register</h1>
 	<form method="post" action="?/register" use:enhance>
 		<div class="flex w-full max-w-sm flex-col items-center justify-center gap-4">
@@ -48,7 +54,7 @@
 		display: flex;
 		padding: 3rem;
 		width: 100%;
-		max-width: 400px;
+		height: 100%;
 		justify-content: center;
 		flex-direction: column;
 		align-items: center;
@@ -57,8 +63,6 @@
 		/* üveghatás */
 		/* background: rgba(33, 33, 33, 0.45);  */
 		backdrop-filter: blur(15px);
-		-webkit-backdrop-filter: blur(15px);
-
 		/* keret */
 		border: 2px solid rgba(207, 24, 24, 0.1);
 
@@ -66,7 +70,7 @@
 		box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
 		/* Középre igazítás */
-		position: absolute;
+		position: fixed;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
@@ -136,11 +140,40 @@
 		text-decoration: underline;
 	}
 
-	/* Hiba üzenet */
-	.error-message {
-		color: #e53e3e;
-		font-size: 0.875rem;
-		text-align: center;
-		margin-top: 1rem;
+	/* Vissza gomb */
+	.back-link {
+		position: absolute;
+		top: 1.5rem;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--default-text-color);
+		text-decoration: none;
+		font-size: 0.9rem;
+		font-weight: 500;
+		opacity: 0.7;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		padding: 0.5rem 0.8rem;
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		white-space: nowrap;
 	}
+
+	.back-link:hover {
+		opacity: 1;
+		background: rgba(255, 255, 255, 0.08);
+		transform: translateX(-50%) translateY(-3px);
+		color: #3182ce;
+		border-color: rgba(49, 130, 206, 0.3);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.back-link span {
+		margin-top: 1px;
+	}
+
+
 </style>

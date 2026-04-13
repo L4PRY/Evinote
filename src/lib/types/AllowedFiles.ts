@@ -1,43 +1,42 @@
 export default [
-    // images
-    'jpg',
-    'jpeg',
-    'png',
-    'gif',
-    'bmp',
-    'svg',
-    'tiff',
-    'webp',
-    'avif',
-    'ico',
-    'jxl',
-    
-    // audio
-    'mp3',
-    'wav',
-    'ogg',
-    'flac',
-    'aac',
-    'm4a',
-    'opus',
-    'wma',
-    'alac',
+	// images
+	'jpg',
+	'jpeg',
+	'png',
+	'gif',
+	'bmp',
+	'svg',
+	'tiff',
+	'webp',
+	'avif',
+	'ico',
+	'jxl',
 
-    // video
-    'mp4',
-    'avi',
-    'mkv',
-    'mov',
-    'wmv',
-    'flv',
-    'webm',
-    'mpeg',
-    'mpg',
+	// audio
+	'mp3',
+	'wav',
+	'ogg',
+	'flac',
+	'aac',
+	'm4a',
+	'opus',
+	'wma',
+	'alac',
 
-    // documents
-    'pdf',
+	// video
+	'mp4',
+	'avi',
+	'mkv',
+	'mov',
+	'wmv',
+	'flv',
+	'webm',
+	'mpeg',
+	'mpg',
 
-    // other
-    'text',
-    
-]
+	// documents
+	'pdf',
+
+	// other
+	'txt'
+];

@@ -12,8 +12,6 @@
 	};
 };
 
-
-
 	const team = [
 		{
 			name: 'Mátyás',
@@ -38,6 +36,19 @@
 		}
 	];
 </script>
+
+<svelte:head>
+	<link rel="preload" href={backgroundImage} as="image" fetchpriority="high" />
+	{#each team as member}
+		<link rel="preload" href="https://github.com/{member.githubUsername}.png?s=150" as="image" />
+	{/each}
+	<link
+		rel="preload"
+		href="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+		as="image"
+	/>
+</svelte:head>
+
 
 <div class="background" style="background-image: url({backgroundImage});"></div>
 
@@ -77,13 +88,30 @@
 
 		<div class="about-buttons">
 			<a href="https://github.com/L4PRY/Evinote" target="_blank" class="button-link">
-				<div>
+				<div class="button-content">
 					<img
 						src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
 						alt="GitHub Logo"
 						class="button-img"
 					/>
-					<p>View on GitHub</p>
+					<div class="button-text">
+						<p class="primary">View on GitHub</p>
+						<p class="secondary">Evinote • Weboldal</p>
+					</div>
+				</div>
+			</a>
+
+			<a href="https://github.com/davidlados511/EvinoteAlk" target="_blank" class="button-link">
+				<div class="button-content">
+					<img
+						src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+						alt="GitHub Logo"
+						class="button-img"
+					/>
+					<div class="button-text">
+						<p class="primary">View on GitHub</p>
+						<p class="secondary">EvinoteAlk • Asztali</p>
+					</div>
 				</div>
 			</a>
 		</div>
@@ -127,12 +155,9 @@
 
 		/* árnyék */
 		box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-
-		margin-bottom: 500px;
 	}
 
 	.about-content {
-		max-width: 1000px;
 		text-align: center;
 	}
 
@@ -143,7 +168,7 @@
 	}
 
 	.about-text {
-		max-width: 700px;
+		max-width: 80%;
 		margin: 0 auto 3rem auto;
 		font-size: 1.05rem;
 		line-height: 1.7;
@@ -158,7 +183,7 @@
 		border-radius: 20px;
 		background: var(--default-text-color-transparent);
 		backdrop-filter: blur(10px);
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
 	}
 
 	.member {
@@ -209,6 +234,7 @@
 	.about-buttons {
 		display: flex;
 		justify-content: space-around;
+		flex-direction: row;
 		margin-top: 2rem;
 		gap: 20px;
 	}
@@ -222,10 +248,10 @@
 		transition: background-color 0.3s;
 		backdrop-filter: blur(5px);
 		width: 100%;
-		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
 	}
 
-	.button-link div {
+	.button-content {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
@@ -237,8 +263,24 @@
 		background-color: #4e335328;
 	}
 
-	.button-link p {
+	.button-text {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.1rem;
+	}
+
+	.button-text .primary {
 		font-size: 1.1rem;
+		font-weight: 500;
+		margin: 0;
+		width: fit-content;
+	}
+
+	.button-text .secondary {
+		font-size: 0.9rem;
+		margin: 0;
+		opacity: 0.7;
 		width: fit-content;
 	}
 
@@ -252,8 +294,8 @@
 	@media (max-width: 768px) {
         .about-wrapper {
             width: 90vw;
-            padding: 2rem;
-            margin-top: 50px;
+            padding: 1rem;
+            margin-top: 100px;
         }
 
         h1 {
@@ -262,6 +304,11 @@
 
         .about-text {
             font-size: 1rem;
+			max-width: 100%;
         }
+
+		.about-buttons {
+			flex-direction: column;
+		}
     }
 </style>

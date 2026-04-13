@@ -1,0 +1,33 @@
+name: Node.js
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js (latest LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          # Keep this only if package-lock.json exists in repo root:
+          # cache: npm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+
+      - name: create .env file
+        run: cp .env.example .env
+      - run: pnpm install
+      - name: run svelte-kit check
+        run: pnpm run check
+        continue-on-error: true
+      - name: run tests
+        run: pnpm run test
