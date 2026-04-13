@@ -9,12 +9,11 @@
 	import type { NoteData, NotesRecord } from '$lib/types/canvas/NoteData';
 	import { parseColor } from '$lib/parseColor';
 	import { zoomLevel } from '$lib/stores/zoomLevel';
-	import { bounds, position, canvasSize, clampScrollPosition, isMiniViewportDragging } from '$lib/stores/viewport';
+	import { bounds, position, canvasSize, isMiniViewportDragging } from '$lib/stores/viewport';
 
 	let { notes = {} as NotesRecord, size = 200, viewport = $bindable() } = $props();
 
 	let noteBounds = $state<{ noteId: string; rect: DOMRect }[]>([]);
-	let isMiniDragging = $state(false);
 
 	let effectiveCanvasWidth = $derived($canvasSize.width * $zoomLevel);
 	let effectiveCanvasHeight = $derived($canvasSize.height * $zoomLevel);
@@ -42,7 +41,7 @@
 	let viewportIndicatorTop = $derived($position.top * zoomedScale);
 
 	let dragCoords = $state({ x: 0, y: 0 });
-	
+
 	$effect(() => {
 		if (!$isMiniViewportDragging) {
 			dragCoords = {
@@ -122,14 +121,11 @@
 					onDragStart: () => {
 						$isMiniViewportDragging = true;
 					},
-					onDrag: (dragData) => {
+					onDrag: dragData => {
 						const newX = dragData.offset?.x ?? (dragData as any).offsetX;
 						const newY = dragData.offset?.y ?? (dragData as any).offsetY;
-						
-						position.setPosition(
-							newX / zoomedScale,
-							newY / zoomedScale
-						);
+
+						position.setPosition(newX / zoomedScale, newY / zoomedScale);
 					},
 					onDragEnd: () => {
 						$isMiniViewportDragging = false;
@@ -137,8 +133,8 @@
 				})
 			])}
 			class={'viewport-indicator'}
-			style:width="{Math.max(viewportIndicatorWidth, 10)-2}px"
-			style:height="{Math.max(viewportIndicatorHeight, 10)-2}px"
+			style:width="{Math.max(viewportIndicatorWidth, 10) - 2}px"
+			style:height="{Math.max(viewportIndicatorHeight, 10) - 2}px"
 			style:opacity={viewportIndicatorWidth > 100 && viewportIndicatorHeight > 100 ? 0.8 : 0.5}
 			role="button"
 			aria-label="Drag to move viewport position"
