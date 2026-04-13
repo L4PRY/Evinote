@@ -9,6 +9,7 @@ export async function GET() {
 			id: table.User.id,
 			username: table.User.username,
 			email: table.User.email,
+			role: table.User.role,
 			created_at: table.User.created
 		})
 		.from(table.User);
