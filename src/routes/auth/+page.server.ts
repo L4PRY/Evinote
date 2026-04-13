@@ -12,16 +12,18 @@ export const actions: Actions = {
 		const username = formData.get('username');
 		const password = formData.get('password');
 
-		let isEmailLogin = false;
+		// let isEmailLogin = false;
 
 		// verify wether username is an actual username or email
-		if (validateEmail(username)) {
-			isEmailLogin = true;
-		} else if (!validateUsername(username)) {
+		// if (validateEmail(username)) {
+		// 	isEmailLogin = true;
+		// } else
+		if (!validateUsername(username)) {
 			return fail(400, { message: 'Invalid username' });
-		} else {
-			isEmailLogin = false;
 		}
+		// else {
+		// 	isEmailLogin = false;
+		// }
 
 		if (!validatePassword(password)) {
 			return fail(400, {
@@ -32,7 +34,8 @@ export const actions: Actions = {
 		const results = await db
 			.select()
 			.from(table.User)
-			.where(isEmailLogin ? eq(table.User.email, username) : eq(table.User.username, username));
+			// .where(isEmailLogin ? eq(table.User.email, username) : eq(table.User.username, username));
+			.where(eq(table.User.username, username));
 
 		const existingUser = results.at(0);
 		if (!existingUser) {
@@ -47,7 +50,7 @@ export const actions: Actions = {
 		const userAgent = event.request.headers.get('user-agent') ?? 'unknown';
 		const location = event.getClientAddress() || 'Unknown location';
 
-		const sessionResult = await auth.createSession(existingUser.id, userAgent, location);
+		const sessionResult = await auth.createSession(existingUser.id, userAgent);
 
 		if (!sessionResult || sessionResult.length === 0) {
 			return fail(500, { message: 'Failed to create session' });
