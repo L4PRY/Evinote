@@ -387,13 +387,14 @@
 			oncontextmenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
 		>
 			<div class="ctx-header">New Note</div>
+			<!-- svelte-ignore a11y_autofocus -->
 			<input
 				type="text"
 				bind:value={newNoteTitle}
 				placeholder="Enter title..."
 				class="ctx-input"
 				autofocus
-				onkeydown={(e) => {
+				onkeydown={(e: KeyboardEvent) => {
 					if (e.key === 'Enter') addNoteFromCtx();
 					if (e.key === 'Escape') closeContextMenu();
 				}}

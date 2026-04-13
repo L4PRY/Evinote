@@ -24,7 +24,9 @@
 	import LucideSymbol from '$lib/components/frontend/LucideSymbol.svelte';
 	import { notifications } from '$lib/stores/notifications';
 
+	// svelte-ignore state_referenced_locally
 	let isLiked = $state(liked);
+	// svelte-ignore state_referenced_locally
 	let likesCount = $state(likes);
 	let lastSyncedLiked = liked;
 

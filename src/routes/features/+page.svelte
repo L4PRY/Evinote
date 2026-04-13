@@ -140,6 +140,7 @@
 	.gradient-text {
 		background: var(--fancygradient);
 		-webkit-background-clip: text;
+		background-clip: text;
 		-webkit-text-fill-color: transparent;
 		display: inline-block;
 	}
@@ -201,6 +202,7 @@
 		font-weight: 800;
 		background: var(--fancygradient);
 		-webkit-background-clip: text;
+		background-clip: text;
 		-webkit-text-fill-color: transparent;
 	}
 

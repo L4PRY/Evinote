@@ -32,9 +32,9 @@
 				<div class="footer-section">
 					<h3>Resources</h3>
 					<ul>
-						<li><button onclick={() => goto(resolve('/about'))}>About Us</button></li>
+						<li><button onclick={() => {}}>About Us</button></li>
 						<li><button onclick={() => goto(resolve('/features'))}>Features</button></li>
-						<li><button onclick={() => goto(resolve('/contact'))}>Contact</button></li>
+						<li><button onclick={() => {}}>Contact</button></li>
 					</ul>
 				</div>
 
@@ -42,9 +42,9 @@
 				<div class="footer-section">
 					<h3>Legal</h3>
 					<ul>
-						<li><button onclick={() => goto(resolve('/privacy'))}>Privacy Policy</button></li>
-						<li><button onclick={() => goto(resolve('/terms'))}>Terms of Service</button></li>
-						<li><button onclick={() => goto(resolve('/cookies'))}>Cookie Policy</button></li>
+						<li><button onclick={() => {}}>Privacy Policy</button></li>
+						<li><button onclick={() => {}}>Terms of Service</button></li>
+						<li><button onclick={() => {}}>Cookie Policy</button></li>
 					</ul>
 				</div>
 			</div>
@@ -100,6 +100,7 @@
 		margin-bottom: 1rem;
 		background: var(--fancygradient);
 		-webkit-background-clip: text;
+		background-clip: text;
 		-webkit-text-fill-color: transparent;
 		display: inline-block;
 	}

@@ -175,11 +175,5 @@
 		margin-top: 1px;
 	}
 
-	/* Hiba üzenet */
-	.error-message {
-		color: #e53e3e;
-		font-size: 0.875rem;
-		text-align: center;
-		margin-top: 1rem;
-	}
+
 </style>

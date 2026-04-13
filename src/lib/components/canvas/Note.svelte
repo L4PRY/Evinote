@@ -301,7 +301,7 @@
 	let selectedFile = $state<globalThis.File | null>(null);
 	let playingVideo = $state<string | null>(null);
 	let pendingImageSrc = $state<string | null>(null);
-	let fileInput: HTMLInputElement;
+	let fileInput = $state<HTMLInputElement>();
 
 	function addTextBlock() {
 		data.content = [...data.content, ''];
@@ -537,6 +537,7 @@
 		{#if isEditingMetadata && !readonly}
 			<div class="config-popup" transition:fly={{ y: 8, duration: 200 }}>
 				<div class="edit-toolbar">
+					<!-- svelte-ignore a11y_autofocus -->
 					<input
 						type="text"
 						bind:value={data.title}
@@ -697,6 +698,14 @@
 								if (target) target.focus();
 							}
 						}}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								if ((entryType === 'text' || entryType === 'checkbox' || entryType === 'checklist')) {
+									const target = e.currentTarget.querySelector('textarea');
+									if (target) target.focus();
+								}
+							}
+						}}
 						style:justify-content={entryVerticalAlign === 'middle' ? 'center' : (entryVerticalAlign === 'bottom' ? 'flex-end' : 'flex-start')}
 					>
 						{#if entryType === 'text' || entryType === 'checkbox'}
@@ -758,7 +767,7 @@
 											entryRef.value = before;
 											
 											const newEntry = { 
-												type: 'checkbox', 
+												type: 'checkbox' as const, 
 												value: after, 
 												checked: false,
 												textAlign: entryTextAlign,
@@ -844,7 +853,7 @@
 												const newEntries = lines.slice(1).map((line, index) => {
 													const isLast = index === lines.length - 2;
 													return {
-														type: 'checkbox',
+														type: 'checkbox' as const,
 														value: isLast ? line + after : line,
 														checked: false,
 														textAlign: entryTextAlign,
@@ -1061,6 +1070,7 @@
 						{#if addingMedia}
 							<div class="image-input-popup">
 								<div class="media-input-wrapper">
+									<!-- svelte-ignore a11y_autofocus -->
 									<input 
 										type="text" 
 										bind:value={newImageUrl} 
@@ -1073,7 +1083,7 @@
 									/>
 									<button 
 										class="browse-btn" 
-										onclick={() => fileInput.click()} 
+										onclick={() => fileInput?.click()} 
 										title="Upload local file"
 										class:has-file={!!selectedFile}
 									>
@@ -1083,7 +1093,7 @@
 										type="file" 
 										bind:this={fileInput} 
 										style:display="none"
-										onchange={() => (selectedFile = fileInput.files?.[0] || null)}
+										onchange={() => (selectedFile = fileInput?.files?.[0] || null)}
 									/>
 								</div>
 
@@ -1091,7 +1101,7 @@
 									<div class="selected-file-info" transition:fly={{ y: -5, duration: 200 }}>
 										<LucideSymbol symbol="File" size={12} />
 										<span>{selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)</span>
-										<button class="clear-file" onclick={() => { selectedFile = null; fileInput.value = ''; }}>
+										<button class="clear-file" onclick={() => { selectedFile = null; if (fileInput) fileInput.value = ''; }}>
 											<LucideSymbol symbol="X" size={12} />
 										</button>
 									</div>
@@ -1444,11 +1454,7 @@
 		&:hover {
 			border: 2px dashed var(--note-fg-o1);
 		}
-        & > .entry-edit {
-            margin: 0;
-            padding: 0;
-            line-height: normal;
-        }
+
 	}
 
 	.text-entry-wrapper {

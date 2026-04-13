@@ -193,6 +193,7 @@
 						}}
 					>
 						<div class="edit-inputs">
+							<!-- svelte-ignore a11y_autofocus -->
 							<input
 								type="text"
 								name="username"
@@ -251,6 +252,7 @@
 						}}
 					>
 						<div class="edit-inputs">
+							<!-- svelte-ignore a11y_autofocus -->
 							<input
 								type="email"
 								name="email"
@@ -316,6 +318,7 @@
 						}}
 					>
 						<div class="edit-inputs">
+							<!-- svelte-ignore a11y_autofocus -->
 							<input
 								type="password"
 								name="oldPassword"
