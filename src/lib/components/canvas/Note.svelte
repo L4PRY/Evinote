@@ -876,7 +876,7 @@
 									class:is-checked={entryType === 'checkbox' && isObjectEntry && (data.content[i] as any).checked}
 									style:text-align={entryTextAlign}
 									style:font-size={entryFontSize + 'px'}
-									style:max-height={entryHeight ? '100%' : 'none'}
+									style:max-height={entryHeight ? entryHeight + 'px' : 'none'}
 								></textarea>
 							</div>
 						{:else if entryType === 'checklist'}
@@ -1454,7 +1454,6 @@
 	.text-entry-wrapper {
 		display: flex;
 		width: 100%;
-		height: 100%;
 	}
 
 	.text-entry-wrapper.is-checkbox {
