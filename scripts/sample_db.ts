@@ -1,336 +1,208 @@
+import { eq } from 'drizzle-orm';
+import { validateEmail, validatePassword, validateUsername } from '../src/lib/parseInput';
+import * as auth from '../src/lib/server/auth';
 import { db } from '../src/lib/server/db';
-import { User, Session, Board, Note, Permissions } from '../src/lib/server/db/schema';
-import type { NoteData } from '../src/lib/server/db/schema';
-import { hash } from '@node-rs/argon2';
-import { createSession } from '../src/lib/server/auth';
+import { Board, BoardLikes, Permissions, Session, User } from '../src/lib/server/db/schema';
+import type { CanvasData } from '../src/lib/types/canvas/CanvasData';
+import type { NoteData, NotesRecord } from '../src/lib/types/canvas/NoteData';
 
-// Sample password hash for "password123" - in production, use proper hashing
-const samplePasshash = await hash('password123', {
-	memoryCost: 19456,
-	timeCost: 2,
-	outputLen: 32,
-	parallelism: 1
+type SeedUserInput = {
+	username: string;
+	email: string;
+	password: string;
+	userAgent: string;
+};
+
+const SESSION_DURATION_ONE_DAY_MS = 1000 * 60 * 60 * 24;
+
+const defaultCanvas: CanvasData = {
+	size: { width: 3200, height: 3200 },
+	background: { type: 'Solid', value: { type: 'rgb', value: [255, 255, 255, 1] } },
+	thumbnail: undefined
+};
+
+const mkNote = (id: string, title: string, x: number, y: number, text: string): NoteData => ({
+	id,
+	title,
+	position: { x, y, z: 1 },
+	size: { width: 280, height: 160 },
+	color: { type: 'rgb', value: [255, 250, 200, 1] },
+	content: [text]
 });
 
+const notesFrom = (
+	...entries: [id: string, title: string, x: number, y: number, text: string][]
+): NotesRecord =>
+	Object.fromEntries(
+		entries.map(([id, title, x, y, text]) => [id, mkNote(id, title, x, y, text)])
+	) as NotesRecord;
+
+const registerSeedUser = async ({ username, email, password, userAgent }: SeedUserInput) => {
+	if (!validateUsername(username)) throw new Error(`Invalid username: ${username}`);
+	if (!validateEmail(email)) throw new Error(`Invalid email: ${email}`);
+	if (!validatePassword(password)) throw new Error(`Invalid password for: ${username}`);
+
+	const existingUser = await db
+		.select()
+		.from(User)
+		.where(eq(User.username, username))
+		.then(r => r.at(0));
+
+	if (existingUser) throw new Error(`Username already taken: ${username}`);
+
+	const passhash = await auth.hashPassword(password);
+	const user = await db
+		.insert(User)
+		.values({ username, passhash, email, role: 'User' })
+		.returning()
+		.then(r => r.at(0));
+
+	if (!user) throw new Error(`Failed to create user: ${username}`);
+
+	const session = await auth
+		.createSession(user.id, userAgent, new Date(Date.now() + SESSION_DURATION_ONE_DAY_MS))
+		.then(r => r.at(0));
+
+	if (!session) throw new Error(`Failed to create session for: ${username}`);
+
+	return { user, session };
+};
+
 async function seedDatabase() {
-	console.log('🌱 Seeding database with sample data...');
+	console.log('🌱 Seeding database...');
 
 	try {
-		// Clear existing data (in reverse order of dependencies)
 		console.log('Clearing existing data...');
-		await db.delete(Note);
+		await db.delete(BoardLikes);
 		await db.delete(Permissions);
 		await db.delete(Session);
 		await db.delete(Board);
 		await db.delete(User);
 
-		// Insert Users
-		console.log('Inserting users...');
-		const users = await db
-			.insert(User)
-			.values([
-				{
-					username: 'alice',
-					email: 'alice@example.com',
-					passhash: samplePasshash,
-					role: 'Admin'
-				},
-				{
-					username: 'bob',
-					email: 'bob@example.com',
-					passhash: samplePasshash,
-					role: 'User'
-				},
-				{
-					username: 'charlie',
-					email: 'charlie@example.com',
-					passhash: samplePasshash,
-					role: 'User'
-				},
-				{
-					username: 'diana',
-					email: 'diana@example.com',
-					passhash: samplePasshash,
-					role: 'User'
-				}
-			])
-			.returning();
-
-		console.log(`✓ Created ${users.length} users`);
-
-		const [alice, bob, charlie, diana] = users;
-
-		// Insert Sessions using createSession method
-		console.log('Inserting sessions...');
-
-		const sessionResults = await Promise.all([
-			createSession(alice.id, 'Alice primary session - Desktop'),
-			createSession(alice.id, 'Alice mobile session'),
-			createSession(bob.id, 'Bob laptop session'),
-			createSession(charlie.id, 'Charlie work computer')
+		console.log('Creating users and sessions...');
+		const registrations = await Promise.all([
+			registerSeedUser({
+				username: 'alice',
+				email: 'alice@example.com',
+				password: 'AliceSeed#2026',
+				userAgent: 'seed-alice-desktop'
+			}),
+			registerSeedUser({
+				username: 'bob',
+				email: 'bob@example.com',
+				password: 'BobSeed#2026',
+				userAgent: 'seed-bob-laptop'
+			}),
+			registerSeedUser({
+				username: 'charlie',
+				email: 'charlie@example.com',
+				password: 'CharlieSeed#2026',
+				userAgent: 'seed-charlie-tablet'
+			}),
+			registerSeedUser({
+				username: 'diana',
+				email: 'diana@example.com',
+				password: 'DianaSeed#2026',
+				userAgent: 'seed-diana-mobile'
+			}),
+			registerSeedUser({
+				username: 'eve',
+				email: 'eve@example.com',
+				password: 'EveSeed#2026',
+				userAgent: 'seed-eve-browser'
+			})
 		]);
 
-		const sessions = sessionResults.filter((s: unknown) => s !== undefined).flat();
+		const [alice, bob, charlie, diana, eve] = registrations.map(({ user }) => user);
+		const sessions = registrations.map(({ session }) => session);
 
-		console.log(`✓ Created ${sessions.length} sessions`);
-
-		// Insert Boards
-		console.log('Inserting boards...');
+		console.log('Creating boards with content...');
 		const boards = await db
 			.insert(Board)
 			.values([
 				{
-					name: 'Project Ideas',
-					owner: alice.id,
-					type: 'Private',
-					updated: new Date()
-				},
-				{
-					name: 'Team Collaboration',
-					owner: alice.id,
+					name: 'Open Product Roadmap',
 					type: 'Public',
-					updated: new Date()
+					owner: alice.id,
+					updated: new Date(),
+					canvas: defaultCanvas,
+					notes: notesFrom(
+						['roadmap_1', 'Q3 Goals', 120, 100, 'Ship board likes and sharing polish.'],
+						['roadmap_2', 'Risks', 460, 100, 'Watch API performance under load.']
+					)
 				},
 				{
-					name: 'Personal Notes',
-					owner: bob.id,
-					type: 'Private',
-					updated: new Date()
-				},
-				{
-					name: 'Shared Resources',
-					owner: bob.id,
+					name: 'Invite-only Sprint Board',
 					type: 'Unlisted',
-					updated: new Date()
+					owner: bob.id,
+					updated: new Date(),
+					canvas: defaultCanvas,
+					notes: notesFrom(
+						['sprint_1', 'Sprint backlog', 120, 120, 'Finalize auth edge-case handling.'],
+						['sprint_2', 'QA', 440, 120, 'Regression test board permissions.']
+					)
 				},
 				{
-					name: 'Meeting Notes',
-					owner: charlie.id,
+					name: 'Private Architecture Notes',
 					type: 'Private',
-					updated: new Date()
-				},
-				{
-					name: 'Design Inspiration',
-					owner: diana.id,
-					type: 'Public',
-					updated: new Date()
+					owner: charlie.id,
+					updated: new Date(),
+					canvas: defaultCanvas,
+					notes: notesFrom(
+						['arch_1', 'DB indexes', 120, 150, 'Review board_likes query patterns.'],
+						['arch_2', 'Session plan', 460, 150, 'Rotate stale sessions regularly.']
+					)
 				}
 			])
 			.returning();
+		const [publicBoard, unlistedBoard, privateBoard] = boards;
 
-		console.log(`✓ Created ${boards.length} boards`);
-
-		const [projectIdeas, teamCollab, personalNotes, sharedResources, meetingNotes, designBoard] =
-			boards;
-
-		// Insert Notes
-		console.log('Inserting notes...');
-
-		const sampleNotes: { bid: number; data: NoteData }[] = [
-			// Notes for Project Ideas board
-			{
-				bid: projectIdeas.id,
-				data: {
-					title: 'App Feature Brainstorm',
-					position: [100, 150],
-					color: ['preset', 'yellow'],
-					content: ['- Real-time collaboration', '- Dark mode support', '- Export to PDF']
-				}
-			},
-			{
-				bid: projectIdeas.id,
-				data: {
-					title: 'Technical Stack',
-					position: [350, 150],
-					color: ['preset', 'blue'],
-					content: ['Frontend: SvelteKit', 'Backend: PostgreSQL + Drizzle', 'Deployment: Vercel']
-				}
-			},
-			{
-				bid: projectIdeas.id,
-				data: {
-					title: 'Timeline',
-					position: [600, 150],
-					color: ['preset', 'green'],
-					content: ['Phase 1: MVP (2 weeks)', 'Phase 2: Beta (1 month)', 'Phase 3: Launch']
-				}
-			},
-			// Notes for Team Collaboration board
-			{
-				bid: teamCollab.id,
-				data: {
-					title: 'Sprint Goals',
-					position: [100, 100],
-					color: ['preset', 'purple'],
-					content: [
-						'Complete user authentication',
-						'Implement board sharing',
-						'Add note editing features'
-					]
-				}
-			},
-			{
-				bid: teamCollab.id,
-				data: {
-					title: 'Team Assignments',
-					position: [400, 100],
-					color: ['preset', 'orange'],
-					content: ['Alice: Backend APIs', 'Bob: Frontend UI', 'Charlie: Testing', 'Diana: Design']
-				}
-			},
-			// Notes for Personal Notes board
-			{
-				bid: personalNotes.id,
-				data: {
-					title: 'Shopping List',
-					position: [50, 50],
-					color: ['preset', 'pink'],
-					content: ['Milk', 'Bread', 'Eggs', 'Coffee']
-				}
-			},
-			{
-				bid: personalNotes.id,
-				data: {
-					title: 'Book Recommendations',
-					position: [300, 50],
-					color: ['preset', 'teal'],
-					content: [
-						'The Pragmatic Programmer',
-						'Clean Code',
-						'Design Patterns',
-						'System Design Interview'
-					]
-				}
-			},
-			// Notes for Shared Resources board
-			{
-				bid: sharedResources.id,
-				data: {
-					title: 'Useful Links',
-					position: [100, 200],
-					color: ['preset', 'cyan'],
-					content: [
-						'MDN Web Docs',
-						'Svelte Documentation',
-						'Drizzle ORM Docs',
-						'TypeScript Handbook'
-					]
-				}
-			},
-			// Notes for Meeting Notes board
-			{
-				bid: meetingNotes.id,
-				data: {
-					title: 'Weekly Standup - 01/15',
-					position: [100, 100],
-					color: ['preset', 'yellow'],
-					content: [
-						'Discussed project timeline',
-						'Reviewed blockers',
-						'Action items assigned',
-						'Next meeting: Friday'
-					]
-				}
-			},
-			{
-				bid: meetingNotes.id,
-				data: {
-					title: 'Client Call Notes',
-					position: [400, 100],
-					color: ['preset', 'red'],
-					content: [
-						'Client requested new features',
-						'Deadline moved to March',
-						'Budget approved for extra resources'
-					]
-				}
-			},
-			// Notes for Design Inspiration board
-			{
-				bid: designBoard.id,
-				data: {
-					title: 'Color Palette Ideas',
-					position: [150, 150],
-					color: ['custom', '#FF6B6B'],
-					content: [
-						'Primary: #667EEA',
-						'Secondary: #764BA2',
-						'Accent: #FF6B6B',
-						'Background: #1A1A2E'
-					]
-				}
-			},
-			{
-				bid: designBoard.id,
-				data: {
-					title: 'Typography',
-					position: [450, 150],
-					color: ['custom', '#667EEA'],
-					content: ['Headings: Inter Bold', 'Body: Inter Regular', 'Code: Fira Code']
-				}
-			},
-			{
-				bid: designBoard.id,
-				data: {
-					title: 'UI Components',
-					position: [300, 350],
-					color: ['custom', '#764BA2'],
-					content: [
-						'Buttons with rounded corners',
-						'Subtle shadows',
-						'Smooth transitions',
-						'Glassmorphism cards'
-					]
-				}
-			}
-		];
-
-		const notes = await db.insert(Note).values(sampleNotes).returning();
-
-		console.log(`✓ Created ${notes.length} notes`);
-
-		// Insert Permissions
-		console.log('Inserting permissions...');
+		console.log('Creating contributors...');
 		const permissions = await db
 			.insert(Permissions)
 			.values([
-				// Bob and Charlie can read Alice's Project Ideas board
-				{ bid: projectIdeas.id, uid: bob.id, perm: 'Read' },
-				{ bid: projectIdeas.id, uid: charlie.id, perm: 'Read' },
-				// All team members can write to Team Collaboration board
-				{ bid: teamCollab.id, uid: bob.id, perm: 'Write' },
-				{ bid: teamCollab.id, uid: charlie.id, perm: 'Write' },
-				{ bid: teamCollab.id, uid: diana.id, perm: 'Write' },
-				// Alice can read Bob's shared resources
-				{ bid: sharedResources.id, uid: alice.id, perm: 'Read' },
-				{ bid: sharedResources.id, uid: charlie.id, perm: 'Write' },
-				// Diana shares her design board with Alice for editing
-				{ bid: designBoard.id, uid: alice.id, perm: 'Write' }
+				{ bid: publicBoard.id, uid: bob.id, perm: 'Write' },
+				{ bid: publicBoard.id, uid: charlie.id, perm: 'Read' },
+				{ bid: publicBoard.id, uid: diana.id, perm: 'Write' },
+				{ bid: unlistedBoard.id, uid: alice.id, perm: 'Read' },
+				{ bid: unlistedBoard.id, uid: charlie.id, perm: 'Write' },
+				{ bid: privateBoard.id, uid: bob.id, perm: 'Read' },
+				{ bid: privateBoard.id, uid: diana.id, perm: 'Write' },
+				{ bid: privateBoard.id, uid: eve.id, perm: 'Read' }
 			])
 			.returning();
 
-		console.log(`✓ Created ${permissions.length} permissions`);
+		console.log('Creating board likes...');
+		const boardLikes = await db
+			.insert(BoardLikes)
+			.values([
+				{ board: publicBoard.id, user: bob.id },
+				{ board: publicBoard.id, user: charlie.id },
+				{ board: publicBoard.id, user: diana.id },
+				{ board: publicBoard.id, user: eve.id },
+				{ board: unlistedBoard.id, user: alice.id },
+				{ board: unlistedBoard.id, user: charlie.id },
+				{ board: privateBoard.id, user: bob.id },
+				{ board: privateBoard.id, user: diana.id }
+			])
+			.returning();
 
 		console.log('\n✅ Database seeding completed successfully!');
 		console.log('\nSummary:');
-		console.log(`  - Users: ${users.length}`);
+		console.log(`  - Users: ${registrations.length}`);
 		console.log(`  - Sessions: ${sessions.length}`);
 		console.log(`  - Boards: ${boards.length}`);
-		console.log(`  - Notes: ${notes.length}`);
 		console.log(`  - Permissions: ${permissions.length}`);
+		console.log(`  - Board Likes: ${boardLikes.length}`);
 	} catch (error) {
 		console.error('❌ Error seeding database:', error);
 		throw error;
 	}
 }
 
-// Run the seed function
 seedDatabase()
-	.then(() => {
-		console.log('\n🎉 Done!');
-		process.exit(0);
-	})
-	.catch((error) => {
+	.then(() => process.exit(0))
+	.catch(error => {
 		console.error('Failed to seed database:', error);
 		process.exit(1);
 	});
