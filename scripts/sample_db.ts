@@ -13,6 +13,8 @@ type SeedUserInput = {
 	userAgent: string;
 };
 
+const SESSION_DURATION_ONE_DAY_MS = 1000 * 60 * 60 * 24;
+
 const defaultCanvas: CanvasData = {
 	size: { width: 3200, height: 3200 },
 	background: { type: 'Solid', value: { type: 'rgb', value: [255, 255, 255, 1] } },
@@ -28,6 +30,13 @@ const mkNote = (id: string, title: string, x: number, y: number, text: string): 
 	content: [text]
 });
 
+const notesFrom = (
+	...entries: [id: string, title: string, x: number, y: number, text: string][]
+): NotesRecord =>
+	Object.fromEntries(
+		entries.map(([id, title, x, y, text]) => [id, mkNote(id, title, x, y, text)])
+	) as NotesRecord;
+
 const registerSeedUser = async ({ username, email, password, userAgent }: SeedUserInput) => {
 	if (!validateUsername(username)) throw new Error(`Invalid username: ${username}`);
 	if (!validateEmail(email)) throw new Error(`Invalid email: ${email}`);
@@ -41,7 +50,7 @@ const registerSeedUser = async ({ username, email, password, userAgent }: SeedUs
 
 	if (existingUser) throw new Error(`Username already taken: ${username}`);
 
-	const passhash = await auth.hashPassword(password.toString());
+	const passhash = await auth.hashPassword(password);
 	const user = await db
 		.insert(User)
 		.values({ username, passhash, email, role: 'User' })
@@ -51,7 +60,7 @@ const registerSeedUser = async ({ username, email, password, userAgent }: SeedUs
 	if (!user) throw new Error(`Failed to create user: ${username}`);
 
 	const session = await auth
-		.createSession(user.id, `seed-${userAgent}`, new Date(Date.now() + 1000 * 60 * 60 * 24))
+		.createSession(user.id, userAgent, new Date(Date.now() + SESSION_DURATION_ONE_DAY_MS))
 		.then(r => r.at(0));
 
 	if (!session) throw new Error(`Failed to create session for: ${username}`);
@@ -75,32 +84,32 @@ async function seedDatabase() {
 			registerSeedUser({
 				username: 'alice',
 				email: 'alice@example.com',
-				password: 'password123',
-				userAgent: 'alice-desktop'
+				password: 'AliceSeed#2026',
+				userAgent: 'seed-alice-desktop'
 			}),
 			registerSeedUser({
 				username: 'bob',
 				email: 'bob@example.com',
-				password: 'password123',
-				userAgent: 'bob-laptop'
+				password: 'BobSeed#2026',
+				userAgent: 'seed-bob-laptop'
 			}),
 			registerSeedUser({
 				username: 'charlie',
 				email: 'charlie@example.com',
-				password: 'password123',
-				userAgent: 'charlie-tablet'
+				password: 'CharlieSeed#2026',
+				userAgent: 'seed-charlie-tablet'
 			}),
 			registerSeedUser({
 				username: 'diana',
 				email: 'diana@example.com',
-				password: 'password123',
-				userAgent: 'diana-mobile'
+				password: 'DianaSeed#2026',
+				userAgent: 'seed-diana-mobile'
 			}),
 			registerSeedUser({
 				username: 'eve',
 				email: 'eve@example.com',
-				password: 'password123',
-				userAgent: 'eve-browser'
+				password: 'EveSeed#2026',
+				userAgent: 'seed-eve-browser'
 			})
 		]);
 
@@ -108,7 +117,7 @@ async function seedDatabase() {
 		const sessions = registrations.map(({ session }) => session);
 
 		console.log('Creating boards with content...');
-		const [publicBoard, unlistedBoard, privateBoard] = await db
+		const boards = await db
 			.insert(Board)
 			.values([
 				{
@@ -117,10 +126,10 @@ async function seedDatabase() {
 					owner: alice.id,
 					updated: new Date(),
 					canvas: defaultCanvas,
-					notes: {
-						roadmap_1: mkNote('roadmap_1', 'Q3 Goals', 120, 100, 'Ship board likes and sharing polish.'),
-						roadmap_2: mkNote('roadmap_2', 'Risks', 460, 100, 'Watch API performance under load.')
-					} satisfies NotesRecord
+					notes: notesFrom(
+						['roadmap_1', 'Q3 Goals', 120, 100, 'Ship board likes and sharing polish.'],
+						['roadmap_2', 'Risks', 460, 100, 'Watch API performance under load.']
+					)
 				},
 				{
 					name: 'Invite-only Sprint Board',
@@ -128,10 +137,10 @@ async function seedDatabase() {
 					owner: bob.id,
 					updated: new Date(),
 					canvas: defaultCanvas,
-					notes: {
-						sprint_1: mkNote('sprint_1', 'Sprint backlog', 120, 120, 'Finalize auth edge-case handling.'),
-						sprint_2: mkNote('sprint_2', 'QA', 440, 120, 'Regression test board permissions.')
-					} satisfies NotesRecord
+					notes: notesFrom(
+						['sprint_1', 'Sprint backlog', 120, 120, 'Finalize auth edge-case handling.'],
+						['sprint_2', 'QA', 440, 120, 'Regression test board permissions.']
+					)
 				},
 				{
 					name: 'Private Architecture Notes',
@@ -139,13 +148,14 @@ async function seedDatabase() {
 					owner: charlie.id,
 					updated: new Date(),
 					canvas: defaultCanvas,
-					notes: {
-						arch_1: mkNote('arch_1', 'DB indexes', 120, 150, 'Review board_likes query patterns.'),
-						arch_2: mkNote('arch_2', 'Session plan', 460, 150, 'Rotate stale sessions regularly.')
-					} satisfies NotesRecord
+					notes: notesFrom(
+						['arch_1', 'DB indexes', 120, 150, 'Review board_likes query patterns.'],
+						['arch_2', 'Session plan', 460, 150, 'Rotate stale sessions regularly.']
+					)
 				}
 			])
 			.returning();
+		const [publicBoard, unlistedBoard, privateBoard] = boards;
 
 		console.log('Creating contributors...');
 		const permissions = await db
@@ -181,7 +191,7 @@ async function seedDatabase() {
 		console.log('\nSummary:');
 		console.log(`  - Users: ${registrations.length}`);
 		console.log(`  - Sessions: ${sessions.length}`);
-		console.log(`  - Boards: 3`);
+		console.log(`  - Boards: ${boards.length}`);
 		console.log(`  - Permissions: ${permissions.length}`);
 		console.log(`  - Board Likes: ${boardLikes.length}`);
 	} catch (error) {
@@ -192,4 +202,7 @@ async function seedDatabase() {
 
 seedDatabase()
 	.then(() => process.exit(0))
-	.catch(() => process.exit(1));
+	.catch(error => {
+		console.error('Failed to seed database:', error);
+		process.exit(1);
+	});
